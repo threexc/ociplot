@@ -181,18 +181,27 @@ class MainWindow(QtWidgets.QMainWindow):
         self.mnc_label = QtWidgets.QLabel('MNC', self)
         self.lac_label = QtWidgets.QLabel('LAC', self)
 
+        self.cellid_count = QtWidgets.QLabel('', self)
+        self.mcc_count = QtWidgets.QLabel('', self)
+        self.mnc_count = QtWidgets.QLabel('', self)
+        self.lac_count = QtWidgets.QLabel('', self)
+
         self.cellid_combo = QtWidgets.QComboBox(self)
         self.mcc_combo = QtWidgets.QComboBox(self)
         self.mnc_combo = QtWidgets.QComboBox(self)
         self.lac_combo = QtWidgets.QComboBox(self)
 
         self.cellid_box.addWidget(self.cellid_label)
+        self.cellid_box.addWidget(self.cellid_count)
         self.cellid_box.addWidget(self.cellid_combo)
         self.mcc_box.addWidget(self.mcc_label)
+        self.mcc_box.addWidget(self.mcc_count)
         self.mcc_box.addWidget(self.mcc_combo)
         self.mnc_box.addWidget(self.mnc_label)
+        self.mnc_box.addWidget(self.mnc_count)
         self.mnc_box.addWidget(self.mnc_combo)
         self.lac_box.addWidget(self.lac_label)
+        self.lac_box.addWidget(self.lac_count)
         self.lac_box.addWidget(self.lac_combo)
         self.tower_load_button = QtWidgets.QPushButton('Load Tower Data', self)
         self.tower_load_button.clicked.connect(self.loadTowerData)
@@ -281,6 +290,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.mcc_combo.clear()
         self.mnc_combo.clear()
         self.lac_combo.clear()
+        self.cellid_count.setText("(" + str(len(self.towerset.cellid_u)) + ")")
+        self.mcc_count.setText("(" + str(len(self.towerset.mcc_u)) + ")")
+        self.mnc_count.setText("(" + str(len(self.towerset.mnc_u)) + ")")
+        self.lac_count.setText("(" + str(len(self.towerset.lac_u)) + ")")
 
         for cellid in self.towerset.cellid_u:
             self.cellid_combo.addItem(str(cellid))
