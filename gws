@@ -298,9 +298,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.mnc_count.setText("(" + str(len(self.towerset.mnc_u)) + ")")
         self.lac_count.setText("(" + str(len(self.towerset.lac_u)) + ")")
 
-        for cellid in self.towerset.cellid_u:
-            self.cellid_combo.addItem(str(cellid))
-
         for mcc in self.towerset.mcc_u:
             self.mcc_combo.addItem(str(mcc))
 
@@ -309,6 +306,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         for lac in self.towerset.lac_u:
             self.lac_combo.addItem(str(lac))
+
+        for cellid in self.towerset.cellid_u:
+            self.cellid_combo.addItem(str(cellid))
 
         print("Generating default plot...")
         self.setTower()
