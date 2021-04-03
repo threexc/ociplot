@@ -205,6 +205,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lac_box.addWidget(self.lac_combo)
         self.tower_load_button = QtWidgets.QPushButton('Load Tower Data', self)
         self.tower_load_button.clicked.connect(self.loadTowerData)
+        self.tower_load_button.setEnabled(False)
         
         self.tower_box.addWidget(self.tower_combo_title)
         self.tower_box.addLayout(self.cellid_box)
@@ -309,6 +310,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         print("Generating default plot...")
         self.updatePlotData()
+        self.tower_load_button.setEnabled(True)
         print("Done.")
 
     def sliderUpdate(self):
