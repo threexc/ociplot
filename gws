@@ -191,6 +191,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.mnc_combo = QtWidgets.QComboBox(self)
         self.lac_combo = QtWidgets.QComboBox(self)
 
+        self.cellid_combo.activated.connect(self.setTower)
+
         self.cellid_box.addWidget(self.cellid_label)
         self.cellid_box.addWidget(self.cellid_count)
         self.cellid_box.addWidget(self.cellid_combo)
@@ -309,9 +311,16 @@ class MainWindow(QtWidgets.QMainWindow):
             self.lac_combo.addItem(str(lac))
 
         print("Generating default plot...")
+        self.setTower()
         self.updatePlotData()
         self.tower_load_button.setEnabled(True)
         print("Done.")
+
+    def setTower(self):
+        self.tower = self.towerset.tower_list.get_tower_data(self.mcc_combo.currentText(), self.mnc_combo.currentText(), self.lac_combo.currentText(), self.cellid_combo.currentText())
+
+        point_count = len(self.tower.signal_power)
+        self.tower_load_button.setText("Load Tower Data ({0} points)".format(point_count))
 
     def sliderUpdate(self):
         self.density = self.density_slider.value() / 100.0
@@ -323,7 +332,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def loadTower(self):
         print("Loading tower data...")
-        self.tower = self.towerset.tower_list.get_tower_data(self.mcc_combo.currentText(), self.mnc_combo.currentText(), self.lac_combo.currentText(), self.cellid_combo.currentText())
         print("Loaded data for {0} {1} {2} {3}".format(self.tower.mcc, self.tower.mnc, self.tower.lac, self.tower.cellid))
         self.updatePlotData()
         self.plotTowerMap()
