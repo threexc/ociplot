@@ -176,10 +176,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tower_combo_title = QtWidgets.QLabel('Tower Selection', self)
         self.tower_combo_title.setFont(QtGui.QFont('Arial', 14))
 
-        self.cellid_label = QtWidgets.QLabel('Cell ID', self)
-        self.mcc_label = QtWidgets.QLabel('MCC', self)
-        self.mnc_label = QtWidgets.QLabel('MNC', self)
-        self.lac_label = QtWidgets.QLabel('LAC', self)
+        self.cellid_label = QtWidgets.QLabel('Cell IDs', self)
+        self.mcc_label = QtWidgets.QLabel('MCCs', self)
+        self.mnc_label = QtWidgets.QLabel('MNCs', self)
+        self.lac_label = QtWidgets.QLabel('LACs', self)
 
         self.cellid_count = QtWidgets.QLabel('', self)
         self.mcc_count = QtWidgets.QLabel('', self)
