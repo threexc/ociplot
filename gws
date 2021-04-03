@@ -204,7 +204,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lac_box.addWidget(self.lac_count)
         self.lac_box.addWidget(self.lac_combo)
         self.tower_load_button = QtWidgets.QPushButton('Load Tower Data', self)
-        self.tower_load_button.clicked.connect(self.loadTowerData)
+        self.tower_load_button.clicked.connect(self.loadTower)
         self.tower_load_button.setEnabled(False)
         
         self.tower_box.addWidget(self.tower_combo_title)
@@ -321,7 +321,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.towerset:
             self.updatePlotData()
 
-    def loadTowerData(self):
+    def loadTower(self):
         print("Loading tower data...")
         self.tower = self.towerset.tower_list.get_tower_data(self.mcc_combo.currentText(), self.mnc_combo.currentText(), self.lac_combo.currentText(), self.cellid_combo.currentText())
         print("Loaded data for {0} {1} {2} {3}".format(self.tower.mcc, self.tower.mnc, self.tower.lac, self.tower.cellid))
