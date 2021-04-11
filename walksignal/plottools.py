@@ -29,8 +29,8 @@ class MplCanvas(FigureCanvas):
 
 class PlotData:
     def __init__(self, datafile, reference_file):
-        self.dataset = data.DataSet(datafile)
-        self.tower_list = data.TowerList(self.dataset.data_matrix, reference_file)
+        self.dataset = data.DataSet(datafile, reference_file)
+        self.tower_list = data.TowerList(self.dataset.data_matrix, self.dataset.reference_matrix)
         self.tower_lat_data = self.tower_list.lats
         self.tower_lon_data = self.tower_list.lons
         self.lat_data = self.dataset.lat

@@ -9,14 +9,14 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import walksignal.utils as utils
 
 class DataSet:
-    def __init__(self, filename):
-        print(filename)
-        self.data_file = filename
+    def __init__(self, data, reference):
+        self.data_file = data
         self.data_path = self.data_file.rsplit('/', 1)[0]
         self.dataset_name = self.data_path.rsplit('/', 1)[1]
         self.map_path = self.data_path + "/map.png"
         self.bbox_path = self.data_path + "/bbox.txt"
-        self.data_matrix = np.array(utils.read_csv(filename))
+        self.data_matrix = np.array(utils.read_csv(data))
+        self.reference_matrix = np.array(utils.read_csv(reference))
 
         # Determine start and end times of test and get a time range for the trip
         self.time_range = np.array(self.data_matrix[1:,7], dtype=float)
@@ -71,7 +71,7 @@ class DataSet:
         self.hash['advance'] = self.timing_advance
 
 class TowerList:
-    def __init__(self, data, reference_file):
+    def __init__(self, data, reference):
         self.tower_id_list = []
         self.tower_list = []
         self.cellid_list = []
@@ -79,7 +79,7 @@ class TowerList:
         self.lats = np.array([])
         self.lons = np.array([])
 
-        self.reference_data = utils.read_csv(reference_file)
+        self.reference_data = np.array(reference)
 
         # Fill tower_id_list with tuples of mcc, mnc, lac, cellid
         self.get_tower_ids()
