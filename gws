@@ -313,14 +313,18 @@ class MainWindow(QtWidgets.QMainWindow):
         print("Generating default plot...")
         self.setTower()
         self.updatePlotData()
-        self.tower_load_button.setEnabled(True)
         print("Done.")
 
     def setTower(self):
         self.tower = self.towerset.tower_list.get_tower_data(self.mcc_combo.currentText(), self.mnc_combo.currentText(), self.lac_combo.currentText(), self.cellid_combo.currentText())
 
-        point_count = len(self.tower.signal_power)
-        self.tower_load_button.setText("Load Tower Data ({0} points)".format(point_count))
+        if self.tower is None:
+            self.tower_load_button.setText("No Valid Reference")
+            self.tower_load_button.setEnabled(False)
+        else:
+            point_count = len(self.tower.signal_power)
+            self.tower_load_button.setText("Load Tower Data ({0} points)".format(point_count))
+            self.tower_load_button.setEnabled(True)
 
     def sliderUpdate(self):
         self.density = self.density_slider.value() / 100.0
