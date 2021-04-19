@@ -60,6 +60,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.setupFileControls()
         self.setupModelControls()
+        self.setupPathLossControls()
         self.setupTowerControls()
         self.setupFileMenu()
         self.setupMenuBar()
@@ -85,11 +86,45 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabs.addTab(self.tab2, "Models")
         self.tabs.addTab(self.tab3, "Path Loss")
 
+    def setupPathLossControls(self):
+        self.pl_box = QtWidgets.QVBoxLayout()
+        self.frequency_box = QtWidgets.QHBoxLayout()
+        self.latbox = QtWidgets.QHBoxLayout()
+        self.lonbox = QtWidgets.QHBoxLayout()
+
+        self.pl_title = QtWidgets.QLabel('Path Loss Parameters', self)
+        self.pl_title.setFont(QtGui.QFont('Arial', 14))
+
+        self.frequency_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
+        self.frequency_slider.setRange(50, 100000)
+        self.frequency_slider.setValue(50)
+        self.frequency_slider.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.frequency_slider_label = QtWidgets.QLabel('Frequency', self)
+        self.frequency_value_label = QtWidgets.QLabel('50 MHz', self)
+        self.frequency_slider.valueChanged[int].connect(self.sliderUpdate)
+        self.frequency_box.addWidget(self.frequency_slider_label)
+        self.frequency_box.addWidget(self.frequency_slider)
+        self.frequency_box.addWidget(self.frequency_value_label)
+
+        self.lat_edit = QtWidgets.QLineEdit(self)
+        self.latbox_label = QtWidgets.QLabel("Tower Lat", self)
+        self.latbox.addWidget(self.latbox_label)
+        self.latbox.addWidget(self.lat_edit)
+        self.lon_edit = QtWidgets.QLineEdit(self)
+        self.lonbox_label = QtWidgets.QLabel("Tower Lon", self)
+        self.lonbox.addWidget(self.lonbox_label)
+        self.lonbox.addWidget(self.lon_edit)
+
+        self.pl_box.addWidget(self.pl_title)
+        self.pl_box.addLayout(self.frequency_box)
+        self.pl_box.addLayout(self.latbox)
+        self.pl_box.addLayout(self.lonbox)
+        print("Set up frequency_slider")
+
     def setupModelControls(self):
         self.model_box = QtWidgets.QVBoxLayout()
         self.density_box = QtWidgets.QHBoxLayout()
         self.absorption_box = QtWidgets.QHBoxLayout()
-        self.frequency_box = QtWidgets.QHBoxLayout()
 
         self.slider_title = QtWidgets.QLabel('Model Parameters', self)
         self.slider_title.setFont(QtGui.QFont('Arial', 14))
@@ -108,16 +143,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.absorption_slider_label = QtWidgets.QLabel('Absorption', self)
         self.absorption_value_label = QtWidgets.QLabel('0.5', self)
 
-        self.frequency_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
-        self.frequency_slider.setRange(50, 100000)
-        self.frequency_slider.setValue(50)
-        self.frequency_slider.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.frequency_slider_label = QtWidgets.QLabel('Frequency', self)
-        self.frequency_value_label = QtWidgets.QLabel('50 MHz', self)
-
         self.density_slider.valueChanged[int].connect(self.sliderUpdate)
         self.absorption_slider.valueChanged[int].connect(self.sliderUpdate)
-        self.frequency_slider.valueChanged[int].connect(self.sliderUpdate)
 
         self.density_box.addWidget(self.density_slider_label)
         self.density_box.addWidget(self.density_slider)
@@ -125,9 +152,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.absorption_box.addWidget(self.absorption_slider_label)
         self.absorption_box.addWidget(self.absorption_slider)
         self.absorption_box.addWidget(self.absorption_value_label)
-        self.frequency_box.addWidget(self.frequency_slider_label)
-        self.frequency_box.addWidget(self.frequency_slider)
-        self.frequency_box.addWidget(self.frequency_value_label)
 
         self.radio_2d = QtWidgets.QRadioButton("2D Model", self)
         self.radio_3d = QtWidgets.QRadioButton("3D Model", self)
@@ -140,11 +164,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.model_box.addWidget(self.radio_3d)
         self.model_box.addLayout(self.density_box)
         self.model_box.addLayout(self.absorption_box)
-        self.model_box.addLayout(self.frequency_box)
         self.model_box.setAlignment(QtCore.Qt.AlignTop)
         print("Set up density_slider")
         print("Set up absorption_slider")
-        print("Set up frequency_slider")
 
     def setupFileControls(self):
         self.file_control_box = QtWidgets.QVBoxLayout()
@@ -257,6 +279,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def setupPlotSidebar(self):
         self.plotSidebar = QtWidgets.QVBoxLayout()
         self.plotSidebar.addLayout(self.model_box)
+        self.plotSidebar.addLayout(self.pl_box)
         self.plotSidebarWidget = QtWidgets.QWidget()
         self.plotSidebarWidget.setLayout(self.plotSidebar)
         print("Set up sidebar")
@@ -383,6 +406,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def plotPathLoss(self):
         self.pl_fs_y = eq.pl_fs(self.pl_points, self.pl_frequency)
+        self.los_5gcm_ci_y = pl_los_5gcm_ci(self.pl_points, self.pl_frequency)
 
     def updateRWMPlot(self):
         self.x_range = self.towerset.plotrange
