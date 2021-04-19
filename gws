@@ -132,8 +132,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.radio_2d = QtWidgets.QRadioButton("2D Model", self)
         self.radio_3d = QtWidgets.QRadioButton("3D Model", self)
         self.radio_3d.setChecked(True)
-        self.radio_2d.toggled.connect(self.updatePlotData)
-        self.radio_3d.toggled.connect(self.updatePlotData)
+        self.radio_2d.toggled.connect(self.updateRWMPlot)
+        self.radio_3d.toggled.connect(self.updateRWMPlot)
 
         self.model_box.addWidget(self.slider_title)
         self.model_box.addWidget(self.radio_2d)
@@ -350,12 +350,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.absorption_value_label.setText(str(self.absorption))
         self.frequency_value_label.setText(str(self.frequency_slider.value()) + " MHz")
         if self.towerset:
-            self.updatePlotData()
+            self.updateRWMPlot()
 
     def loadTower(self):
         print("Loading tower data...")
         print("Loaded data for {0} {1} {2} {3}".format(self.tower.mcc, self.tower.mnc, self.tower.lac, self.tower.cellid))
-        self.updatePlotData()
+        self.updateRWMPlot()
         self.plotTowerMap()
 
     def plotTowerMap(self):
@@ -384,7 +384,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def plotPathLoss(self):
         self.pl_fs_y = eq.pl_fs(self.pl_points, self.pl_frequency)
 
-    def updatePlotData(self):
+    def updateRWMPlot(self):
         self.x_range = self.towerset.plotrange
         if self.radio_2d.isChecked():
             self.y_range = eq.gplt_rwm_fpd2d(self.density, self.absorption, self.x_range)
