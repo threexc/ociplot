@@ -115,8 +115,7 @@ class TowerList:
 
     def get_distances(self):
         for tower in self.tower_list:
-            for datapoint in tower.data_points:
-                tower.distances.append(utils.get_distance(tower.lat, tower.lon, datapoint.lat, datapoint.lon) * 1000)
+            tower.get_distances()
 
     def get_power(self):
         for tower in self.tower_list:
@@ -151,6 +150,11 @@ class Tower:
         self.distances = []
         self.signal_power = []
 
+    def get_distances(self):
+        self.distances.clear()
+        for datapoint in self.data_points:
+            self.distances.append(utils.get_distance(self.lat, self.lon, datapoint.lat, datapoint.lon) * 1000)
+
 class TowerDataPoint:
     def __init__(self, mcc, mnc, lac, cellid, lat, lon, signal, measured_at, rating, speed, direction, access_type, timing_advance, tac, pci):
       self.mcc = mcc
@@ -168,4 +172,3 @@ class TowerDataPoint:
       self.timing_advance = timing_advance
       self.tac = tac
       self.pci = pci
-      self.numeric_id = str(self.mcc) + str(self.mnc) + str(self.lac) + str(self.cellid)

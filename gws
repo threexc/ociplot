@@ -121,20 +121,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lonbox.addWidget(self.lon_edit)
 
         self.custom_lat_edit = QtWidgets.QLineEdit(self)
-        self.custom_lat_edit
         self.custom_latbox_label = QtWidgets.QLabel("Custom Lat", self)
         self.custom_latbox.addWidget(self.custom_latbox_label)
         self.custom_latbox.addWidget(self.custom_lat_edit)
         self.custom_lon_edit = QtWidgets.QLineEdit(self)
-        self.custom_lon_edit
         self.custom_lonbox_label = QtWidgets.QLabel("Custom Lon", self)
         self.custom_lonbox.addWidget(self.custom_lonbox_label)
         self.custom_lonbox.addWidget(self.custom_lon_edit)
 
         self.custom_latlon_button = QtWidgets.QPushButton("Use Custom")
-        self.tower_latlon_button = QtWidgets.QPushButton("Use Selected")
+        self.custom_latlon_button.clicked.connect(self.setCustomTowerLocation)
         self.location_button_box.addWidget(self.custom_latlon_button)
-        self.location_button_box.addWidget(self.tower_latlon_button)
 
         self.pl_box.addWidget(self.pl_title)
         self.pl_box.addLayout(self.frequency_box)
@@ -393,6 +390,15 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tower_load_button.setText("Load Tower Data ({0} points)".format(point_count))
             self.tower_load_button.setEnabled(True)
 
+    def setCustomTowerLocation(self):
+        if self.custom_lat_edit.text() and self.custom_lon_edit.text():
+            self.tower.lat = float(self.custom_lat_edit.text())
+            self.tower.lon = float(self.custom_lat_edit.text())
+            self.tower.get_distances()
+
+        self.updateRWMPlot()
+        self.plotTowerMap()
+
     def sliderUpdate(self):
         self.density = self.density_slider.value() / 100.0
         self.absorption = self.absorption_slider.value() / 100.0
@@ -451,8 +457,12 @@ class MainWindow(QtWidgets.QMainWindow):
             self.y_range = eq.gplt_rwm_fpd2d(self.density, self.absorption, self.x_range)
         else:
             self.y_range = eq.gplt_rwm_fpd3d(self.density, self.absorption, self.x_range)
+        self.data_line.clear()
         self.data_line.setData(self.x_range, self.y_range)
         if self.tower:
+            self.tower_data_line.clear()
+            print(len(self.tower.distances))
+            print(len(self.tower.signal_power))
             self.tower_data_line.setData(self.tower.distances, self.tower.signal_power, symbol='o')
 
 app = QtWidgets.QApplication(sys.argv)
