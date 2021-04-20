@@ -91,6 +91,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.frequency_box = QtWidgets.QHBoxLayout()
         self.latbox = QtWidgets.QHBoxLayout()
         self.lonbox = QtWidgets.QHBoxLayout()
+        self.custom_latbox = QtWidgets.QHBoxLayout()
+        self.custom_lonbox = QtWidgets.QHBoxLayout()
+        self.location_button_box = QtWidgets.QHBoxLayout()
 
         self.pl_title = QtWidgets.QLabel('Path Loss Parameters', self)
         self.pl_title.setFont(QtGui.QFont('Arial', 14))
@@ -107,19 +110,42 @@ class MainWindow(QtWidgets.QMainWindow):
         self.frequency_box.addWidget(self.frequency_value_label)
 
         self.lat_edit = QtWidgets.QLineEdit(self)
+        self.lat_edit.setReadOnly(True)
         self.latbox_label = QtWidgets.QLabel("Tower Lat", self)
         self.latbox.addWidget(self.latbox_label)
         self.latbox.addWidget(self.lat_edit)
         self.lon_edit = QtWidgets.QLineEdit(self)
+        self.lon_edit.setReadOnly(True)
         self.lonbox_label = QtWidgets.QLabel("Tower Lon", self)
         self.lonbox.addWidget(self.lonbox_label)
         self.lonbox.addWidget(self.lon_edit)
+
+        self.custom_lat_edit = QtWidgets.QLineEdit(self)
+        self.custom_lat_edit
+        self.custom_latbox_label = QtWidgets.QLabel("Custom Lat", self)
+        self.custom_latbox.addWidget(self.custom_latbox_label)
+        self.custom_latbox.addWidget(self.custom_lat_edit)
+        self.custom_lon_edit = QtWidgets.QLineEdit(self)
+        self.custom_lon_edit
+        self.custom_lonbox_label = QtWidgets.QLabel("Custom Lon", self)
+        self.custom_lonbox.addWidget(self.custom_lonbox_label)
+        self.custom_lonbox.addWidget(self.custom_lon_edit)
+
+        self.custom_latlon_button = QtWidgets.QPushButton("Use Custom")
+        self.tower_latlon_button = QtWidgets.QPushButton("Use Selected")
+        self.location_button_box.addWidget(self.custom_latlon_button)
+        self.location_button_box.addWidget(self.tower_latlon_button)
 
         self.pl_box.addWidget(self.pl_title)
         self.pl_box.addLayout(self.frequency_box)
         self.pl_box.addLayout(self.latbox)
         self.pl_box.addLayout(self.lonbox)
+        self.pl_box.addLayout(self.custom_latbox)
+        self.pl_box.addLayout(self.custom_lonbox)
+        self.pl_box.addLayout(self.location_button_box)
+        self.pl_box.setAlignment(QtCore.Qt.AlignTop)
         print("Set up frequency_slider")
+        print("Set up lat and lon boxes")
 
     def setupModelControls(self):
         self.model_box = QtWidgets.QVBoxLayout()
@@ -280,6 +306,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.plotSidebar = QtWidgets.QVBoxLayout()
         self.plotSidebar.addLayout(self.model_box)
         self.plotSidebar.addLayout(self.pl_box)
+        self.plotSidebar.setAlignment(QtCore.Qt.AlignTop)
         self.plotSidebarWidget = QtWidgets.QWidget()
         self.plotSidebarWidget.setLayout(self.plotSidebar)
         print("Set up sidebar")
@@ -350,6 +377,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.cellid_combo.addItem(str(cellid))
 
         print("Generating default plot...")
+        self.setBoxText()
         self.setTower()
         self.plotTowerMap()
         print("Done.")
@@ -380,6 +408,15 @@ class MainWindow(QtWidgets.QMainWindow):
         print("Loaded data for {0} {1} {2} {3}".format(self.tower.mcc, self.tower.mnc, self.tower.lac, self.tower.cellid))
         self.updateRWMPlot()
         self.plotTowerMap()
+        self.setBoxText()
+
+    def setBoxText(self):
+        if self.tower:
+            self.lat_edit.setText(str(self.tower.lat))
+            self.lon_edit.setText(str(self.tower.lon))
+        else:
+            self.lat_edit.setText("N/A")
+            self.lon_edit.setText("N/A")
 
     def plotTowerMap(self):
         points = self.tower.data_points
