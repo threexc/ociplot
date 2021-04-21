@@ -393,11 +393,12 @@ class MainWindow(QtWidgets.QMainWindow):
     def setCustomTowerLocation(self):
         if self.custom_lat_edit.text() and self.custom_lon_edit.text():
             self.tower.lat = float(self.custom_lat_edit.text())
-            self.tower.lon = float(self.custom_lat_edit.text())
+            self.tower.lon = float(self.custom_lon_edit.text())
             self.tower.get_distances()
 
         self.updateRWMPlot()
         self.plotTowerMap()
+        self.setBoxText()
 
     def sliderUpdate(self):
         self.density = self.density_slider.value() / 100.0
