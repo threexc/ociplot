@@ -1,5 +1,6 @@
 import numpy as np
-import scipy.special as sp
+from scipy import special as sp
+from scipy import constants
 
 # Equation 12 in A Random Walk Model of Wave Propagation
 def gplt_rwm_fpd2d(obs_dens, absorption, x_range):
@@ -28,8 +29,8 @@ def gplt_rwm_fpd3d(obs_dens, absorption, x_range):
 
     return rwm_y
 
-def pl_fs(distance, frequency):
-    return 20 * np.log10(4 * sp.constants.pi * distance / sp.constants.speed_of_light)
+def pl_fs(distance):
+    return 20 * np.log10(4 * constants.pi * distance / constants.speed_of_light)
 
 def pl_los_5gcm_ci(distance, frequency):
     return 32.4 + 20 * np.log10(distance) + 20 * np.log10(frequency)
@@ -39,3 +40,16 @@ def pl_nlos_5gcm_ci(distance, frequency):
 
 def pl_nlos_5gcm_abg(distance, frequency):
     return 19.2 + 34 * np.log10(distance) + 23 * np.log10(frequency)
+
+def v_pl_fs(array, frequency):
+    return np.array([pl_fs(xi) for xi in array])
+
+def v_pl_los_5gcm_ci(array, frequency):
+    return np.array([pl_los_5gcm_ci(xi, frequency) for xi in array])
+
+def v_pl_nlos_5gcm_ci(array, frequency):
+    return np.array([pl_nlos_5gcm_ci(xi, frequency) for xi in array])
+
+def v_pl_nlos_5gcm_abg(distance, frequency):
+    return np.array([pl_nlos_5gcm_abg(xi, frequency) for xi in array])
+

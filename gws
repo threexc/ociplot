@@ -36,7 +36,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tower_y = None
         self.cbar = None
         self.map_canvas = pt.MplCanvas(self, width=5, height=4, dpi=100)
-        self.pl_canvas = pt.MplCanvas(self, width=5, height=4, dpi=100)
 
         self.x = list(range(100))  # 100 time points
         self.y = [randint(0,100) for _ in range(100)]  # 100 data points
@@ -57,6 +56,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self.styles = {'color':'b', 'font-size':'18px'}
         self.model_widget.setLabel('left', "Power (dBm)", **self.styles)
         self.model_widget.setLabel('bottom', "Distance (m)", **self.styles)
+
+        self.pl_widget = pg.PlotWidget()
+        self.pl_widget.setBackground('w')
+        self.pl_widget.showGrid(x=True, y=True, alpha=0.5)
+        self.pl_widget.setYRange(-200, 20)
+        self.pen = pg.mkPen(color=(255, 0, 0))
+
+        self.pl_line = self.pl_widget.plot(self.x, self.y, pen=self.pen)
+        self.tower_pl_line = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='b'), symbol='o', size=1)
+        self.pl_widget.addItem(self.tower_pl_line)
+        self.styles = {'color':'b', 'font-size':'18px'}
+        self.pl_widget.setLabel('left', "Path Loss (dB)", **self.styles)
+        self.pl_widget.setLabel('bottom', "Distance (m)", **self.styles)
 
         self.setupFileControls()
         self.setupModelControls()
@@ -80,7 +92,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabs = QtWidgets.QTabWidget()
         self.tab1 = self.map_canvas
         self.tab2 = self.model_widget
-        self.tab3 = self.pl_canvas
+        self.tab3 = self.pl_widget
         self.tabs.resize(300, 200)
         self.tabs.addTab(self.tab1, "Tower Map")
         self.tabs.addTab(self.tab2, "Models")
@@ -377,6 +389,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setBoxText()
         self.setTower()
         self.plotTowerMap()
+        self.sliderUpdate()
         print("Done.")
 
     def setTower(self):
@@ -409,12 +422,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.frequency_value_label.setText(str(self.frequency_slider.value()) + " MHz")
         if self.towerset:
             self.updateRWMPlot()
+            self.updatePathLossPlot()
 
     def loadTower(self):
         print("Loading tower data...")
         print("Loaded data for {0} {1} {2} {3}".format(self.tower.mcc, self.tower.mnc, self.tower.lac, self.tower.cellid))
-        self.updateRWMPlot()
         self.plotTowerMap()
+        self.updateRWMPlot()
+        self.updatePathLossPlot()
         self.setBoxText()
 
     def setBoxText(self):
@@ -448,9 +463,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.map_canvas.draw()
 
-    def plotPathLoss(self):
-        self.pl_fs_y = eq.pl_fs(self.pl_points, self.pl_frequency)
-        self.los_5gcm_ci_y = pl_los_5gcm_ci(self.pl_points, self.pl_frequency)
+    def updatePathLossPlot(self):
+        self.pl_fs_y = eq.v_pl_fs(self.pl_points, self.frequency)
+        self.los_5gcm_ci_y = eq.v_pl_los_5gcm_ci(self.pl_points, self.frequency)
+
+        self.pl_line.clear()
+        self.pl_line.setData(self.pl_points, self.pl_fs_y)
 
     def updateRWMPlot(self):
         self.x_range = self.towerset.plotrange
@@ -462,8 +480,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.data_line.setData(self.x_range, self.y_range)
         if self.tower:
             self.tower_data_line.clear()
-            print(len(self.tower.distances))
-            print(len(self.tower.signal_power))
             self.tower_data_line.setData(self.tower.distances, self.tower.signal_power, symbol='o')
 
 app = QtWidgets.QApplication(sys.argv)
