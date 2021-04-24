@@ -368,7 +368,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def loadDataSet(self):
         print("Loading data...")
         self.start_time = time.time()
-        self.towerset = pt.PlotData(self.datafile, self.reference)
+        self.towerset = ds.DataSet(self.datafile, self.reference)
         self.duration = time.time() - self.start_time
         print("Done loading data in {:.2f} seconds".format(self.duration))
         print("Setting up tower selectors...")

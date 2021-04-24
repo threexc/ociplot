@@ -70,6 +70,36 @@ class DataSet:
         self.hash['direction'] = self.direction
         self.hash['advance'] = self.timing_advance
 
+        self.tower_list = TowerList(self.data_matrix, self.reference_matrix)
+        self.tower_lat_data = self.tower_list.lats
+        self.tower_lon_data = self.tower_list.lons
+        self.lat_data = self.lat
+        self.lon_data = self.lon
+        self.signal_data = self.signal_range
+        self.mcc_u = np.unique(self.mcc)
+        self.mnc_u = np.unique(self.mnc)
+        self.lac_u = np.unique(self.lac)
+        self.cellid_u = np.unique(self.cellid)
+        self.plot_map = None
+        self.map_bbox = None
+        self.get_map_and_bbox()
+        self.fig = plt.figure()
+        self.ax1 = self.fig.add_subplot(111)
+        self.set_image()
+        self.cm = plt.cm.get_cmap('gist_heat')
+        self.cm2 = plt.cm.get_cmap('gist_gray')
+        self.avg_lat_diff = np.average(np.ediff1d(self.lat_data))
+        self.avg_lon_diff = np.average(np.ediff1d(self.lon_data))
+        self.distances = np.array([])
+        self.plotrange = np.linspace(1, 500, 250)
+
+    def get_map_and_bbox(self):
+        self.plot_map = plt.imread(self.map_path)
+        self.map_bbox = [entry for entry in utils.get_bbox(self.bbox_path)]
+
+    def set_image(self):
+        self.ax1.imshow(self.plot_map, zorder=0, extent = self.map_bbox[0], aspect="equal")
+
 class TowerList:
     def __init__(self, data, reference):
         self.tower_id_list = []
