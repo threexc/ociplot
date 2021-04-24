@@ -60,15 +60,23 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_widget = pg.PlotWidget()
         self.pl_widget.setBackground('w')
         self.pl_widget.showGrid(x=True, y=True, alpha=0.5)
-        self.pl_widget.setYRange(-200, 20)
+        self.pl_widget.setYRange(-150, 150)
         self.pen = pg.mkPen(color=(255, 0, 0))
 
-        self.pl_line = self.pl_widget.plot(self.x, self.y, pen=self.pen)
-        self.tower_pl_line = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='b'), symbol='o', size=1)
-        self.pl_widget.addItem(self.tower_pl_line)
+        self.pl_line1 = self.pl_widget.plot(self.x, self.y, pen=self.pen)
+        self.tower_pl_line1 = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='b'), symbol='o', size=1)
+        self.pl_widget.addItem(self.tower_pl_line1)
         self.styles = {'color':'b', 'font-size':'18px'}
         self.pl_widget.setLabel('left', "Path Loss (dB)", **self.styles)
         self.pl_widget.setLabel('bottom', "Distance (m)", **self.styles)
+
+        self.pl_line2 = self.pl_widget.plot(self.x, self.y, pen=self.pen)
+        self.tower_pl_line2 = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='r'), symbol='o', size=1)
+        self.pl_widget.addItem(self.tower_pl_line2)
+
+        self.pl_line3 = self.pl_widget.plot(self.x, self.y, pen=self.pen)
+        self.tower_pl_line3 = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='r'), symbol='o', size=1)
+        self.pl_widget.addItem(self.tower_pl_line3)
 
         self.setupFileControls()
         self.setupModelControls()
@@ -466,9 +474,14 @@ class MainWindow(QtWidgets.QMainWindow):
     def updatePathLossPlot(self):
         self.pl_fs_y = eq.v_pl_fs(self.pl_points, self.frequency)
         self.los_5gcm_ci_y = eq.v_pl_los_5gcm_ci(self.pl_points, self.frequency)
+        self.nlos_5gcm_ci_y = eq.v_pl_nlos_5gcm_ci(self.pl_points, self.frequency)
 
-        self.pl_line.clear()
-        self.pl_line.setData(self.pl_points, self.pl_fs_y)
+        self.pl_line1.clear()
+        self.pl_line1.setData(self.pl_points, self.pl_fs_y)
+        self.pl_line2.clear()
+        self.pl_line2.setData(self.pl_points, self.los_5gcm_ci_y)
+        self.pl_line3.clear()
+        self.pl_line3.setData(self.pl_points, self.nlos_5gcm_ci_y)
 
     def updateRWMPlot(self):
         self.x_range = self.towerset.plotrange
