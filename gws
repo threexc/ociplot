@@ -28,8 +28,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.density = 0.5
         self.x_range = None
         self.y_range = None
-        self.pl_points = np.arange(1, 1000, 1)
-        self.pl_frequency = None
+        self.pl_points = np.arange(0.5, 1000, 0.5)
+        self.pl_frequency = 50000000
         self.pl_fs_y = None
         self.tower = None
         self.tower_x = None
@@ -108,7 +108,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def setupPathLossControls(self):
         self.pl_box = QtWidgets.QVBoxLayout()
-        self.frequency_box = QtWidgets.QHBoxLayout()
+        self.pl_frequency_box = QtWidgets.QHBoxLayout()
         self.latbox = QtWidgets.QHBoxLayout()
         self.lonbox = QtWidgets.QHBoxLayout()
         self.custom_latbox = QtWidgets.QHBoxLayout()
@@ -118,16 +118,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_title = QtWidgets.QLabel('Path Loss Parameters', self)
         self.pl_title.setFont(QtGui.QFont('Arial', 14))
 
-        self.frequency_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
-        self.frequency_slider.setRange(50, 100000)
-        self.frequency_slider.setValue(50)
-        self.frequency_slider.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.frequency_slider_label = QtWidgets.QLabel('Frequency', self)
-        self.frequency_value_label = QtWidgets.QLabel('50 MHz', self)
-        self.frequency_slider.valueChanged[int].connect(self.sliderUpdate)
-        self.frequency_box.addWidget(self.frequency_slider_label)
-        self.frequency_box.addWidget(self.frequency_slider)
-        self.frequency_box.addWidget(self.frequency_value_label)
+        self.pl_frequency_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
+        self.pl_frequency_slider.setRange(50, 100000)
+        self.pl_frequency_slider.setValue(50)
+        self.pl_frequency_slider.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.pl_frequency_slider_label = QtWidgets.QLabel('Frequency', self)
+        self.pl_frequency_value_label = QtWidgets.QLabel('50 MHz', self)
+        self.pl_frequency_slider.valueChanged[int].connect(self.sliderUpdate)
+        self.pl_frequency_box.addWidget(self.pl_frequency_slider_label)
+        self.pl_frequency_box.addWidget(self.pl_frequency_slider)
+        self.pl_frequency_box.addWidget(self.pl_frequency_value_label)
 
         self.lat_edit = QtWidgets.QLineEdit(self)
         self.lat_edit.setReadOnly(True)
@@ -154,7 +154,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.location_button_box.addWidget(self.custom_latlon_button)
 
         self.pl_box.addWidget(self.pl_title)
-        self.pl_box.addLayout(self.frequency_box)
+        self.pl_box.addLayout(self.pl_frequency_box)
         self.pl_box.addLayout(self.latbox)
         self.pl_box.addLayout(self.lonbox)
         self.pl_box.addLayout(self.custom_latbox)
@@ -391,10 +391,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.cellid_combo.addItem(str(cellid))
 
         print("Generating default plot...")
-        self.setBoxText()
-        self.setTower()
-        self.plotTowerMap()
-        self.sliderUpdate()
+        self.loadTower()
         print("Done.")
 
     def setTower(self):
@@ -427,10 +424,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def sliderUpdate(self):
         self.density = self.density_slider.value() / 100.0
         self.absorption = self.absorption_slider.value() / 100.0
-        self.frequency = self.frequency_slider.value() * 1000000
+        self.pl_frequency = self.pl_frequency_slider.value() * 1000000
         self.density_value_label.setText(str(self.density))
         self.absorption_value_label.setText(str(self.absorption))
-        self.frequency_value_label.setText(str(self.frequency_slider.value()) + " MHz")
+        self.pl_frequency_value_label.setText(str(self.pl_frequency_slider.value()) + " MHz")
         if self.towerset:
             self.updateRWMPlot()
             self.updatePathLossPlot()
@@ -481,9 +478,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.map_canvas.draw()
 
     def updatePathLossPlot(self):
-        self.pl_fs_y = eq.v_pl_fs(self.pl_points, self.frequency)
-        self.los_5gcm_ci_y = eq.v_pl_los_5gcm_ci(self.pl_points, self.frequency)
-        self.nlos_5gcm_ci_y = eq.v_pl_nlos_5gcm_ci(self.pl_points, self.frequency)
+        self.pl_fs_y = eq.v_pl_fs(self.pl_points, self.pl_frequency)
+        self.los_5gcm_ci_y = eq.v_pl_los_5gcm_ci(self.pl_points, self.pl_frequency)
+        self.nlos_5gcm_ci_y = eq.v_pl_nlos_5gcm_ci(self.pl_points, self.pl_frequency)
 
         self.pl_line1.clear()
         self.pl_line1.setData(self.pl_points, self.pl_fs_y)

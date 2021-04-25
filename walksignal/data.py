@@ -120,13 +120,10 @@ class DataSet:
             self.tower_id_list.append((self.mcc[row], self.mnc[row], self.lac[row], self.cellid_u[row]))
 
     def get_dataset_tower_data(self):
-        print(self.reference_matrix['cell'])
         for tower_id in self.tower_id_list:
-            print(type(tower_id[3]))
             if tower_id[3] in self.reference_matrix['cell'].unique():
                 print("Found {0} in reference".format(tower_id[3]))
                 for index, row in self.reference_matrix.iterrows():
-                    print(type(row['cell']), type(tower_id[3]))
                     if row['cell'] == tower_id[3]:
                         print("Added {0}".format(row['cell']))
                         self.tower_list.append(Tower(row['radio'], row['mcc'], row['net'], row['area'], row['cell'], row['lon'], row['lat'], row['range'], row['samples']))
