@@ -381,15 +381,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.mnc_count.setText("(" + str(len(self.towerset.mnc_u)) + ")")
         self.lac_count.setText("(" + str(len(self.towerset.lac_u)) + ")")
 
-        for mcc in self.towerset.mcc_u:
+        for mcc in self.towerset.mcc:
             self.mcc_combo.addItem(str(mcc))
-
         for mnc in self.towerset.mnc_u:
             self.mnc_combo.addItem(str(mnc))
-
         for lac in self.towerset.lac_u:
             self.lac_combo.addItem(str(lac))
-
         for cellid in self.towerset.cellid_u:
             self.cellid_combo.addItem(str(cellid))
 
@@ -401,7 +398,11 @@ class MainWindow(QtWidgets.QMainWindow):
         print("Done.")
 
     def setTower(self):
-        self.tower = self.towerset.tower_list.get_tower_data(self.mcc_combo.currentText(), self.mnc_combo.currentText(), self.lac_combo.currentText(), self.cellid_combo.currentText())
+        print(self.mcc_combo.currentText(),
+                self.mnc_combo.currentText(),
+                self.lac_combo.currentText(),
+                self.cellid_combo.currentText())
+        self.tower = self.towerset.get_tower_stats(self.mcc_combo.currentText(), self.mnc_combo.currentText(), self.lac_combo.currentText(), self.cellid_combo.currentText())
 
         if self.tower is None:
             self.tower_load_button.setText("No Valid Reference")
@@ -415,8 +416,10 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.custom_lat_edit.text() and self.custom_lon_edit.text():
             self.tower.lat = float(self.custom_lat_edit.text())
             self.tower.lon = float(self.custom_lon_edit.text())
+
             self.tower.get_distances()
 
+        self.setTower()
         self.updateRWMPlot()
         self.plotTowerMap()
         self.setBoxText()
@@ -434,11 +437,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def loadTower(self):
         print("Loading tower data...")
-        print("Loaded data for {0} {1} {2} {3}".format(self.tower.mcc, self.tower.mnc, self.tower.lac, self.tower.cellid))
+        self.setTower()
         self.plotTowerMap()
         self.updateRWMPlot()
         self.updatePathLossPlot()
         self.setBoxText()
+        print("Loaded data for {0} {1} {2} {3}".format(self.tower.mcc, self.tower.mnc, self.tower.lac, self.tower.cellid))
 
     def setBoxText(self):
         if self.tower:
@@ -460,7 +464,12 @@ class MainWindow(QtWidgets.QMainWindow):
         cax = divider.append_axes("right", size="5%", pad=0.1)
         self.map_canvas.axes.imshow(self.towerset.plot_map, zorder=0, extent = self.towerset.map_bbox[0], aspect="equal")
         powerscatter = self.map_canvas.axes.scatter(lon_series, lat_series, zorder=1, alpha=1.0, s=20, c=self.tower.signal_power, cmap=self.towerset.cm)
-        self.map_canvas.axes.scatter(float(self.tower.lon), float(self.tower.lat), zorder=1, alpha=1.0, s=20, color="blue")
+
+        if (self.tower.lon is None) or (self.tower.lat is None):
+            print("Can't draw tower, bad lat/lon")
+        else:
+            self.map_canvas.axes.scatter(float(self.tower.lon), float(self.tower.lat), zorder=1, alpha=1.0, s=20, color="blue")
+
         self.map_canvas.axes.set_xlim(self.towerset.map_bbox[0][0], self.towerset.map_bbox[0][1])
         self.map_canvas.axes.set_ylim(self.towerset.map_bbox[0][2], self.towerset.map_bbox[0][3])
         self.map_canvas.axes.set_xlabel("Longitude")
@@ -491,7 +500,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.y_range = eq.gplt_rwm_fpd3d(self.density, self.absorption, self.x_range)
         self.data_line.clear()
         self.data_line.setData(self.x_range, self.y_range)
-        if self.tower:
+        if self.tower and self.tower.distances:
             self.tower_data_line.clear()
             self.tower_data_line.setData(self.tower.distances, self.tower.signal_power, symbol='o')
 
