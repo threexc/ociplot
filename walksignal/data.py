@@ -104,7 +104,7 @@ class DataSet:
         self.avg_lat_diff = np.average(np.ediff1d(self.lat_data))
         self.avg_lon_diff = np.average(np.ediff1d(self.lon_data))
         self.distances = np.array([])
-        self.plotrange = np.linspace(1, 500, 250)
+        self.plotrange = np.linspace(1, 1500, 500)
         self.duration = time.time() - self.start_time
         print("Done loading plot properties in {:.2f} seconds".format(self.duration))
 
