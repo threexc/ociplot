@@ -347,6 +347,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dataSidebar.addLayout(self.file_control_box)
         self.dataSidebar.addLayout(self.tower_box)
         self.dataSidebar.addWidget(self.tower_load_button)
+        self.dataSidebar.setAlignment(QtCore.Qt.AlignTop)
         self.dataSidebarWidget = QtWidgets.QWidget()
         self.dataSidebarWidget.setLayout(self.dataSidebar)
         print("Set up sidebar")
