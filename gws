@@ -54,11 +54,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setupMenuBar()
         self.setupPlotSidebar()
         self.setupDataSidebar()
-        self.setupTabs()
+        self.setupPlotTabs()
 
         self.main_layout = QtWidgets.QHBoxLayout()
         self.main_layout.addWidget(self.dataSidebarWidget, 1)
-        self.main_layout.addWidget(self.tabs, 3)
+        self.main_layout.addWidget(self.plot_tabs, 3)
         self.main_layout.addWidget(self.plotSidebarWidget, 1)
         self.model_widget = QtWidgets.QWidget()
         self.model_widget.setLayout(self.main_layout)
@@ -100,15 +100,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tower_pl_line3 = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='r'), symbol='o', size=1)
         self.pl_widget.addItem(self.tower_pl_line3)
 
-    def setupTabs(self):
-        self.tabs = QtWidgets.QTabWidget()
-        self.tab1 = self.map_canvas
-        self.tab2 = self.model_widget
-        self.tab3 = self.pl_widget
-        self.tabs.resize(300, 200)
-        self.tabs.addTab(self.tab1, "Tower Map")
-        self.tabs.addTab(self.tab2, "Models")
-        self.tabs.addTab(self.tab3, "Path Loss")
+    def setupPlotTabs(self):
+        self.plot_tabs = QtWidgets.QTabWidget()
+        self.plot_tab1 = self.map_canvas
+        self.plot_tab2 = self.model_widget
+        self.plot_tab3 = self.pl_widget
+        self.plot_tabs.resize(300, 200)
+        self.plot_tabs.addTab(self.plot_tab1, "Tower Map")
+        self.plot_tabs.addTab(self.plot_tab2, "Models")
+        self.plot_tabs.addTab(self.plot_tab3, "Path Loss")
 
     def setupPathLossControls(self):
         self.pl_box = QtWidgets.QVBoxLayout()
