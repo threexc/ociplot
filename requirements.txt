@@ -1,0 +1,7 @@
+numpy==1.19.4
+utm==0.7.0
+matplotlib==3.3.4
+pandas==1.0.5
+scipy==1.5.2
+geopy==2.1.0
+PyQt5==5.15.0
