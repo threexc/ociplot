@@ -57,10 +57,10 @@ def pl_abg(dist, freq, alpha, beta, gamma, sigma, ref_dist=1, ref_freq=100000000
     return 10 * alpha * np.log10(dist/ref) + beta + 10 * gamma * np.log10(freq/ref_freq) + np.random.normal(0, sigma)
 
 def v_pl_abg(array, freq, alpha, beta, gamma, sigma, ref_dist=1, ref_freq=1000000000):
-    return np.array([pl_abg(xi, freq, alpha, beta, gamma, sigma, ref_dist, ref_freq) for xi in array)
+    return np.array([pl_abg(xi, freq, alpha, beta, gamma, sigma, ref_dist, ref_freq) for xi in array])
     
 def pl_ci(dist, freq, sigma, pl_exp, ref_dist=1):
     return pl_fs(ref_dist, freq) + 10 * pl_exp * np.log10(dist/ref_dist) + np.random.normal(0, sigma)
 
 def v_pl_ci(array, freq, sigma, pl_exp, ref_dist=1):
-    return np.array([pl_ci(xi, freq, sigma, pl_exp, ref_dist) for xi in array)
+    return np.array([pl_ci(xi, freq, sigma, pl_exp, ref_dist) for xi in array])

@@ -80,7 +80,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_widget.addItem(self.tower_pl_line3)
 
         self.setupFileControls()
-        self.setupModelControls()
+        self.setupRWMControls()
         self.setupPathLossControls()
         self.setupTowerControls()
         self.setupFileMenu()
@@ -165,7 +165,7 @@ class MainWindow(QtWidgets.QMainWindow):
         print("Set up frequency_slider")
         print("Set up lat and lon boxes")
 
-    def setupModelControls(self):
+    def setupRWMControls(self):
         self.model_box = QtWidgets.QVBoxLayout()
         self.density_box = QtWidgets.QHBoxLayout()
         self.absorption_box = QtWidgets.QHBoxLayout()
