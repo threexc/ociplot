@@ -29,7 +29,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.x_range = None
         self.y_range = None
         self.pl_points = np.arange(0.5, 1000, 0.5)
-        self.pl_frequency = 50000000
+        self.pl_freq = 50000000
+        self.pl_alpha = 1
+        self.pl_beta = 1
+        self.pl_gamma = 1
+        self.pl_sigma = 0
+        self.pl_ref_dist = 1
+        self.pl_ref_freq = 1000000000
         self.pl_fs_y = None
         self.tower = None
         self.tower_x = None
@@ -104,39 +110,111 @@ class MainWindow(QtWidgets.QMainWindow):
     def setupPlotTabs(self):
         self.plot_tabs = QtWidgets.QTabWidget()
         self.plot_tab1 = self.map_canvas
-        self.plot_tab2 = self.model_widget
-        self.plot_tab3 = self.pl_widget
+        self.plot_tab2 = self.pl_widget
+        self.plot_tab3 = self.model_widget
         self.plot_tabs.resize(300, 200)
         self.plot_tabs.addTab(self.plot_tab1, "Tower Map")
-        self.plot_tabs.addTab(self.plot_tab2, "RWM")
-        self.plot_tabs.addTab(self.plot_tab3, "Path Loss")
+        self.plot_tabs.addTab(self.plot_tab2, "Path Loss")
+        self.plot_tabs.addTab(self.plot_tab3, "RWM")
 
     def setupControlTabs(self):
         self.control_tabs = QtWidgets.QTabWidget()
         self.rwm_control_tab = QtWidgets.QWidget()
         self.pl_control_tab = QtWidgets.QWidget()
-        self.control_tabs.addTab(self.rwm_control_tab, "RWM")
         self.control_tabs.addTab(self.pl_control_tab, "Path Loss")
+        self.control_tabs.addTab(self.rwm_control_tab, "RWM")
 
     def setupPathLossControls(self):
         self.pl_box = QtWidgets.QVBoxLayout()
-        self.pl_frequency_box = QtWidgets.QHBoxLayout()
+        self.pl_freq_box = QtWidgets.QHBoxLayout()
+        self.pl_alpha_box = QtWidgets.QHBoxLayout()
+        self.pl_beta_box = QtWidgets.QHBoxLayout()
+        self.pl_gamma_box = QtWidgets.QHBoxLayout()
+        self.pl_sigma_box = QtWidgets.QHBoxLayout()
+        self.pl_ref_dist_box = QtWidgets.QHBoxLayout()
+        self.pl_ref_freq_box = QtWidgets.QHBoxLayout()
         self.latbox = QtWidgets.QHBoxLayout()
         self.lonbox = QtWidgets.QHBoxLayout()
         self.custom_latbox = QtWidgets.QHBoxLayout()
         self.custom_lonbox = QtWidgets.QHBoxLayout()
         self.location_button_box = QtWidgets.QHBoxLayout()
 
-        self.pl_frequency_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
-        self.pl_frequency_slider.setRange(50, 100000)
-        self.pl_frequency_slider.setValue(50)
-        self.pl_frequency_slider.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.pl_frequency_slider_label = QtWidgets.QLabel('Frequency', self)
-        self.pl_frequency_value_label = QtWidgets.QLabel('50 MHz', self)
-        self.pl_frequency_slider.valueChanged[int].connect(self.sliderUpdate)
-        self.pl_frequency_box.addWidget(self.pl_frequency_slider_label)
-        self.pl_frequency_box.addWidget(self.pl_frequency_slider)
-        self.pl_frequency_box.addWidget(self.pl_frequency_value_label)
+        self.pl_freq_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
+        self.pl_freq_slider.setRange(50, 100000)
+        self.pl_freq_slider.setValue(50)
+        self.pl_freq_slider.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.pl_freq_slider_label = QtWidgets.QLabel('Frequency', self)
+        self.pl_freq_value_label = QtWidgets.QLabel('50 MHz', self)
+        self.pl_freq_slider.valueChanged[int].connect(self.sliderUpdate)
+        self.pl_freq_box.addWidget(self.pl_freq_slider_label)
+        self.pl_freq_box.addWidget(self.pl_freq_slider)
+        self.pl_freq_box.addWidget(self.pl_freq_value_label)
+
+        self.pl_ref_dist_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
+        self.pl_ref_dist_slider.setRange(1, 500)
+        self.pl_ref_dist_slider.setValue(1)
+        self.pl_ref_dist_slider.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.pl_ref_dist_slider_label = QtWidgets.QLabel('Ref Dist', self)
+        self.pl_ref_dist_value_label = QtWidgets.QLabel('1 m', self)
+        self.pl_ref_dist_slider.valueChanged[int].connect(self.sliderUpdate)
+        self.pl_ref_dist_box.addWidget(self.pl_ref_dist_slider_label)
+        self.pl_ref_dist_box.addWidget(self.pl_ref_dist_slider)
+        self.pl_ref_dist_box.addWidget(self.pl_ref_dist_value_label)
+
+        self.pl_ref_freq_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
+        self.pl_ref_freq_slider.setRange(50, 100000)
+        self.pl_ref_freq_slider.setValue(1000)
+        self.pl_ref_freq_slider.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.pl_ref_freq_slider_label = QtWidgets.QLabel('Ref Freq', self)
+        self.pl_ref_freq_value_label = QtWidgets.QLabel('1000 MHz', self)
+        self.pl_ref_freq_slider.valueChanged[int].connect(self.sliderUpdate)
+        self.pl_ref_freq_box.addWidget(self.pl_ref_freq_slider_label)
+        self.pl_ref_freq_box.addWidget(self.pl_ref_freq_slider)
+        self.pl_ref_freq_box.addWidget(self.pl_ref_freq_value_label)
+
+        self.pl_alpha_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
+        self.pl_alpha_slider.setRange(10, 100)
+        self.pl_alpha_slider.setValue(10)
+        self.pl_alpha_slider.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.pl_alpha_slider_label = QtWidgets.QLabel('Alpha', self)
+        self.pl_alpha_value_label = QtWidgets.QLabel('0', self)
+        self.pl_alpha_slider.valueChanged[int].connect(self.sliderUpdate)
+        self.pl_alpha_box.addWidget(self.pl_alpha_slider_label)
+        self.pl_alpha_box.addWidget(self.pl_alpha_slider)
+        self.pl_alpha_box.addWidget(self.pl_alpha_value_label)
+
+        self.pl_beta_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
+        self.pl_beta_slider.setRange(10, 100)
+        self.pl_beta_slider.setValue(10)
+        self.pl_beta_slider.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.pl_beta_slider_label = QtWidgets.QLabel('Beta', self)
+        self.pl_beta_value_label = QtWidgets.QLabel('0 dB', self)
+        self.pl_beta_slider.valueChanged[int].connect(self.sliderUpdate)
+        self.pl_beta_box.addWidget(self.pl_beta_slider_label)
+        self.pl_beta_box.addWidget(self.pl_beta_slider)
+        self.pl_beta_box.addWidget(self.pl_beta_value_label)
+
+        self.pl_gamma_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
+        self.pl_gamma_slider.setRange(10, 100)
+        self.pl_gamma_slider.setValue(10)
+        self.pl_gamma_slider.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.pl_gamma_slider_label = QtWidgets.QLabel('Gamma', self)
+        self.pl_gamma_value_label = QtWidgets.QLabel('0', self)
+        self.pl_gamma_slider.valueChanged[int].connect(self.sliderUpdate)
+        self.pl_gamma_box.addWidget(self.pl_gamma_slider_label)
+        self.pl_gamma_box.addWidget(self.pl_gamma_slider)
+        self.pl_gamma_box.addWidget(self.pl_gamma_value_label)
+
+        self.pl_sigma_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
+        self.pl_sigma_slider.setRange(0, 100)
+        self.pl_sigma_slider.setValue(10)
+        self.pl_sigma_slider.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.pl_sigma_slider_label = QtWidgets.QLabel('Sigma', self)
+        self.pl_sigma_value_label = QtWidgets.QLabel('0 dB', self)
+        self.pl_sigma_slider.valueChanged[int].connect(self.sliderUpdate)
+        self.pl_sigma_box.addWidget(self.pl_sigma_slider_label)
+        self.pl_sigma_box.addWidget(self.pl_sigma_slider)
+        self.pl_sigma_box.addWidget(self.pl_sigma_value_label)
 
         self.lat_edit = QtWidgets.QLineEdit(self)
         self.lat_edit.setReadOnly(True)
@@ -162,15 +240,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self.custom_latlon_button.clicked.connect(self.setCustomTowerLocation)
         self.location_button_box.addWidget(self.custom_latlon_button)
 
-        self.pl_box.addLayout(self.pl_frequency_box)
+        self.pl_box.addLayout(self.pl_freq_box)
+        self.pl_box.addLayout(self.pl_ref_dist_box)
+        self.pl_box.addLayout(self.pl_ref_freq_box)
+        self.pl_box.addLayout(self.pl_alpha_box)
+        self.pl_box.addLayout(self.pl_beta_box)
+        self.pl_box.addLayout(self.pl_gamma_box)
+        self.pl_box.addLayout(self.pl_sigma_box)
         self.pl_box.addLayout(self.latbox)
         self.pl_box.addLayout(self.lonbox)
         self.pl_box.addLayout(self.custom_latbox)
         self.pl_box.addLayout(self.custom_lonbox)
         self.pl_box.addLayout(self.location_button_box)
         self.pl_box.setAlignment(QtCore.Qt.AlignTop)
-        print("Set up frequency_slider")
-        print("Set up lat and lon boxes")
 
     def setupRWMControls(self):
         self.model_box = QtWidgets.QVBoxLayout()
@@ -225,8 +307,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.model_box.addLayout(self.absorption_box)
         self.model_box.addLayout(self.offset_box)
         self.model_box.setAlignment(QtCore.Qt.AlignTop)
-        print("Set up density_slider")
-        print("Set up absorption_slider")
 
     def setupFileControls(self):
         self.file_control_box = QtWidgets.QVBoxLayout()
@@ -449,11 +529,23 @@ class MainWindow(QtWidgets.QMainWindow):
         self.density = self.density_slider.value() / 100.0
         self.absorption = self.absorption_slider.value() / 100.0
         self.rwm_offset = self.offset_slider.value()
-        self.pl_frequency = self.pl_frequency_slider.value() * 1000000
+        self.pl_freq = self.pl_freq_slider.value() * 1000000
+        self.pl_alpha = self.pl_alpha_slider.value() / 10.0
+        self.pl_beta = self.pl_beta_slider.value() / 10.0
+        self.pl_gamma = self.pl_gamma_slider.value() / 10.0
+        self.pl_sigma = self.pl_sigma_slider.value() / 10.0
+        self.pl_ref_dist = self.pl_ref_dist_slider.value()
+        self.pl_ref_freq = self.pl_ref_freq_slider.value()
         self.density_value_label.setText(str(self.density))
         self.absorption_value_label.setText(str(self.absorption))
         self.offset_value_label.setText(str(self.rwm_offset) + " dB")
-        self.pl_frequency_value_label.setText(str(self.pl_frequency_slider.value()) + " MHz")
+        self.pl_freq_value_label.setText(str(self.pl_freq) + " MHz")
+        self.pl_alpha_value_label.setText(str(self.pl_alpha))
+        self.pl_beta_value_label.setText(str(self.pl_beta) + " dB")
+        self.pl_gamma_value_label.setText(str(self.pl_gamma))
+        self.pl_sigma_value_label.setText(str(self.pl_sigma) + " dB")
+        self.pl_ref_dist_value_label.setText(str(self.pl_ref_dist_slider.value()) + " m")
+        self.pl_ref_freq_value_label.setText(str(self.pl_ref_freq_slider.value()) + " MHz")
         if self.towerset:
             self.updateRWMPlot()
             self.updatePathLossPlot()
@@ -504,16 +596,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.map_canvas.draw()
 
     def updatePathLossPlot(self):
-        self.pl_fs_y = eq.v_pl_fs(self.pl_points, self.pl_frequency)
-        self.los_5gcm_ci_y = eq.v_pl_los_5gcm_ci(self.pl_points, self.pl_frequency)
-        self.nlos_5gcm_ci_y = eq.v_pl_nlos_5gcm_ci(self.pl_points, self.pl_frequency)
+        self.pl_fs_y = eq.v_pl_fs(self.pl_points, self.pl_freq)
+        self.los_5gcm_ci_y = eq.v_pl_los_5gcm_ci(self.pl_points, self.pl_freq)
+        self.nlos_5gcm_ci_y = eq.v_pl_nlos_5gcm_ci(self.pl_points, self.pl_freq)
+        self.abg_y = eq.v_pl_abg(self.pl_points, self.pl_freq, self.pl_alpha, self.pl_beta, self.pl_gamma, self.pl_sigma, self.pl_ref_dist, self.pl_ref_freq)
 
         self.pl_line1.clear()
         self.pl_line1.setData(self.pl_points, self.pl_fs_y)
         self.pl_line2.clear()
         self.pl_line2.setData(self.pl_points, self.los_5gcm_ci_y)
         self.pl_line3.clear()
-        self.pl_line3.setData(self.pl_points, self.nlos_5gcm_ci_y)
+        self.pl_line3.setData(self.pl_points, self.abg_y)
 
     def updateRWMPlot(self):
         self.x_range = self.towerset.plotrange

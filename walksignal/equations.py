@@ -54,7 +54,7 @@ def v_pl_nlos_5gcm_abg(dist, freq):
     return np.array([pl_nlos_5gcm_abg(xi, freq) for xi in array])
 
 def pl_abg(dist, freq, alpha, beta, gamma, sigma, ref_dist=1, ref_freq=1000000000):
-    return 10 * alpha * np.log10(dist/ref) + beta + 10 * gamma * np.log10(freq/ref_freq) + np.random.normal(0, sigma)
+    return 10 * alpha * np.log10(dist/ref_dist) + beta + 10 * gamma * np.log10(freq/ref_freq) + np.random.normal(0, sigma)
 
 def v_pl_abg(array, freq, alpha, beta, gamma, sigma, ref_dist=1, ref_freq=1000000000):
     return np.array([pl_abg(xi, freq, alpha, beta, gamma, sigma, ref_dist, ref_freq) for xi in array])
