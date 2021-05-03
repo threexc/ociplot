@@ -52,9 +52,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setupTowerControls()
         self.setupFileMenu()
         self.setupMenuBar()
-        self.setupPlotSidebar()
-        self.setupDataSidebar()
         self.setupPlotTabs()
+        self.setupControlTabs()
+        self.setupControlsSidebar()
+        self.setupDataSidebar()
 
         self.main_layout = QtWidgets.QHBoxLayout()
         self.main_layout.addWidget(self.dataSidebarWidget, 1)
@@ -107,8 +108,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.plot_tab3 = self.pl_widget
         self.plot_tabs.resize(300, 200)
         self.plot_tabs.addTab(self.plot_tab1, "Tower Map")
-        self.plot_tabs.addTab(self.plot_tab2, "Models")
+        self.plot_tabs.addTab(self.plot_tab2, "RWM")
         self.plot_tabs.addTab(self.plot_tab3, "Path Loss")
+
+    def setupControlTabs(self):
+        self.control_tabs = QtWidgets.QTabWidget()
+        self.rwm_control_tab = QtWidgets.QWidget()
+        self.pl_control_tab = QtWidgets.QWidget()
+        self.control_tabs.addTab(self.rwm_control_tab, "RWM")
+        self.control_tabs.addTab(self.pl_control_tab, "Path Loss")
 
     def setupPathLossControls(self):
         self.pl_box = QtWidgets.QVBoxLayout()
@@ -118,9 +126,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.custom_latbox = QtWidgets.QHBoxLayout()
         self.custom_lonbox = QtWidgets.QHBoxLayout()
         self.location_button_box = QtWidgets.QHBoxLayout()
-
-        self.pl_title = QtWidgets.QLabel('Path Loss Parameters', self)
-        self.pl_title.setFont(QtGui.QFont('Arial', 14))
 
         self.pl_frequency_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
         self.pl_frequency_slider.setRange(50, 100000)
@@ -157,7 +162,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.custom_latlon_button.clicked.connect(self.setCustomTowerLocation)
         self.location_button_box.addWidget(self.custom_latlon_button)
 
-        self.pl_box.addWidget(self.pl_title)
         self.pl_box.addLayout(self.pl_frequency_box)
         self.pl_box.addLayout(self.latbox)
         self.pl_box.addLayout(self.lonbox)
@@ -173,9 +177,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.density_box = QtWidgets.QHBoxLayout()
         self.absorption_box = QtWidgets.QHBoxLayout()
         self.offset_box = QtWidgets.QHBoxLayout()
-
-        self.slider_title = QtWidgets.QLabel('RWM Parameters', self)
-        self.slider_title.setFont(QtGui.QFont('Arial', 14))
 
         self.density_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
         self.density_slider.setRange(1, 100)
@@ -218,7 +219,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.radio_2d.toggled.connect(self.updateRWMPlot)
         self.radio_3d.toggled.connect(self.updateRWMPlot)
 
-        self.model_box.addWidget(self.slider_title)
         self.model_box.addWidget(self.radio_2d)
         self.model_box.addWidget(self.radio_3d)
         self.model_box.addLayout(self.density_box)
@@ -336,10 +336,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.fileMenu.addAction(self.referenceFile)
         print("Set up menu bar")
 
-    def setupPlotSidebar(self):
+    def setupControlsSidebar(self):
         self.plotSidebar = QtWidgets.QVBoxLayout()
-        self.plotSidebar.addLayout(self.model_box)
-        self.plotSidebar.addLayout(self.pl_box)
+        self.rwm_control_tab.setLayout(self.model_box)
+        self.pl_control_tab.setLayout(self.pl_box)
+
+        self.controls_title = QtWidgets.QLabel('Controls', self)
+        self.controls_title.setFont(QtGui.QFont('Arial', 14))
+
+        self.plotSidebar.addWidget(self.controls_title)
+        self.plotSidebar.addWidget(self.control_tabs)
         self.plotSidebar.setAlignment(QtCore.Qt.AlignTop)
         self.plotSidebarWidget = QtWidgets.QWidget()
         self.plotSidebarWidget.setLayout(self.plotSidebar)
