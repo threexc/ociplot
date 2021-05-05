@@ -87,6 +87,7 @@ class DataSet:
         self.get_tower_data_points()
         self.get_distances_to_towers()
         self.get_power()
+        self.get_path_loss()
         self.tower_lat_data = self.get_tower_lats()
         self.tower_lon_data = self.get_tower_lons()
         self.duration = time.time() - self.start_time
@@ -151,6 +152,10 @@ class DataSet:
             for datapoint in tower.data_points:
                 tower.signal_power.append(float(datapoint.signal))
 
+    def get_path_loss(self):
+        for tower in self.tower_list:
+            tower.get_path_loss()
+
     def get_tower_lats(self):
         tower_lats = [tower.lat for tower in self.tower_list]
         return tower_lats
@@ -180,6 +185,8 @@ class Tower:
         self.data_points = []
         self.distances = []
         self.signal_power = []
+        self.peak_value = None
+        self.path_loss = []
 
     def get_distances(self):
         self.distances.clear()
@@ -188,6 +195,11 @@ class Tower:
         else:
             for datapoint in self.data_points:
                 self.distances.append(utils.get_distance(self.lat, self.lon, datapoint.lat, datapoint.lon) * 1000)
+
+    def get_path_loss(self):
+        self.path_loss.clear()
+        self.peak_value = max(self.signal_power)
+        self.path_loss = [self.peak_value - xi for xi in self.signal_power]
 
 class TowerDataPoint:
     def __init__(self, mcc, mnc, lac, cellid, lat, lon, signal, measured_at, rating, speed, direction, access_type, timing_advance, pci):

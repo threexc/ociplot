@@ -95,17 +95,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_line1 = self.pl_widget.plot(self.x, self.y, pen=self.pen)
         self.tower_pl_line1 = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='b'), symbol='o', size=1)
         self.pl_widget.addItem(self.tower_pl_line1)
+
+        self.pl_line2 = self.pl_widget.plot(self.x, self.y, pen=self.pen)
+        self.tower_pl_line2 = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='b'), symbol='o', size=1)
+        self.pl_widget.addItem(self.tower_pl_line2)
         self.styles = {'color':'b', 'font-size':'18px'}
         self.pl_widget.setLabel('left', "Path Loss (dB)", **self.styles)
         self.pl_widget.setLabel('bottom', "Distance (m)", **self.styles)
-
-        self.pl_line2 = self.pl_widget.plot(self.x, self.y, pen=self.pen)
-        self.tower_pl_line2 = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='r'), symbol='o', size=1)
-        self.pl_widget.addItem(self.tower_pl_line2)
-
-        self.pl_line3 = self.pl_widget.plot(self.x, self.y, pen=self.pen)
-        self.tower_pl_line3 = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='r'), symbol='o', size=1)
-        self.pl_widget.addItem(self.tower_pl_line3)
 
     def setupPlotTabs(self):
         self.plot_tabs = QtWidgets.QTabWidget()
@@ -184,7 +180,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_alpha_box.addWidget(self.pl_alpha_value_label)
 
         self.pl_beta_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
-        self.pl_beta_slider.setRange(10, 100)
+        self.pl_beta_slider.setRange(-1000, 1000)
         self.pl_beta_slider.setValue(10)
         self.pl_beta_slider.setFocusPolicy(QtCore.Qt.NoFocus)
         self.pl_beta_slider_label = QtWidgets.QLabel('Beta', self)
@@ -519,9 +515,11 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tower.lon = float(self.custom_lon_edit.text())
 
             self.tower.get_distances()
+            self.tower.get_path_loss()
 
         self.setTower()
         self.updateRWMPlot()
+        self.updatePathLossPlot()
         self.plotTowerMap()
         self.setBoxText()
 
@@ -529,7 +527,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.density = self.density_slider.value() / 100.0
         self.absorption = self.absorption_slider.value() / 100.0
         self.rwm_offset = self.offset_slider.value()
-        self.pl_freq = self.pl_freq_slider.value() * 1000000
+        self.pl_freq = self.pl_freq_slider.value()
         self.pl_alpha = self.pl_alpha_slider.value() / 10.0
         self.pl_beta = self.pl_beta_slider.value() / 10.0
         self.pl_gamma = self.pl_gamma_slider.value() / 10.0
@@ -602,11 +600,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.abg_y = eq.v_pl_abg(self.pl_points, self.pl_freq, self.pl_alpha, self.pl_beta, self.pl_gamma, self.pl_sigma, self.pl_ref_dist, self.pl_ref_freq)
 
         self.pl_line1.clear()
-        self.pl_line1.setData(self.pl_points, self.pl_fs_y)
+        self.pl_line1.setData(self.tower.distances, self.tower.path_loss)
         self.pl_line2.clear()
-        self.pl_line2.setData(self.pl_points, self.los_5gcm_ci_y)
-        self.pl_line3.clear()
-        self.pl_line3.setData(self.pl_points, self.abg_y)
+        self.pl_line2.setData(self.pl_points, self.abg_y)
 
     def updateRWMPlot(self):
         self.x_range = self.towerset.plotrange
