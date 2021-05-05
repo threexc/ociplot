@@ -135,37 +135,31 @@ class MainWindow(QtWidgets.QMainWindow):
         self.custom_lonbox = QtWidgets.QHBoxLayout()
         self.location_button_box = QtWidgets.QHBoxLayout()
 
-        self.pl_freq_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
-        self.pl_freq_slider.setRange(50, 100000)
-        self.pl_freq_slider.setValue(50)
-        self.pl_freq_slider.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.pl_freq_slider_label = QtWidgets.QLabel('Frequency', self)
+        self.pl_freq_textbox = QtWidgets.QLineEdit(self)
+        self.pl_freq_textbox.setText("50")
+        self.pl_freq_textbox_label = QtWidgets.QLabel('Frequency', self)
         self.pl_freq_value_label = QtWidgets.QLabel('50 MHz', self)
-        self.pl_freq_slider.valueChanged[int].connect(self.sliderUpdate)
-        self.pl_freq_box.addWidget(self.pl_freq_slider_label)
-        self.pl_freq_box.addWidget(self.pl_freq_slider)
+        self.pl_freq_textbox.editingFinished.connect(self.textboxUpdate)
+        self.pl_freq_box.addWidget(self.pl_freq_textbox_label)
+        self.pl_freq_box.addWidget(self.pl_freq_textbox)
         self.pl_freq_box.addWidget(self.pl_freq_value_label)
 
-        self.pl_ref_dist_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
-        self.pl_ref_dist_slider.setRange(1, 500)
-        self.pl_ref_dist_slider.setValue(1)
-        self.pl_ref_dist_slider.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.pl_ref_dist_slider_label = QtWidgets.QLabel('Ref Dist', self)
+        self.pl_ref_dist_textbox = QtWidgets.QLineEdit(self)
+        self.pl_ref_dist_textbox.setText("1")
+        self.pl_ref_dist_textbox_label = QtWidgets.QLabel('Ref Dist', self)
         self.pl_ref_dist_value_label = QtWidgets.QLabel('1 m', self)
-        self.pl_ref_dist_slider.valueChanged[int].connect(self.sliderUpdate)
-        self.pl_ref_dist_box.addWidget(self.pl_ref_dist_slider_label)
-        self.pl_ref_dist_box.addWidget(self.pl_ref_dist_slider)
+        self.pl_ref_dist_textbox.editingFinished.connect(self.textboxUpdate)
+        self.pl_ref_dist_box.addWidget(self.pl_ref_dist_textbox_label)
+        self.pl_ref_dist_box.addWidget(self.pl_ref_dist_textbox)
         self.pl_ref_dist_box.addWidget(self.pl_ref_dist_value_label)
 
-        self.pl_ref_freq_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
-        self.pl_ref_freq_slider.setRange(50, 100000)
-        self.pl_ref_freq_slider.setValue(1000)
-        self.pl_ref_freq_slider.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.pl_ref_freq_slider_label = QtWidgets.QLabel('Ref Freq', self)
+        self.pl_ref_freq_textbox = QtWidgets.QLineEdit(self)
+        self.pl_ref_freq_textbox.setText("1000")
+        self.pl_ref_freq_textbox_label = QtWidgets.QLabel('Ref Freq', self)
         self.pl_ref_freq_value_label = QtWidgets.QLabel('1000 MHz', self)
-        self.pl_ref_freq_slider.valueChanged[int].connect(self.sliderUpdate)
-        self.pl_ref_freq_box.addWidget(self.pl_ref_freq_slider_label)
-        self.pl_ref_freq_box.addWidget(self.pl_ref_freq_slider)
+        self.pl_ref_freq_textbox.editingFinished.connect(self.textboxUpdate)
+        self.pl_ref_freq_box.addWidget(self.pl_ref_freq_textbox_label)
+        self.pl_ref_freq_box.addWidget(self.pl_ref_freq_textbox)
         self.pl_ref_freq_box.addWidget(self.pl_ref_freq_value_label)
 
         self.pl_alpha_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
@@ -523,27 +517,29 @@ class MainWindow(QtWidgets.QMainWindow):
         self.plotTowerMap()
         self.setBoxText()
 
+    def textboxUpdate(self):
+        self.pl_freq = float(self.pl_freq_textbox.text())
+        self.pl_ref_dist = float(self.pl_ref_dist_textbox.text())
+        self.pl_ref_freq = float(self.pl_ref_freq_textbox.text())
+        if self.towerset:
+            self.updateRWMPlot()
+            self.updatePathLossPlot()
+
     def sliderUpdate(self):
         self.density = self.density_slider.value() / 100.0
         self.absorption = self.absorption_slider.value() / 100.0
         self.rwm_offset = self.offset_slider.value()
-        self.pl_freq = self.pl_freq_slider.value()
         self.pl_alpha = self.pl_alpha_slider.value() / 10.0
         self.pl_beta = self.pl_beta_slider.value() / 10.0
         self.pl_gamma = self.pl_gamma_slider.value() / 10.0
         self.pl_sigma = self.pl_sigma_slider.value() / 10.0
-        self.pl_ref_dist = self.pl_ref_dist_slider.value()
-        self.pl_ref_freq = self.pl_ref_freq_slider.value()
         self.density_value_label.setText(str(self.density))
         self.absorption_value_label.setText(str(self.absorption))
         self.offset_value_label.setText(str(self.rwm_offset) + " dB")
-        self.pl_freq_value_label.setText(str(self.pl_freq) + " MHz")
         self.pl_alpha_value_label.setText(str(self.pl_alpha))
         self.pl_beta_value_label.setText(str(self.pl_beta) + " dB")
         self.pl_gamma_value_label.setText(str(self.pl_gamma))
         self.pl_sigma_value_label.setText(str(self.pl_sigma) + " dB")
-        self.pl_ref_dist_value_label.setText(str(self.pl_ref_dist_slider.value()) + " m")
-        self.pl_ref_freq_value_label.setText(str(self.pl_ref_freq_slider.value()) + " MHz")
         if self.towerset:
             self.updateRWMPlot()
             self.updatePathLossPlot()
@@ -594,9 +590,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.map_canvas.draw()
 
     def updatePathLossPlot(self):
-        self.pl_fs_y = eq.v_pl_fs(self.pl_points, self.pl_freq)
-        self.los_5gcm_ci_y = eq.v_pl_los_5gcm_ci(self.pl_points, self.pl_freq)
-        self.nlos_5gcm_ci_y = eq.v_pl_nlos_5gcm_ci(self.pl_points, self.pl_freq)
         self.abg_y = eq.v_pl_abg(self.pl_points, self.pl_freq, self.pl_alpha, self.pl_beta, self.pl_gamma, self.pl_sigma, self.pl_ref_dist, self.pl_ref_freq)
 
         self.pl_line1.clear()
