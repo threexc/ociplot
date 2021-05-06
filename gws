@@ -131,8 +131,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_ref_freq_box = QtWidgets.QHBoxLayout()
         self.latbox = QtWidgets.QHBoxLayout()
         self.lonbox = QtWidgets.QHBoxLayout()
-        self.custom_latbox = QtWidgets.QHBoxLayout()
-        self.custom_lonbox = QtWidgets.QHBoxLayout()
         self.location_button_box = QtWidgets.QHBoxLayout()
 
         self.pl_freq_textbox = QtWidgets.QLineEdit(self)
@@ -207,28 +205,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_sigma_box.addWidget(self.pl_sigma_value_label)
 
         self.lat_edit = QtWidgets.QLineEdit(self)
-        self.lat_edit.setReadOnly(True)
+        self.lat_edit.editingFinished.connect(self.textboxUpdate)
         self.latbox_label = QtWidgets.QLabel("Tower Lat", self)
         self.latbox.addWidget(self.latbox_label)
         self.latbox.addWidget(self.lat_edit)
         self.lon_edit = QtWidgets.QLineEdit(self)
-        self.lon_edit.setReadOnly(True)
+        self.lon_edit.editingFinished.connect(self.textboxUpdate)
         self.lonbox_label = QtWidgets.QLabel("Tower Lon", self)
         self.lonbox.addWidget(self.lonbox_label)
         self.lonbox.addWidget(self.lon_edit)
 
-        self.custom_lat_edit = QtWidgets.QLineEdit(self)
-        self.custom_latbox_label = QtWidgets.QLabel("Custom Lat", self)
-        self.custom_latbox.addWidget(self.custom_latbox_label)
-        self.custom_latbox.addWidget(self.custom_lat_edit)
-        self.custom_lon_edit = QtWidgets.QLineEdit(self)
-        self.custom_lonbox_label = QtWidgets.QLabel("Custom Lon", self)
-        self.custom_lonbox.addWidget(self.custom_lonbox_label)
-        self.custom_lonbox.addWidget(self.custom_lon_edit)
-
-        self.custom_latlon_button = QtWidgets.QPushButton("Use Custom")
-        self.custom_latlon_button.clicked.connect(self.setCustomTowerLocation)
-        self.location_button_box.addWidget(self.custom_latlon_button)
+        self.set_latlon_button = QtWidgets.QPushButton("Set Lat/Lon")
+        self.set_latlon_button.clicked.connect(self.setCustomTowerLocation)
+        self.location_button_box.addWidget(self.set_latlon_button)
 
         self.pl_box.addLayout(self.pl_freq_box)
         self.pl_box.addLayout(self.pl_ref_dist_box)
@@ -239,8 +228,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_box.addLayout(self.pl_sigma_box)
         self.pl_box.addLayout(self.latbox)
         self.pl_box.addLayout(self.lonbox)
-        self.pl_box.addLayout(self.custom_latbox)
-        self.pl_box.addLayout(self.custom_lonbox)
         self.pl_box.addLayout(self.location_button_box)
         self.pl_box.setAlignment(QtCore.Qt.AlignTop)
 
@@ -504,9 +491,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tower_load_button.setEnabled(True)
 
     def setCustomTowerLocation(self):
-        if self.custom_lat_edit.text() and self.custom_lon_edit.text():
-            self.tower.lat = float(self.custom_lat_edit.text())
-            self.tower.lon = float(self.custom_lon_edit.text())
+        if self.lat_edit.text() and self.lon_edit.text():
+            self.tower.lat = float(self.lat_edit.text())
+            self.tower.lon = float(self.lon_edit.text())
 
             self.tower.get_distances()
             self.tower.get_path_loss()
