@@ -72,17 +72,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self.model_widget)
 
     def setupPlotWidgets(self):
+        self.pen1 = pg.mkPen(color=(255, 0, 0))
+        self.pen2 = pg.mkPen(color=(0, 0, 255))
+        self.pen3 = pg.mkPen(color=(0,255,128))
+
         self.model_widget = pg.PlotWidget()
         self.model_widget.setBackground('w')
         self.model_widget.showGrid(x=True, y=True, alpha=0.5)
         self.model_widget.setYRange(-200, 20)
-        self.pen1 = pg.mkPen(color=(255, 0, 0))
 
         self.pl_widget = pg.PlotWidget()
         self.pl_widget.setBackground('w')
         self.pl_widget.showGrid(x=True, y=True, alpha=0.5)
         self.pl_widget.setYRange(-150, 150)
-        self.pen2 = pg.mkPen(color=(0, 0, 255))
 
     def setupLines(self):
         self.data_line = self.model_widget.plot(self.x, self.y, pen=self.pen1)
@@ -92,13 +94,18 @@ class MainWindow(QtWidgets.QMainWindow):
         self.model_widget.setLabel('left', "Power (dBm)", **self.styles)
         self.model_widget.setLabel('bottom', "Distance (m)", **self.styles)
 
-        self.pl_line1 = self.pl_widget.plot(self.x, self.y, pen=self.pen1)
-        self.tower_pl_line1 = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='b'), symbol='o', size=1)
-        self.pl_widget.addItem(self.tower_pl_line1)
+        self.pl_data_line = self.pl_widget.plot(self.x, self.y, pen=self.pen1)
+        self.tower_pl_data_line = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='b'), symbol='o', size=1)
+        self.pl_widget.addItem(self.tower_pl_data_line)
 
-        self.pl_line2 = self.pl_widget.plot(self.x, self.y, pen=self.pen2)
-        self.tower_pl_line2 = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='b'), symbol='o', size=1)
-        self.pl_widget.addItem(self.tower_pl_line2)
+        self.pl_abg_line = self.pl_widget.plot(self.x, self.y, pen=self.pen2)
+        self.tower_pl_abg_line = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='b'), symbol='o', size=1)
+        self.pl_widget.addItem(self.tower_pl_abg_line)
+
+        self.pl_ci_line = self.pl_widget.plot(self.x, self.y, pen=self.pen3)
+        self.tower_pl_ci_line = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='b'), symbol='o', size=1)
+        self.pl_widget.addItem(self.tower_pl_ci_line)
+
         self.styles = {'color':'b', 'font-size':'18px'}
         self.pl_widget.setLabel('left', "Path Loss (dB)", **self.styles)
         self.pl_widget.setLabel('bottom', "Distance (m)", **self.styles)
@@ -122,6 +129,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def setupPathLossControls(self):
         self.pl_box = QtWidgets.QVBoxLayout()
+        self.pl_abg_box = QtWidgets.QHBoxLayout()
+        self.pl_ci_box = QtWidgets.QHBoxLayout()
         self.pl_freq_box = QtWidgets.QHBoxLayout()
         self.pl_alpha_box = QtWidgets.QHBoxLayout()
         self.pl_beta_box = QtWidgets.QHBoxLayout()
@@ -132,6 +141,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.latbox = QtWidgets.QHBoxLayout()
         self.lonbox = QtWidgets.QHBoxLayout()
         self.location_button_box = QtWidgets.QHBoxLayout()
+
+        self.pl_abg_checkbox = QtWidgets.QCheckBox("Plot ABG")
+        self.pl_abg_checkbox.setChecked(True)
+        self.pl_abg_checkbox.stateChanged.connect(self.checkboxUpdate)
+        self.pl_abg_box.addWidget(self.pl_abg_checkbox)
+        self.pl_ci_checkbox = QtWidgets.QCheckBox("Plot CI")
+        self.pl_ci_checkbox.setChecked(False)
+        self.pl_ci_checkbox.stateChanged.connect(self.checkboxUpdate)
+        self.pl_ci_box.addWidget(self.pl_ci_checkbox)
 
         self.pl_freq_textbox = QtWidgets.QLineEdit(self)
         self.pl_freq_textbox.setText("50")
@@ -219,6 +237,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.set_latlon_button.clicked.connect(self.setCustomTowerLocation)
         self.location_button_box.addWidget(self.set_latlon_button)
 
+        self.pl_box.addLayout(self.pl_abg_box)
+        self.pl_box.addLayout(self.pl_ci_box)
         self.pl_box.addLayout(self.pl_freq_box)
         self.pl_box.addLayout(self.pl_ref_dist_box)
         self.pl_box.addLayout(self.pl_ref_freq_box)
@@ -511,6 +531,9 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.towerset:
             self.updateRWMPlot()
             self.updatePathLossPlot()
+    
+    def checkboxUpdate(self):
+        pass
 
     def sliderUpdate(self):
         self.density = self.density_slider.value() / 100.0
@@ -578,11 +601,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def updatePathLossPlot(self):
         self.abg_y = eq.v_pl_abg(self.pl_points, self.pl_freq, self.pl_alpha, self.pl_beta, self.pl_gamma, self.pl_sigma, self.pl_ref_dist, self.pl_ref_freq)
+        self.ci_y = eq.v_pl_ci(self.pl_points, self.pl_freq, self.pl_sigma, self.pl_exp, self.ref_dist)
 
-        self.pl_line1.clear()
-        self.pl_line1.setData(self.tower.distances, self.tower.path_loss)
-        self.pl_line2.clear()
-        self.pl_line2.setData(self.pl_points, self.abg_y)
+        self.pl_data_line.clear()
+        self.pl_data_line.setData(self.tower.distances, self.tower.path_loss)
+        self.pl_abg_line.clear()
+        self.pl_abg_line.setData(self.pl_points, self.abg_y)
+        self.pl_ci_line.clear()
+        self.pl_ci_line.setData(self.pl_points, self.ci_y)
 
     def updateRWMPlot(self):
         self.x_range = self.towerset.plotrange
