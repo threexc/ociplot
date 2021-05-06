@@ -28,7 +28,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.density = 0.5
         self.x_range = None
         self.y_range = None
-        self.pl_points = np.arange(0.5, 1000, 0.5)
+        self.pl_points = np.arange(0.5, 1500, 0.5)
         self.pl_freq = 50000000
         self.pl_alpha = 1
         self.pl_beta = 1
