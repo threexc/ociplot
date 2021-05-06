@@ -76,27 +76,27 @@ class MainWindow(QtWidgets.QMainWindow):
         self.model_widget.setBackground('w')
         self.model_widget.showGrid(x=True, y=True, alpha=0.5)
         self.model_widget.setYRange(-200, 20)
-        self.pen = pg.mkPen(color=(255, 0, 0))
+        self.pen1 = pg.mkPen(color=(255, 0, 0))
 
         self.pl_widget = pg.PlotWidget()
         self.pl_widget.setBackground('w')
         self.pl_widget.showGrid(x=True, y=True, alpha=0.5)
         self.pl_widget.setYRange(-150, 150)
-        self.pen = pg.mkPen(color=(255, 0, 0))
+        self.pen2 = pg.mkPen(color=(0, 0, 255))
 
     def setupLines(self):
-        self.data_line = self.model_widget.plot(self.x, self.y, pen=self.pen)
+        self.data_line = self.model_widget.plot(self.x, self.y, pen=self.pen1)
         self.tower_data_line = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='b'), symbol='o', size=1)
         self.model_widget.addItem(self.tower_data_line)
         self.styles = {'color':'b', 'font-size':'18px'}
         self.model_widget.setLabel('left', "Power (dBm)", **self.styles)
         self.model_widget.setLabel('bottom', "Distance (m)", **self.styles)
 
-        self.pl_line1 = self.pl_widget.plot(self.x, self.y, pen=self.pen)
+        self.pl_line1 = self.pl_widget.plot(self.x, self.y, pen=self.pen1)
         self.tower_pl_line1 = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='b'), symbol='o', size=1)
         self.pl_widget.addItem(self.tower_pl_line1)
 
-        self.pl_line2 = self.pl_widget.plot(self.x, self.y, pen=self.pen)
+        self.pl_line2 = self.pl_widget.plot(self.x, self.y, pen=self.pen2)
         self.tower_pl_line2 = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='b'), symbol='o', size=1)
         self.pl_widget.addItem(self.tower_pl_line2)
         self.styles = {'color':'b', 'font-size':'18px'}
