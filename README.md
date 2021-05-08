@@ -9,17 +9,17 @@ online services:
 2. [OpenStreetMap](https://www.openstreetmap.org)
 3. [OpenCellID](https://www.opencellid.org)
 
-GUI:
-
-![Downtown Ottawa](example.png?raw=true)
-
 ## Usage
 
-### Basic Data Requirements
+### Requirements
 
-Although example data can be found in the data/ subfolder, the tools here are
-designed to work with other datasets. In order to compile a dataset for use,
-the following things are required:
+See [requirements.txt](requirements.txt) , or just run `pip install -r requirements.txt`.
+
+At least one measurement set and one reference set are required for use.
+
+#### The Measurement Set
+
+In order to compile a dataset for use, the following things are required:
 
 1. At least one set of OpenCellID data, such as that exported by the Network
    Cell Info Lite app
@@ -29,10 +29,33 @@ the following things are required:
    same path as the map file and the data as "bbox.txt". This can be
    obtained on the same page as the export of the map image
 
+Examples can be found in the `data` directory.
+
+#### The Reference Data Set
+
+A reference set is required to be set for analysis of the measurement
+set. An example is provided in `data/oci_ref`
+
+If a tower in the measurement set is not in the reference set, the Path
+Loss plot will not display the measurement data until a tower position
+is manually set. Doing this will draw the tower in the specified
+location on the tower plot.
+
 ### Using gws
 
 Run the following to start the GUI:
 `./gws`
 
-The plot tab and map tab are both updated when selecting the "Load Tower
-Data" button.
+## Screenshots
+
+### Path Loss
+
+![path loss](example_pathloss.png?raw=true "Path Loss")
+
+### Tower Map
+
+![tower map](example_towermap.png?raw=true "Tower Map")
+
+### Random Walk Model Plot
+
+![random_walk](example_rwm.png?raw=true "Random Walk Model")

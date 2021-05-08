@@ -136,6 +136,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_beta_box = QtWidgets.QHBoxLayout()
         self.pl_gamma_box = QtWidgets.QHBoxLayout()
         self.pl_sigma_box = QtWidgets.QHBoxLayout()
+        self.pl_exp_box = QtWidgets.QHBoxLayout()
         self.pl_ref_dist_box = QtWidgets.QHBoxLayout()
         self.pl_ref_freq_box = QtWidgets.QHBoxLayout()
         self.latbox = QtWidgets.QHBoxLayout()
@@ -222,6 +223,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_sigma_box.addWidget(self.pl_sigma_slider)
         self.pl_sigma_box.addWidget(self.pl_sigma_value_label)
 
+        self.pl_exp_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
+        self.pl_exp_slider.setRange(0, 100)
+        self.pl_exp_slider.setValue(10)
+        self.pl_exp_slider.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.pl_exp_slider_label = QtWidgets.QLabel('PL Exp', self)
+        self.pl_exp_value_label = QtWidgets.QLabel('1 dB', self)
+        self.pl_exp_slider.valueChanged[int].connect(self.plSliderUpdate)
+        self.pl_exp_box.addWidget(self.pl_exp_slider_label)
+        self.pl_exp_box.addWidget(self.pl_exp_slider)
+        self.pl_exp_box.addWidget(self.pl_exp_value_label)
+
         self.lat_edit = QtWidgets.QLineEdit(self)
         self.lat_edit.editingFinished.connect(self.textboxUpdate)
         self.latbox_label = QtWidgets.QLabel("Tower Lat", self)
@@ -245,6 +257,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_box.addLayout(self.pl_beta_box)
         self.pl_box.addLayout(self.pl_gamma_box)
         self.pl_box.addLayout(self.pl_sigma_box)
+        self.pl_box.addLayout(self.pl_exp_box)
         self.pl_box.addLayout(self.latbox)
         self.pl_box.addLayout(self.lonbox)
         self.pl_box.addLayout(self.location_button_box)
@@ -527,8 +540,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.updatePathLossPlot()
     
     def checkboxUpdate(self):
-        #self.updateCILine()
-        #self.updateABGLine()
         self.updatePathLossPlot()
 
     def rwmSliderUpdate(self):
@@ -546,10 +557,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_beta = self.pl_beta_slider.value() / 10.0
         self.pl_gamma = self.pl_gamma_slider.value() / 10.0
         self.pl_sigma = self.pl_sigma_slider.value() / 10.0
+        self.pl_exp = self.pl_exp_slider.value() / 10.0
         self.pl_alpha_value_label.setText(str(self.pl_alpha))
         self.pl_beta_value_label.setText(str(self.pl_beta) + " dB")
         self.pl_gamma_value_label.setText(str(self.pl_gamma))
         self.pl_sigma_value_label.setText(str(self.pl_sigma) + " dB")
+        self.pl_exp_value_label.setText(str(self.pl_exp))
         if self.towerset:
             self.updatePathLossPlot()
 
