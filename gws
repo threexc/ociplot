@@ -96,7 +96,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.model_widget.setLabel('left', "Power (dBm)", **self.styles)
         self.model_widget.setLabel('bottom', "Distance (m)", **self.styles)
 
-        self.pl_data_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_data_pen, name="Measured")
+        self.pl_data_line = self.pl_widget.plot(self.x, self.y,
+                pen=None, symbol="o", symbolPen=None, symbolSize=3,
+                symbolBrush=(255, 0, 0, 255), name="Measured")
         self.pl_abg_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_abg_pen, name="ABG Model")
         self.pl_ci_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_ci_pen, name="CI Model")
 
