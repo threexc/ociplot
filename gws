@@ -97,16 +97,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.model_widget.setLabel('bottom', "Distance (m)", **self.styles)
 
         self.pl_data_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_data_pen, name="Measured")
-        self.tower_pl_data_line = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='b'), symbol='o', size=1)
-        self.pl_widget.addItem(self.tower_pl_data_line)
-
         self.pl_abg_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_abg_pen, name="ABG Model")
-        self.tower_pl_abg_line = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='b'), symbol='o', size=1)
-        self.pl_widget.addItem(self.tower_pl_abg_line)
-
         self.pl_ci_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_ci_pen, name="CI Model")
-        self.tower_pl_ci_line = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='b'), symbol='o', size=1)
-        self.pl_widget.addItem(self.tower_pl_ci_line)
 
         self.styles = {'color':'b', 'font-size':'18px'}
         self.pl_widget.setLabel('left', "Path Loss (dB)", **self.styles)
