@@ -453,7 +453,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def showFileDialog(self):
         home_dir = str(Path.home)
-        fname = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file', home_dir)
+        fname = QtWidgets.QFileDialog.getOpenFileNames(self, 'Open file', home_dir)
 
         if fname[0]:
             print("Selected datafile {0}".format(fname[0]))

@@ -12,13 +12,13 @@ import walksignal.utils as utils
 class DataSet:
     def __init__(self, data, reference):
         self.data_file = data
-        self.data_path = self.data_file.rsplit('/', 1)[0]
+        self.data_path = self.data_file[0].rsplit('/', 1)[0]
         self.dataset_name = self.data_path.rsplit('/', 1)[1]
         self.map_path = self.data_path + "/map.png"
         self.bbox_path = self.data_path + "/bbox.txt"
 
         self.start_time = time.time()
-        self.data_matrix = pd.read_csv(data)
+        self.data_matrix = pd.concat([pd.read_csv(f) for f in data], ignore_index=True)
         self.duration = time.time() - self.start_time
         print("Done loading data_matrix in {:.2f} seconds".format(self.duration))
 
