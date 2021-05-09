@@ -59,3 +59,39 @@ Run the following to start the GUI:
 ### Random Walk Model Plot
 
 ![random_walk](example_rwm.png?raw=true "Random Walk Model")
+
+## Path Loss Models
+
+The two path loss models provided originate in [[1]](#1) and are known
+as the Alpha-Beta-Gamma (ABG) and the Close-In (CI) models,
+respectively. They have the following expressions:
+
+**ABG:**
+
+`10 * alpha * np.log10(dist/ref_dist) + beta + 10 * gamma * np.log10(freq/ref_freq) + np.random.normal(0, sigma)`
+
+**CI:**
+
+`pl_fs(ref_dist, freq) + 10 * pl_exp * np.log10(dist/ref_dist) + np.random.normal(0, sigma)`
+
+Where: 
+
+- **alpha** is the distance-dependency coefficient
+- **beta** is an offset value in dB
+- **gamma** is the frequency-dependency coefficient
+- **sigma** is the standard deviation for a zero-mean Gaussian random
+  variable in dB
+- **pl_exp** is the path loss exponent
+- **dist** is the measurement distance
+- **ref_dist** is the free space reference distance
+- **freq** is the carrier frequency
+- **ref_freq** is the reference frequency
+
+## References
+
+<a id="1">[1]</a> 
+S. Sun, T.S. Rappaport, et al (2016),
+*Investigation of Prediction Accuracy, Sensitivity, and
+Parameter Stability of Large-Scale Propagation Path
+Loss Models for 5G Wireless Communications*,
+IEEE TRANSACTIONS ON VEHICULAR TECHNOLOGY, VOL. 65, NO. 5, MAY 2016
