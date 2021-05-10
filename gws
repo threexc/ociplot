@@ -47,6 +47,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.x = list(range(100))  # 100 time points
         self.y = [randint(0,100) for _ in range(100)]  # 100 data points
         self.rwm_offset = 0.0
+        self.rwm_gain_factor = 1.0
 
         self.setupUI()
 
@@ -263,6 +264,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.density_box = QtWidgets.QHBoxLayout()
         self.absorption_box = QtWidgets.QHBoxLayout()
         self.offset_box = QtWidgets.QHBoxLayout()
+        self.gain_factor_box = QtWidgets.QHBoxLayout()
 
         self.density_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
         self.density_slider.setRange(1, 100)
@@ -285,9 +287,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.offset_slider_label = QtWidgets.QLabel('Offset', self)
         self.offset_value_label = QtWidgets.QLabel('0 dB', self)
 
+        self.gain_factor_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
+        self.gain_factor_slider.setRange(1, 10)
+        self.gain_factor_slider.setValue(1)
+        self.gain_factor_slider.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.gain_factor_slider_label = QtWidgets.QLabel('Gain Factor', self)
+        self.gain_factor_value_label = QtWidgets.QLabel(u"1 Wm\u00B2", self)
+
         self.density_slider.valueChanged[int].connect(self.rwmSliderUpdate)
         self.absorption_slider.valueChanged[int].connect(self.rwmSliderUpdate)
         self.offset_slider.valueChanged[int].connect(self.rwmSliderUpdate)
+        self.gain_factor_slider.valueChanged[int].connect(self.rwmSliderUpdate)
 
         self.density_box.addWidget(self.density_slider_label)
         self.density_box.addWidget(self.density_slider)
@@ -298,6 +308,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.offset_box.addWidget(self.offset_slider_label)
         self.offset_box.addWidget(self.offset_slider)
         self.offset_box.addWidget(self.offset_value_label)
+        self.gain_factor_box.addWidget(self.gain_factor_slider_label)
+        self.gain_factor_box.addWidget(self.gain_factor_slider)
+        self.gain_factor_box.addWidget(self.gain_factor_value_label)
 
         self.radio_2d = QtWidgets.QRadioButton("2D Model", self)
         self.radio_3d = QtWidgets.QRadioButton("3D Model", self)
@@ -310,6 +323,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.model_box.addLayout(self.density_box)
         self.model_box.addLayout(self.absorption_box)
         self.model_box.addLayout(self.offset_box)
+        self.model_box.addLayout(self.gain_factor_box)
         self.model_box.setAlignment(QtCore.Qt.AlignTop)
 
     def setupFileControls(self):
@@ -541,9 +555,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.density = self.density_slider.value() / 100.0
         self.absorption = self.absorption_slider.value() / 100.0
         self.rwm_offset = self.offset_slider.value()
+        self.rwm_gain_factor = self.gain_factor_slider.value()
         self.density_value_label.setText(str(self.density))
         self.absorption_value_label.setText(str(self.absorption))
         self.offset_value_label.setText(str(self.rwm_offset) + " dB")
+        self.gain_factor_value_label.setText(str(self.rwm_gain_factor) + u" Wm\u00B2")
         if self.towerset:
             self.updateRWMPlot()
 
@@ -629,9 +645,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def updateRWMPlot(self):
         self.x_range = self.towerset.plotrange
         if self.radio_2d.isChecked():
-            self.y_range = self.rwm_offset + eq.gplt_rwm_fpd2d(self.density, self.absorption, self.x_range)
+            self.y_range = self.rwm_offset + eq.gplt_rwm_fpd2d(self.density, self.absorption, self.x_range, self.rwm_gain_factor)
         else:
-            self.y_range = self.rwm_offset + eq.gplt_rwm_fpd3d(self.density, self.absorption, self.x_range)
+            self.y_range = self.rwm_offset + eq.gplt_rwm_fpd3d(self.density, self.absorption, self.x_range, self.rwm_gain_factor)
         self.data_line.clear()
         self.data_line.setData(self.x_range, self.y_range)
         if self.tower and self.tower.distances:

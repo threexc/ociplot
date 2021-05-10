@@ -2,9 +2,9 @@ import numpy as np
 from scipy import special as sp
 from scipy import constants
 
-# Equation 12 in A Random Walk Model of Wave Propagation
-def gplt_rwm_fpd2d(obs_dens, absorption, x_range):
-    external_multiplier = obs_dens * absorption / (2 * np.pi)
+# Equation 13 in A Random Walk Model of Wave Propagation
+def gplt_rwm_fpd2d(obs_dens, absorption, x_range, gain_factor=1):
+    external_multiplier = obs_dens * absorption / (2 * np.pi * x_range)
     internal_multiplier = (1 - absorption) * obs_dens
     exp_mult_1 = np.sqrt(1 - np.square(1 - absorption)) * obs_dens
     exp_mult_2 = -1 * (1 - np.square(1 - absorption)) * obs_dens
@@ -14,11 +14,11 @@ def gplt_rwm_fpd2d(obs_dens, absorption, x_range):
     g_r = external_multiplier * np.multiply(np.add(first_component, second_component), x_range)
     rwm_y = 10 * np.log10(g_r / (absorption * obs_dens)) + 30
 
-    return rwm_y
+    return rwm_y * gain_factor
 
-# Equation 12 in A Random Walk Model of Wave Propagation
-def gplt_rwm_fpd3d(obs_dens, absorption, x_range):
-    external_multiplier = obs_dens * absorption / (4 * np.pi)
+# Equation 13 in A Random Walk Model of Wave Propagation
+def gplt_rwm_fpd3d(obs_dens, absorption, x_range, gain_factor=1):
+    external_multiplier = obs_dens * absorption / (4 * np.pi * x_range * x_range)
     internal_multiplier = (1 - absorption) * obs_dens
     exp_mult_1 = np.sqrt(1 - np.square(1 - absorption)) * obs_dens
     exp_mult_2 = -1 * (1 - np.square(1 - absorption)) * obs_dens
@@ -27,7 +27,7 @@ def gplt_rwm_fpd3d(obs_dens, absorption, x_range):
     g_r = external_multiplier * np.multiply(np.add(first_component, second_component), x_range)
     rwm_y = 10 * np.log10(g_r / (absorption * obs_dens)) + 30
 
-    return rwm_y
+    return rwm_y * gain_factor
 
 def pl_fs(dist, freq):
     return 20 * np.log10(4 * constants.pi * dist * freq / constants.speed_of_light)
