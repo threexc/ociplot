@@ -101,6 +101,29 @@ too complex to list here, but it has the following parameters:
   loss in the link, in Wm^2
 - **offset** to manually adjust the model curve by a factor in dB
 
+## Challenges
+
+- Accurate tower positioning info is still difficult to obtain - the
+  Network Cell Info Lite app shows a tower icon at the location of the
+  cell, not the tower itself[[3]](#3)
+    - Means that there is outstanding effort remaining to collect full
+      data set for analysis (i.e. find, photograph, and get approximate
+      GPS position of each tower projecting to a cell)
+- Data collection is somewhat erratic and inconsistent, as the same
+  campaign route can provide significantly different results on
+  subsequent runs
+- Still an outstanding issue with accurate positioning in "street
+  canyons" and even in low-density non-line-of-sight (NLOS) areas,
+  leading to inaccurate positioning readings. This can be corrected with
+  the addition of a windowing algorithm that "smoothes" the data via
+  dead-reckoning
+    - Existing datasets for more urban areas are still useful, but
+      require more repeated measurement campaigns in the same locations
+      to have sufficient numbers of data points for this to work
+- Need to expand and compare this with other devices - a 5G-capable
+  mobile device would be a valuable addition, but the Network Cell Info
+  app does not clearly state support for 5G yet
+
 ## References
 
 <a id="1">[1]</a> 
@@ -115,3 +138,7 @@ M. Franceschetti, J. Bruck, L. J. Schulman,
 *A Random Walk Model of Wave Propagation*,
 IEEE TRANSACTIONS ON ANTENNAS AND PROPAGATION, VOL. 52, NO. 5, MAY 2004
 
+<a id="3">[3]</a>
+M2Catalyst, LLC.,
+*Network Cell Info: The Ultimate Network Cell Signal Information Tool*,
+https://m2catalyst.com/apps/network-cell-info
