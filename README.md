@@ -89,7 +89,7 @@ Where:
 
 It is important to note that while the alpha parameter has some physical
 basis in the ABG model, the **beta** and **gamma** parameters are primarily for
-curve-fitting[[1]](#1, p. 2847) and do not have obvious physical
+curve-fitting[[1]](#1)(p. 2847) and do not have obvious physical
 origins. Also stated there are the conditions for equivalence between
 the ABG and CI models:
 
@@ -135,7 +135,7 @@ too complex to list here, but it has the following parameters:
   mobile device would be a valuable addition, but the Network Cell Info
   app does not clearly state support for 5G yet
 - Measurements thus far do not adequately compare to the stochastic
-  nature of the PL and RWM models. In [[1]](#1, p. 2847), it is stated
+  nature of the PL and RWM models. In [[1]](#1)(p. 2847), it is stated
   that their experiments used 30 data sets to compare with the models,
   so more campaigns should be undertaken in the previously-visited areas
   to ensure level comparisons
