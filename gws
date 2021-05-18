@@ -77,6 +77,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_data_pen = pg.mkPen(color=(255, 0, 0))
         self.pl_abg_pen = pg.mkPen(color=(0, 0, 255))
         self.pl_ci_pen = pg.mkPen(color=(64,192,64))
+        self.pl_fs_pen = pg.mkPen(color=(0, 0, 0))
 
         self.model_widget = pg.PlotWidget()
         self.model_widget.setBackground('w')
@@ -102,6 +103,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 symbolBrush=(255, 0, 0, 255), name="Measured")
         self.pl_abg_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_abg_pen, name="ABG Model")
         self.pl_ci_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_ci_pen, name="CI Model")
+        self.pl_fs_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_fs_pen, name="Free Space Model")
 
         self.styles = {'color':'b', 'font-size':'18px'}
         self.pl_widget.setLabel('left', "Path Loss (dB)", **self.styles)
@@ -139,6 +141,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lonbox = QtWidgets.QHBoxLayout()
         self.location_button_box = QtWidgets.QHBoxLayout()
 
+        self.pl_fs_checkbox = QtWidgets.QCheckBox("Plot FS")
+        self.pl_fs_checkbox.setChecked(True)
+        self.pl_fs_checkbox.stateChanged.connect(self.checkboxUpdate)
+        self.pl_checkbox_box.addWidget(self.pl_fs_checkbox)
         self.pl_abg_checkbox = QtWidgets.QCheckBox("Plot ABG")
         self.pl_abg_checkbox.setChecked(True)
         self.pl_abg_checkbox.stateChanged.connect(self.checkboxUpdate)
@@ -627,6 +633,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_data_line.setData(self.tower.distances, self.tower.path_loss)
         self.updateCILine()
         self.updateABGLine()
+        self.updateFSLine()
+
+    def updateFSLine(self):
+        if self.pl_fs_checkbox.isChecked():
+            self.fs_y = eq.v_pl_fs(self.pl_points, self.pl_freq)
+            self.pl_fs_line.setData(self.pl_points, self.fs_y)
+        else:
+            self.pl_fs_line.clear()
 
     def updateCILine(self):
         if self.pl_ci_checkbox.isChecked():

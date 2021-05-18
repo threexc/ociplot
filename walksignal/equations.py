@@ -30,7 +30,7 @@ def gplt_rwm_fpd3d(obs_dens, absorption, x_range, gain_factor=1):
     return rwm_y * gain_factor
 
 def pl_fs(dist, freq):
-    return 20 * np.log10(4 * constants.pi * dist * freq / constants.speed_of_light)
+    return 20 * np.log10(dist) + 20 * np.log10(freq) - 27.55
 
 def pl_los_5gcm_ci(dist, freq):
     return 32.4 + 20 * np.log10(dist) + 20 * np.log10(freq)
@@ -40,9 +40,6 @@ def pl_nlos_5gcm_ci(dist, freq):
 
 def pl_nlos_5gcm_abg(dist, freq):
     return 19.2 + 34 * np.log10(dist) + 23 * np.log10(freq)
-
-def v_pl_fs(array, freq):
-    return np.array([pl_fs(xi, freq) for xi in array])
 
 def v_pl_los_5gcm_ci(array, freq):
     return np.array([pl_los_5gcm_ci(xi, freq) for xi in array])
@@ -64,3 +61,6 @@ def pl_ci(dist, freq, sigma, pl_exp, ref_dist=1):
 
 def v_pl_ci(array, freq, sigma, pl_exp, ref_dist=1):
     return np.array([pl_ci(xi, freq, sigma, pl_exp, ref_dist) for xi in array])
+
+def v_pl_fs(array, freq):
+    return np.array([pl_fs(xi, freq) for xi in array])
