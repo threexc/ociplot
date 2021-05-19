@@ -352,29 +352,22 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.file_controls_title = QtWidgets.QLabel('File Selection', self)
         self.file_controls_title.setFont(QtGui.QFont('Arial', 14))
-
         self.load_button = QtWidgets.QPushButton('Load', self)
         self.load_button.clicked.connect(self.setDataSource)
-
         self.set_data_button = QtWidgets.QPushButton('Set Dataset', self)
         self.set_data_button.clicked.connect(self.showFileDialog)
-
         self.set_data_text = QtWidgets.QLineEdit('None', self)
         self.set_data_text.setReadOnly(True)
-
         self.set_reference_button = QtWidgets.QPushButton('Set Reference', self)
         self.set_reference_button.clicked.connect(self.showReferenceDialog)
-
         self.set_reference_text = QtWidgets.QLineEdit('None', self)
         self.set_reference_text.setReadOnly(True)
 
         self.load_box.addWidget(self.load_button)
         self.set_data_box.addWidget(self.set_data_button)
         self.set_data_box.addWidget(self.set_data_text)
-
         self.set_reference_box.addWidget(self.set_reference_button)
         self.set_reference_box.addWidget(self.set_reference_text)
-
         self.file_control_box.addWidget(self.file_controls_title)
         self.file_control_box.addLayout(self.load_box)
         self.file_control_box.addLayout(self.set_data_box)
