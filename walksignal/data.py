@@ -87,7 +87,7 @@ class DataSet:
         self.get_cell_data_points()
         self.get_distances_to_cells()
         self.get_power()
-        self.get_path_loss()
+        self.get_path_loss(43) # 43dBm or ~20W for 4G antenna
         self.cell_lat_data = self.get_cell_lats()
         self.cell_lon_data = self.get_cell_lons()
         self.duration = time.time() - self.start_time
@@ -127,15 +127,15 @@ class DataSet:
                 for index, row in self.reference_matrix.iterrows():
                     if row['cell'] == cell_id[3]:
                         print("Added {0}".format(row['cell']))
-                        self.cell_list.append(Tower(row['radio'], row['mcc'], row['net'], row['area'], row['cell'], row['lon'], row['lat'], row['range'], row['samples']))
+                        self.cell_list.append(Cell(row['radio'], row['mcc'], row['net'], row['area'], row['cell'], row['lon'], row['lat'], row['range'], row['samples']))
             else:
-                self.cell_list.append(Tower(mcc=cell_id[0], mnc=cell_id[1], lac=cell_id[2], cellid=cell_id[3]))
+                self.cell_list.append(Cell(mcc=cell_id[0], mnc=cell_id[1], lac=cell_id[2], cellid=cell_id[3]))
 
     def get_cell_data_points(self):
         for index, row in self.data_matrix.iterrows():
             for cell in self.cell_list:
                 if (cell.cellid == row['cellid']):
-                    cell.data_points.append(TowerDataPoint(row['mcc'],
+                    cell.data_points.append(CellDataPoint(row['mcc'],
                         row['mnc'], row['lac'], row['cellid'],
                         row['lat'], row['lon'], row['signal'],
                         row['measured_at'], row['rating'],
@@ -152,9 +152,9 @@ class DataSet:
             for datapoint in cell.data_points:
                 cell.signal_power.append(float(datapoint.signal))
 
-    def get_path_loss(self):
+    def get_path_loss(self, tx_power):
         for cell in self.cell_list:
-            cell.get_path_loss()
+            cell.get_path_loss(tx_power)
 
     def get_cell_lats(self):
         cell_lats = [cell.lat for cell in self.cell_list]
@@ -171,7 +171,7 @@ class DataSet:
                 print(cell.lat, cell.lon)
                 return cell
 
-class Tower:
+class Cell:
     def __init__(self, signal_type=None, mcc=None, mnc=None, lac=None, cellid=None, lon=None, lat=None, cell_range=None, samples=None):
         self.mcc = mcc
         self.mnc = mnc
@@ -196,12 +196,12 @@ class Tower:
             for datapoint in self.data_points:
                 self.distances.append(utils.get_distance(self.lat, self.lon, datapoint.lat, datapoint.lon) * 1000)
 
-    def get_path_loss(self):
+    def get_path_loss(self, tx_power):
         self.path_loss.clear()
-        self.peak_value = max(self.signal_power)
-        self.path_loss = [self.peak_value - xi for xi in self.signal_power]
+        #self.peak_value = max(self.signal_power)
+        self.path_loss = [tx_power - xi for xi in self.signal_power]
 
-class TowerDataPoint:
+class CellDataPoint:
     def __init__(self, mcc, mnc, lac, cellid, lat, lon, signal, measured_at, rating, speed, direction, access_type, timing_advance, pci):
       self.mcc = mcc
       self.mnc = mnc

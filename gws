@@ -590,7 +590,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tower.lon = float(self.lon_edit.text())
 
             self.tower.get_distances()
-            self.tower.get_path_loss()
+            self.tower.get_path_loss(self.pl_tx_power)
 
         self.loadCell()
 
@@ -683,6 +683,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def updatePathLossPlot(self):
         self.pl_data_line.clear()
+        self.tower.get_path_loss(self.pl_tx_power)
         self.pl_data_line.setData(self.tower.distances, self.tower.path_loss)
         self.updateCILine()
         self.updateABGLine()
