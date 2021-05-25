@@ -127,15 +127,15 @@ class DataSet:
                 for index, row in self.reference_matrix.iterrows():
                     if row['cell'] == tower_id[3]:
                         print("Added {0}".format(row['cell']))
-                        self.tower_list.append(Tower(row['radio'], row['mcc'], row['net'], row['area'], row['cell'], row['lon'], row['lat'], row['range'], row['samples']))
+                        self.tower_list.append(Cell(row['radio'], row['mcc'], row['net'], row['area'], row['cell'], row['lon'], row['lat'], row['range'], row['samples']))
             else:
-                self.tower_list.append(Tower(mcc=tower_id[0], mnc=tower_id[1], lac=tower_id[2], cellid=tower_id[3]))
+                self.tower_list.append(Cell(mcc=tower_id[0], mnc=tower_id[1], lac=tower_id[2], cellid=tower_id[3]))
 
     def get_tower_data_points(self):
         for index, row in self.data_matrix.iterrows():
             for tower in self.tower_list:
                 if (tower.cellid == row['cellid']):
-                    tower.data_points.append(TowerDataPoint(row['mcc'],
+                    tower.data_points.append(CellDataPoint(row['mcc'],
                         row['mnc'], row['lac'], row['cellid'],
                         row['lat'], row['lon'], row['signal'],
                         row['measured_at'], row['rating'],
@@ -171,7 +171,7 @@ class DataSet:
                 print(tower.lat, tower.lon)
                 return tower
 
-class Tower:
+class Cell:
     def __init__(self, signal_type=None, mcc=None, mnc=None, lac=None, cellid=None, lon=None, lat=None, tower_range=None, samples=None):
         self.mcc = mcc
         self.mnc = mnc
@@ -201,7 +201,7 @@ class Tower:
         self.peak_value = max(self.signal_power)
         self.path_loss = [self.peak_value - xi for xi in self.signal_power]
 
-class TowerDataPoint:
+class CellDataPoint:
     def __init__(self, mcc, mnc, lac, cellid, lat, lon, signal, measured_at, rating, speed, direction, access_type, timing_advance, pci):
       self.mcc = mcc
       self.mnc = mnc
