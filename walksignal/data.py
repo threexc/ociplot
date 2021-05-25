@@ -78,20 +78,20 @@ class DataSet:
         print("Done loading reference properties in {:.2f} seconds".format(self.duration))
 
         self.start_time = time.time()
-        self.tower_id_list = []
-        self.tower_list = []
+        self.cell_id_list = []
+        self.cell_list = []
         self.lat_data = self.lat
         self.lon_data = self.lon
-        self.get_tower_ids()
-        self.get_dataset_tower_data()
-        self.get_tower_data_points()
-        self.get_distances_to_towers()
+        self.get_cell_ids()
+        self.get_dataset_cell_data()
+        self.get_cell_data_points()
+        self.get_distances_to_cells()
         self.get_power()
         self.get_path_loss()
-        self.tower_lat_data = self.get_tower_lats()
-        self.tower_lon_data = self.get_tower_lons()
+        self.cell_lat_data = self.get_cell_lats()
+        self.cell_lon_data = self.get_cell_lons()
         self.duration = time.time() - self.start_time
-        print("Done loading tower properties in {:.2f} seconds".format(self.duration))
+        print("Done loading cell properties in {:.2f} seconds".format(self.duration))
 
         self.start_time = time.time()
         self.plot_map = None
@@ -116,26 +116,26 @@ class DataSet:
     def set_image(self):
         self.ax1.imshow(self.plot_map, zorder=0, extent = self.map_bbox[0], aspect="equal")
 
-    def get_tower_ids(self):
+    def get_cell_ids(self):
         for row in range(len(self.cellid_u)):
-            self.tower_id_list.append((self.mcc[row], self.mnc[row], self.lac[row], self.cellid_u[row]))
+            self.cell_id_list.append((self.mcc[row], self.mnc[row], self.lac[row], self.cellid_u[row]))
 
-    def get_dataset_tower_data(self):
-        for tower_id in self.tower_id_list:
-            if tower_id[3] in self.reference_matrix['cell'].unique():
-                print("Found {0} in reference".format(tower_id[3]))
+    def get_dataset_cell_data(self):
+        for cell_id in self.cell_id_list:
+            if cell_id[3] in self.reference_matrix['cell'].unique():
+                print("Found {0} in reference".format(cell_id[3]))
                 for index, row in self.reference_matrix.iterrows():
-                    if row['cell'] == tower_id[3]:
+                    if row['cell'] == cell_id[3]:
                         print("Added {0}".format(row['cell']))
-                        self.tower_list.append(Tower(row['radio'], row['mcc'], row['net'], row['area'], row['cell'], row['lon'], row['lat'], row['range'], row['samples']))
+                        self.cell_list.append(Tower(row['radio'], row['mcc'], row['net'], row['area'], row['cell'], row['lon'], row['lat'], row['range'], row['samples']))
             else:
-                self.tower_list.append(Tower(mcc=tower_id[0], mnc=tower_id[1], lac=tower_id[2], cellid=tower_id[3]))
+                self.cell_list.append(Tower(mcc=cell_id[0], mnc=cell_id[1], lac=cell_id[2], cellid=cell_id[3]))
 
-    def get_tower_data_points(self):
+    def get_cell_data_points(self):
         for index, row in self.data_matrix.iterrows():
-            for tower in self.tower_list:
-                if (tower.cellid == row['cellid']):
-                    tower.data_points.append(TowerDataPoint(row['mcc'],
+            for cell in self.cell_list:
+                if (cell.cellid == row['cellid']):
+                    cell.data_points.append(TowerDataPoint(row['mcc'],
                         row['mnc'], row['lac'], row['cellid'],
                         row['lat'], row['lon'], row['signal'],
                         row['measured_at'], row['rating'],
@@ -143,43 +143,43 @@ class DataSet:
                         row['act'], row['ta'],
                         row['pci']))
 
-    def get_distances_to_towers(self):
-        for tower in self.tower_list:
-            tower.get_distances()
+    def get_distances_to_cells(self):
+        for cell in self.cell_list:
+            cell.get_distances()
 
     def get_power(self):
-        for tower in self.tower_list:
-            for datapoint in tower.data_points:
-                tower.signal_power.append(float(datapoint.signal))
+        for cell in self.cell_list:
+            for datapoint in cell.data_points:
+                cell.signal_power.append(float(datapoint.signal))
 
     def get_path_loss(self):
-        for tower in self.tower_list:
-            tower.get_path_loss()
+        for cell in self.cell_list:
+            cell.get_path_loss()
 
-    def get_tower_lats(self):
-        tower_lats = [tower.lat for tower in self.tower_list]
-        return tower_lats
+    def get_cell_lats(self):
+        cell_lats = [cell.lat for cell in self.cell_list]
+        return cell_lats
 
-    def get_tower_lons(self):
-        tower_lons = [tower.lon for tower in self.tower_list]
-        return tower_lons
+    def get_cell_lons(self):
+        cell_lons = [cell.lon for cell in self.cell_list]
+        return cell_lons
 
-    def get_tower_stats(self, mcc, mnc, lac, cellid):
-        for tower in self.tower_list:
-            if ((str(tower.mcc) == mcc) and (str(tower.mnc) == mnc) and (str(tower.lac) == lac) and (str(tower.cellid) == cellid)):
-                print(tower.cellid)
-                print(tower.lat, tower.lon)
-                return tower
+    def get_cell_stats(self, mcc, mnc, lac, cellid):
+        for cell in self.cell_list:
+            if ((str(cell.mcc) == mcc) and (str(cell.mnc) == mnc) and (str(cell.lac) == lac) and (str(cell.cellid) == cellid)):
+                print(cell.cellid)
+                print(cell.lat, cell.lon)
+                return cell
 
 class Tower:
-    def __init__(self, signal_type=None, mcc=None, mnc=None, lac=None, cellid=None, lon=None, lat=None, tower_range=None, samples=None):
+    def __init__(self, signal_type=None, mcc=None, mnc=None, lac=None, cellid=None, lon=None, lat=None, cell_range=None, samples=None):
         self.mcc = mcc
         self.mnc = mnc
         self.lac = lac
         self.cellid = cellid
         self.lat = lat
         self.lon = lon
-        self.range = tower_range
+        self.range = cell_range
         self.samples = samples
         self.signal_type = signal_type
         self.data_points = []

@@ -57,7 +57,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setupFileControls()
         self.setupRWMControls()
         self.setupPathLossControls()
-        self.setupTowerControls()
+        self.setupCellControls()
         self.setupFileMenu()
         self.setupMenuBar()
         self.setupPlotTabs()
@@ -115,7 +115,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.plot_tab2 = self.pl_widget
         self.plot_tab3 = self.model_widget
         self.plot_tabs.resize(300, 200)
-        self.plot_tabs.addTab(self.plot_tab1, "Tower Map")
+        self.plot_tabs.addTab(self.plot_tab1, "Cell Map")
         self.plot_tabs.addTab(self.plot_tab2, "Path Loss")
         self.plot_tabs.addTab(self.plot_tab3, "RWM")
 
@@ -270,7 +270,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lonbox.addWidget(self.lonbox_label)
         self.lonbox.addWidget(self.lon_edit)
 
-        self.set_latlon_button = QtWidgets.QPushButton("Set Lat/Lon")
+        self.set_latlon_button = QtWidgets.QPushButton("Set Tower Lat/Lon")
         self.set_latlon_button.clicked.connect(self.setCustomTowerLocation)
         self.location_button_box.addWidget(self.set_latlon_button)
 
@@ -373,14 +373,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.file_control_box.addLayout(self.set_data_box)
         self.file_control_box.addLayout(self.set_reference_box)
         
-    def setupTowerControls(self):
+    def setupCellControls(self):
         self.tower_box = QtWidgets.QVBoxLayout()
         self.cellid_box = QtWidgets.QHBoxLayout()
         self.mcc_box = QtWidgets.QHBoxLayout()
         self.mnc_box = QtWidgets.QHBoxLayout()
         self.lac_box = QtWidgets.QHBoxLayout()
 
-        self.tower_combo_title = QtWidgets.QLabel('Tower Selection', self)
+        self.tower_combo_title = QtWidgets.QLabel('Cell Selection', self)
         self.tower_combo_title.setFont(QtGui.QFont('Arial', 14))
 
         self.cellid_label = QtWidgets.QLabel('Cell IDs', self)
@@ -398,7 +398,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.mnc_combo = QtWidgets.QComboBox(self)
         self.lac_combo = QtWidgets.QComboBox(self)
 
-        self.cellid_combo.activated.connect(self.setTower)
+        self.cellid_combo.activated.connect(self.setCell)
 
         self.cellid_box.addWidget(self.cellid_label)
         self.cellid_box.addWidget(self.cellid_count)
@@ -412,8 +412,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lac_box.addWidget(self.lac_label)
         self.lac_box.addWidget(self.lac_count)
         self.lac_box.addWidget(self.lac_combo)
-        self.tower_load_button = QtWidgets.QPushButton('Load Tower Data', self)
-        self.tower_load_button.clicked.connect(self.loadTower)
+        self.tower_load_button = QtWidgets.QPushButton('Load Cell Data', self)
+        self.tower_load_button.clicked.connect(self.loadCell)
         self.tower_load_button.setEnabled(False)
         
         self.tower_box.addWidget(self.tower_combo_title)
@@ -524,22 +524,22 @@ class MainWindow(QtWidgets.QMainWindow):
             self.cellid_combo.addItem(str(cellid))
 
         print("Generating default plot...")
-        self.loadTower()
+        self.loadCell()
         print("Done.")
 
-    def setTower(self):
+    def setCell(self):
         print(self.mcc_combo.currentText(),
                 self.mnc_combo.currentText(),
                 self.lac_combo.currentText(),
                 self.cellid_combo.currentText())
-        self.tower = self.towerset.get_tower_stats(self.mcc_combo.currentText(), self.mnc_combo.currentText(), self.lac_combo.currentText(), self.cellid_combo.currentText())
+        self.tower = self.towerset.get_cell_stats(self.mcc_combo.currentText(), self.mnc_combo.currentText(), self.lac_combo.currentText(), self.cellid_combo.currentText())
 
         if self.tower is None:
             self.tower_load_button.setText("No Valid Reference")
             self.tower_load_button.setEnabled(False)
         else:
             point_count = len(self.tower.signal_power)
-            self.tower_load_button.setText("Load Tower Data ({0} points)".format(point_count))
+            self.tower_load_button.setText("Load Cell Data ({0} points)".format(point_count))
             self.tower_load_button.setEnabled(True)
 
     def setCustomTowerLocation(self):
@@ -550,7 +550,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tower.get_distances()
             self.tower.get_path_loss()
 
-        self.loadTower()
+        self.loadCell()
 
     def textboxUpdate(self):
         self.pl_freq = float(self.pl_freq_textbox.text())
@@ -588,10 +588,10 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.towerset:
             self.updatePathLossPlot()
 
-    def loadTower(self):
-        print("Loading tower data...")
-        self.setTower()
-        self.updateTowerPlot()
+    def loadCell(self):
+        print("Loading cell data...")
+        self.setCell()
+        self.updateCellPlot()
         self.updateRWMPlot()
         self.updatePathLossPlot()
         #self.setBoxText()
@@ -605,7 +605,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.lat_edit.setText("N/A")
             self.lon_edit.setText("N/A")
 
-    def updateTowerPlot(self):
+    def updateCellPlot(self):
         points = self.tower.data_points
         lon_series = np.array([point.lon for point in points], dtype=float)
         lat_series = np.array([point.lat for point in points], dtype=float)
