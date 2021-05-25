@@ -31,13 +31,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_points = np.arange(0.5, 1500, 0.5)
         self.pl_freq = 50000000
         self.pl_alpha = 1
-        self.pl_beta = 1
+        self.pl_beta = 0
         self.pl_gamma = 1
         self.pl_sigma = 0
         self.pl_exp = 1
         self.pl_ref_dist = 1
         self.pl_ref_freq = 1000000000
         self.pl_fs_y = None
+        self.pl_tx_power = 43
+        self.pl_tx_gain = 0
+        self.pl_rx_gain = 0
         self.tower = None
         self.tower_x = None
         self.tower_y = None
@@ -135,6 +138,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_gamma_box = QtWidgets.QHBoxLayout()
         self.pl_sigma_box = QtWidgets.QHBoxLayout()
         self.pl_exp_box = QtWidgets.QHBoxLayout()
+        self.pl_tx_power_box = QtWidgets.QHBoxLayout()
+        self.pl_tx_gain_box = QtWidgets.QHBoxLayout()
+        self.pl_rx_gain_box = QtWidgets.QHBoxLayout()
         self.pl_ref_dist_box = QtWidgets.QHBoxLayout()
         self.pl_ref_freq_box = QtWidgets.QHBoxLayout()
         self.latbox = QtWidgets.QHBoxLayout()
@@ -155,6 +161,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_box.addLayout(self.pl_gamma_box)
         self.pl_box.addLayout(self.pl_sigma_box)
         self.pl_box.addLayout(self.pl_exp_box)
+        self.pl_box.addLayout(self.pl_tx_gain_box)
+        self.pl_box.addLayout(self.pl_rx_gain_box)
+        self.pl_box.addLayout(self.pl_tx_power_box)
         self.pl_box.addLayout(self.latbox)
         self.pl_box.addLayout(self.lonbox)
         self.pl_box.addLayout(self.location_button_box)
@@ -162,7 +171,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _setupPLSliders(self):
         self.pl_alpha_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
-        self.pl_alpha_slider.setRange(10, 100)
+        self.pl_alpha_slider.setRange(0, 100)
         self.pl_alpha_slider.setValue(10)
         self.pl_alpha_slider.setFocusPolicy(QtCore.Qt.NoFocus)
         self.pl_alpha_slider_label = QtWidgets.QLabel('Alpha', self)
@@ -174,7 +183,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.pl_beta_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
         self.pl_beta_slider.setRange(-1000, 1000)
-        self.pl_beta_slider.setValue(10)
+        self.pl_beta_slider.setValue(0)
         self.pl_beta_slider.setFocusPolicy(QtCore.Qt.NoFocus)
         self.pl_beta_slider_label = QtWidgets.QLabel('Beta', self)
         self.pl_beta_value_label = QtWidgets.QLabel('0 dB', self)
@@ -184,7 +193,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_beta_box.addWidget(self.pl_beta_value_label)
 
         self.pl_gamma_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
-        self.pl_gamma_slider.setRange(10, 100)
+        self.pl_gamma_slider.setRange(0, 100)
         self.pl_gamma_slider.setValue(10)
         self.pl_gamma_slider.setFocusPolicy(QtCore.Qt.NoFocus)
         self.pl_gamma_slider_label = QtWidgets.QLabel('Gamma', self)
@@ -196,10 +205,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.pl_sigma_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
         self.pl_sigma_slider.setRange(0, 100)
-        self.pl_sigma_slider.setValue(10)
+        self.pl_sigma_slider.setValue(1)
         self.pl_sigma_slider.setFocusPolicy(QtCore.Qt.NoFocus)
         self.pl_sigma_slider_label = QtWidgets.QLabel('Sigma', self)
-        self.pl_sigma_value_label = QtWidgets.QLabel('1 dB', self)
+        self.pl_sigma_value_label = QtWidgets.QLabel('0 dB', self)
         self.pl_sigma_slider.valueChanged[int].connect(self.plSliderUpdate)
         self.pl_sigma_box.addWidget(self.pl_sigma_slider_label)
         self.pl_sigma_box.addWidget(self.pl_sigma_slider)
@@ -210,11 +219,44 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_exp_slider.setValue(10)
         self.pl_exp_slider.setFocusPolicy(QtCore.Qt.NoFocus)
         self.pl_exp_slider_label = QtWidgets.QLabel('PL Exp', self)
-        self.pl_exp_value_label = QtWidgets.QLabel('1 dB', self)
+        self.pl_exp_value_label = QtWidgets.QLabel('0 dB', self)
         self.pl_exp_slider.valueChanged[int].connect(self.plSliderUpdate)
         self.pl_exp_box.addWidget(self.pl_exp_slider_label)
         self.pl_exp_box.addWidget(self.pl_exp_slider)
         self.pl_exp_box.addWidget(self.pl_exp_value_label)
+
+        self.pl_tx_power_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
+        self.pl_tx_power_slider.setRange(0, 1000)
+        self.pl_tx_power_slider.setValue(430)
+        self.pl_tx_power_slider.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.pl_tx_power_slider_label = QtWidgets.QLabel('TX Power', self)
+        self.pl_tx_power_value_label = QtWidgets.QLabel('43 dBm', self)
+        self.pl_tx_power_slider.valueChanged[int].connect(self.plSliderUpdate)
+        self.pl_tx_power_box.addWidget(self.pl_tx_power_slider_label)
+        self.pl_tx_power_box.addWidget(self.pl_tx_power_slider)
+        self.pl_tx_power_box.addWidget(self.pl_tx_power_value_label)
+
+        self.pl_tx_gain_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
+        self.pl_tx_gain_slider.setRange(0, 100)
+        self.pl_tx_gain_slider.setValue(0)
+        self.pl_tx_gain_slider.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.pl_tx_gain_slider_label = QtWidgets.QLabel('TX Gain', self)
+        self.pl_tx_gain_value_label = QtWidgets.QLabel('0 dB', self)
+        self.pl_tx_gain_slider.valueChanged[int].connect(self.plSliderUpdate)
+        self.pl_tx_gain_box.addWidget(self.pl_tx_gain_slider_label)
+        self.pl_tx_gain_box.addWidget(self.pl_tx_gain_slider)
+        self.pl_tx_gain_box.addWidget(self.pl_tx_gain_value_label)
+
+        self.pl_rx_gain_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
+        self.pl_rx_gain_slider.setRange(0, 100)
+        self.pl_rx_gain_slider.setValue(0)
+        self.pl_rx_gain_slider.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.pl_rx_gain_slider_label = QtWidgets.QLabel('RX Gain', self)
+        self.pl_rx_gain_value_label = QtWidgets.QLabel('0 dB', self)
+        self.pl_rx_gain_slider.valueChanged[int].connect(self.plSliderUpdate)
+        self.pl_rx_gain_box.addWidget(self.pl_rx_gain_slider_label)
+        self.pl_rx_gain_box.addWidget(self.pl_rx_gain_slider)
+        self.pl_rx_gain_box.addWidget(self.pl_rx_gain_value_label)
 
     def _setupPLTextBoxes(self):
         self.pl_freq_textbox = QtWidgets.QLineEdit(self)
@@ -580,11 +622,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_gamma = self.pl_gamma_slider.value() / 10.0
         self.pl_sigma = self.pl_sigma_slider.value() / 10.0
         self.pl_exp = self.pl_exp_slider.value() / 10.0
+        self.pl_tx_power = self.pl_tx_power_slider.value() / 10.0
+        self.pl_tx_gain = self.pl_tx_gain_slider.value() / 10.0
+        self.pl_rx_gain = self.pl_rx_gain_slider.value() / 10.0
         self.pl_alpha_value_label.setText(str(self.pl_alpha))
         self.pl_beta_value_label.setText(str(self.pl_beta) + " dB")
         self.pl_gamma_value_label.setText(str(self.pl_gamma))
         self.pl_sigma_value_label.setText(str(self.pl_sigma) + " dB")
         self.pl_exp_value_label.setText(str(self.pl_exp))
+        self.pl_tx_power_value_label.setText(str(self.pl_tx_power) + " dBm")
+        self.pl_tx_gain_value_label.setText(str(self.pl_tx_gain) + " dB")
+        self.pl_rx_gain_value_label.setText(str(self.pl_rx_gain) + " dB")
         if self.towerset:
             self.updatePathLossPlot()
 
@@ -642,21 +690,21 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def updateFSLine(self):
         if self.pl_fs_checkbox.isChecked():
-            self.fs_y = eq.v_pl_fs(self.pl_points, self.pl_freq)
+            self.fs_y = eq.v_pl_fs(self.pl_points, self.pl_freq) - self.pl_tx_gain - self.pl_rx_gain
             self.pl_fs_line.setData(self.pl_points, self.fs_y)
         else:
             self.pl_fs_line.clear()
 
     def updateCILine(self):
         if self.pl_ci_checkbox.isChecked():
-            self.ci_y = eq.v_pl_ci(self.pl_points, self.pl_freq, self.pl_sigma, self.pl_exp, self.pl_ref_dist)
+            self.ci_y = eq.v_pl_ci(self.pl_points, self.pl_freq, self.pl_sigma, self.pl_exp, self.pl_ref_dist) - self.pl_tx_gain - self.pl_rx_gain
             self.pl_ci_line.setData(self.pl_points, self.ci_y)
         else:
             self.pl_ci_line.clear()
 
     def updateABGLine(self):
         if self.pl_abg_checkbox.isChecked():
-            self.abg_y = eq.v_pl_abg(self.pl_points, self.pl_freq, self.pl_alpha, self.pl_beta, self.pl_gamma, self.pl_sigma, self.pl_ref_dist, self.pl_ref_freq)
+            self.abg_y = eq.v_pl_abg(self.pl_points, self.pl_freq, self.pl_alpha, self.pl_beta, self.pl_gamma, self.pl_sigma, self.pl_ref_dist, self.pl_ref_freq) - self.pl_tx_gain - self.pl_rx_gain
             self.pl_abg_line.setData(self.pl_points, self.abg_y)
         else:
             self.pl_abg_line.clear()
