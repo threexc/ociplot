@@ -237,7 +237,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_tx_power_box.addWidget(self.pl_tx_power_value_label)
 
         self.pl_tx_gain_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
-        self.pl_tx_gain_slider.setRange(0, 100)
+        self.pl_tx_gain_slider.setRange(0, 1000)
         self.pl_tx_gain_slider.setValue(0)
         self.pl_tx_gain_slider.setFocusPolicy(QtCore.Qt.NoFocus)
         self.pl_tx_gain_slider_label = QtWidgets.QLabel('TX Gain', self)
@@ -248,7 +248,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_tx_gain_box.addWidget(self.pl_tx_gain_value_label)
 
         self.pl_rx_gain_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
-        self.pl_rx_gain_slider.setRange(0, 100)
+        self.pl_rx_gain_slider.setRange(0, 200)
         self.pl_rx_gain_slider.setValue(0)
         self.pl_rx_gain_slider.setFocusPolicy(QtCore.Qt.NoFocus)
         self.pl_rx_gain_slider_label = QtWidgets.QLabel('RX Gain', self)
