@@ -42,6 +42,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_tx_power = 43
         self.pl_tx_gain = 0
         self.pl_rx_gain = 0
+        self.pl_bs_height = 1
+        self.pl_mu_height = 1
+        self.pl_correction_factor = 1
         self.tower = None
         self.tower_x = None
         self.tower_y = None
@@ -83,6 +86,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_abg_pen = pg.mkPen(color=(0, 0, 255))
         self.pl_ci_pen = pg.mkPen(color=(64,192,64))
         self.pl_fs_pen = pg.mkPen(color=(0, 0, 0))
+        self.pl_oh_u_pen = pg.mkPen(color=(0, 255, 0))
+        self.pl_oh_s_pen = pg.mkPen(color=(192,64,192))
 
         self.model_widget = pg.PlotWidget()
         self.model_widget.setBackground('w')
@@ -109,6 +114,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_abg_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_abg_pen, name="ABG Model")
         self.pl_ci_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_ci_pen, name="CI Model")
         self.pl_fs_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_fs_pen, name="Free Space Model")
+        self.pl_oh_u_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_oh_u_pen, name="Okumura-Hata Urban")
+        self.pl_oh_s_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_oh_s_pen, name="Okumura-Hata Suburban")
 
         self.styles = {'color':'b', 'font-size':'18px'}
         self.pl_widget.setLabel('left', "Path Loss (dB)", **self.styles)
@@ -149,6 +156,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_rx_gain_box = QtWidgets.QHBoxLayout()
         self.pl_ref_dist_box = QtWidgets.QHBoxLayout()
         self.pl_ref_freq_box = QtWidgets.QHBoxLayout()
+        self.pl_bs_height_box = QtWidgets.QHBoxLayout()
+        self.pl_mu_height_box = QtWidgets.QHBoxLayout()
         self.latbox = QtWidgets.QHBoxLayout()
         self.lonbox = QtWidgets.QHBoxLayout()
         self.location_button_box = QtWidgets.QHBoxLayout()
@@ -170,6 +179,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_box.addLayout(self.pl_tx_gain_box)
         self.pl_box.addLayout(self.pl_rx_gain_box)
         self.pl_box.addLayout(self.pl_tx_power_box)
+        self.pl_box.addLayout(self.pl_bs_height_box)
+        self.pl_box.addLayout(self.pl_mu_height_box)
         self.pl_box.addLayout(self.latbox)
         self.pl_box.addLayout(self.lonbox)
         self.pl_box.addLayout(self.location_button_box)
@@ -264,6 +275,28 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_rx_gain_box.addWidget(self.pl_rx_gain_slider)
         self.pl_rx_gain_box.addWidget(self.pl_rx_gain_value_label)
 
+        self.pl_bs_height_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
+        self.pl_bs_height_slider.setRange(0, 250)
+        self.pl_bs_height_slider.setValue(0)
+        self.pl_bs_height_slider.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.pl_bs_height_slider_label = QtWidgets.QLabel('Base Station Height', self)
+        self.pl_bs_height_value_label = QtWidgets.QLabel('0 m', self)
+        self.pl_bs_height_slider.valueChanged[int].connect(self.plSliderUpdate)
+        self.pl_bs_height_box.addWidget(self.pl_bs_height_slider_label)
+        self.pl_bs_height_box.addWidget(self.pl_bs_height_slider)
+        self.pl_bs_height_box.addWidget(self.pl_bs_height_value_label)
+
+        self.pl_mu_height_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
+        self.pl_mu_height_slider.setRange(0, 100)
+        self.pl_mu_height_slider.setValue(0)
+        self.pl_mu_height_slider.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.pl_mu_height_slider_label = QtWidgets.QLabel('User Equipment Height', self)
+        self.pl_mu_height_value_label = QtWidgets.QLabel('0 m', self)
+        self.pl_mu_height_slider.valueChanged[int].connect(self.plSliderUpdate)
+        self.pl_mu_height_box.addWidget(self.pl_mu_height_slider_label)
+        self.pl_mu_height_box.addWidget(self.pl_mu_height_slider)
+        self.pl_mu_height_box.addWidget(self.pl_mu_height_value_label)
+
     def _setupPLTextBoxes(self):
         self.pl_freq_textbox = QtWidgets.QLineEdit(self)
         self.pl_freq_textbox.setText("50")
@@ -305,6 +338,18 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_ci_checkbox.setChecked(False)
         self.pl_ci_checkbox.stateChanged.connect(self.checkboxUpdate)
         self.pl_checkbox_box.addWidget(self.pl_ci_checkbox)
+        self.pl_oh_u_checkbox = QtWidgets.QCheckBox("Plot OH Urban")
+        self.pl_oh_u_checkbox.setChecked(False)
+        self.pl_oh_u_checkbox.stateChanged.connect(self.checkboxUpdate)
+        self.pl_checkbox_box.addWidget(self.pl_oh_u_checkbox)
+        self.pl_oh_s_checkbox = QtWidgets.QCheckBox("Plot OH Suburban")
+        self.pl_oh_s_checkbox.setChecked(False)
+        self.pl_oh_s_checkbox.stateChanged.connect(self.checkboxUpdate)
+        self.pl_checkbox_box.addWidget(self.pl_oh_s_checkbox)
+        self.pl_oh_r_checkbox = QtWidgets.QCheckBox("Plot OH Rural")
+        self.pl_oh_r_checkbox.setChecked(False)
+        self.pl_oh_r_checkbox.stateChanged.connect(self.checkboxUpdate)
+        self.pl_checkbox_box.addWidget(self.pl_oh_r_checkbox)
 
     def _setupLatLonBoxes(self):
         self.lat_edit = QtWidgets.QLineEdit(self)
