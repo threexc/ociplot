@@ -29,19 +29,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self.density = 0.5
         self.x_range = None
         self.y_range = None
-        self.pl_points = np.arange(0.5, 1500, 0.5)
+        self.pl_points = np.arange(0.5, 10000, 0.5)
         self.pl_freq = 50000000
         self.pl_alpha = 1
-        self.pl_beta = 0
+        self.pl_beta = 1
         self.pl_gamma = 1
-        self.pl_sigma = 0
+        self.pl_sigma = 1
         self.pl_exp = 1
         self.pl_ref_dist = 1
         self.pl_ref_freq = 1000000000
         self.pl_fs_y = None
         self.pl_tx_power = 43
-        self.pl_tx_gain = 0
-        self.pl_rx_gain = 0
+        self.pl_tx_gain = 3
+        self.pl_rx_gain = 3
         self.pl_bs_height = 1
         self.pl_ue_height = 1
         self.pl_correction_factor = 1
@@ -222,7 +222,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_alpha_slider.setValue(10)
         self.pl_alpha_slider.setFocusPolicy(QtCore.Qt.NoFocus)
         self.pl_alpha_slider_label = QtWidgets.QLabel('Alpha', self)
-        self.pl_alpha_value_label = QtWidgets.QLabel('0', self)
+        self.pl_alpha_value_label = QtWidgets.QLabel('1', self)
         self.pl_alpha_slider.valueChanged[int].connect(self.plSliderUpdate)
         self.pl_alpha_box.addWidget(self.pl_alpha_slider_label)
         self.pl_alpha_box.addWidget(self.pl_alpha_slider)
@@ -244,7 +244,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_gamma_slider.setValue(10)
         self.pl_gamma_slider.setFocusPolicy(QtCore.Qt.NoFocus)
         self.pl_gamma_slider_label = QtWidgets.QLabel('Gamma', self)
-        self.pl_gamma_value_label = QtWidgets.QLabel('0', self)
+        self.pl_gamma_value_label = QtWidgets.QLabel('1', self)
         self.pl_gamma_slider.valueChanged[int].connect(self.plSliderUpdate)
         self.pl_gamma_box.addWidget(self.pl_gamma_slider_label)
         self.pl_gamma_box.addWidget(self.pl_gamma_slider)
@@ -252,10 +252,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.pl_sigma_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
         self.pl_sigma_slider.setRange(0, 100)
-        self.pl_sigma_slider.setValue(1)
+        self.pl_sigma_slider.setValue(10)
         self.pl_sigma_slider.setFocusPolicy(QtCore.Qt.NoFocus)
         self.pl_sigma_slider_label = QtWidgets.QLabel('Sigma', self)
-        self.pl_sigma_value_label = QtWidgets.QLabel('0 dB', self)
+        self.pl_sigma_value_label = QtWidgets.QLabel('1 dB', self)
         self.pl_sigma_slider.valueChanged[int].connect(self.plSliderUpdate)
         self.pl_sigma_box.addWidget(self.pl_sigma_slider_label)
         self.pl_sigma_box.addWidget(self.pl_sigma_slider)
@@ -266,7 +266,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_exp_slider.setValue(10)
         self.pl_exp_slider.setFocusPolicy(QtCore.Qt.NoFocus)
         self.pl_exp_slider_label = QtWidgets.QLabel('PL Exp', self)
-        self.pl_exp_value_label = QtWidgets.QLabel('0 dB', self)
+        self.pl_exp_value_label = QtWidgets.QLabel('1', self)
         self.pl_exp_slider.valueChanged[int].connect(self.plSliderUpdate)
         self.pl_exp_box.addWidget(self.pl_exp_slider_label)
         self.pl_exp_box.addWidget(self.pl_exp_slider)
@@ -288,7 +288,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_tx_gain_slider.setValue(0)
         self.pl_tx_gain_slider.setFocusPolicy(QtCore.Qt.NoFocus)
         self.pl_tx_gain_slider_label = QtWidgets.QLabel('TX Gain', self)
-        self.pl_tx_gain_value_label = QtWidgets.QLabel('0 dB', self)
+        self.pl_tx_gain_value_label = QtWidgets.QLabel('3 dB', self)
         self.pl_tx_gain_slider.valueChanged[int].connect(self.plSliderUpdate)
         self.pl_tx_gain_box.addWidget(self.pl_tx_gain_slider_label)
         self.pl_tx_gain_box.addWidget(self.pl_tx_gain_slider)
@@ -299,7 +299,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_rx_gain_slider.setValue(0)
         self.pl_rx_gain_slider.setFocusPolicy(QtCore.Qt.NoFocus)
         self.pl_rx_gain_slider_label = QtWidgets.QLabel('RX Gain', self)
-        self.pl_rx_gain_value_label = QtWidgets.QLabel('0 dB', self)
+        self.pl_rx_gain_value_label = QtWidgets.QLabel('3 dB', self)
         self.pl_rx_gain_slider.valueChanged[int].connect(self.plSliderUpdate)
         self.pl_rx_gain_box.addWidget(self.pl_rx_gain_slider_label)
         self.pl_rx_gain_box.addWidget(self.pl_rx_gain_slider)
@@ -741,7 +741,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.updateCellPlot()
         self.updateRWMPlot()
         self.updatePathLossPlot()
-        #self.setBoxText()
+        self.setBoxText()
         print("Loaded data for {0} {1} {2} {3}".format(self.tower.mcc, self.tower.mnc, self.tower.lac, self.tower.cellid))
 
     def setBoxText(self):
