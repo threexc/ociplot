@@ -30,8 +30,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.x_range = None
         self.y_range = None
 
-        self.pl_points = np.arange(0.5, 10000, 0.5)
-        self.pl_freq = 50000000
+        self.pl_points = np.arange(0.5, 2500, 0.5)
+        self.pl_freq = 50
         self.pl_alpha = 1
         self.pl_beta = 1
         self.pl_gamma = 1
