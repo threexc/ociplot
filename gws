@@ -29,6 +29,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.density = 0.5
         self.x_range = None
         self.y_range = None
+
         self.pl_points = np.arange(0.5, 10000, 0.5)
         self.pl_freq = 50000000
         self.pl_alpha = 1
@@ -46,6 +47,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_ue_height = 1
         self.pl_correction_factor = 1
         self.pl_large_city = True
+
         self.tower = None
         self.tower_x = None
         self.tower_y = None
@@ -124,26 +126,70 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_widget.setLabel('left', "Path Loss (dB)", **self.styles)
         self.pl_widget.setLabel('bottom', "Distance (m)", **self.styles)
 
-    def setupPlotTabs(self):
-        self.plot_tabs = QtWidgets.QTabWidget()
-        self.map_box = QtWidgets.QVBoxLayout()
-        self.map_box.addWidget(self.map_toolbar)
-        self.map_box.addWidget(self.map_canvas)
-        self.plot_tab1 = QtWidgets.QWidget()
-        self.plot_tab1.setLayout(self.map_box)
-        self.plot_tab2 = self.pl_widget
-        self.plot_tab3 = self.model_widget
-        self.plot_tabs.resize(300, 200)
-        self.plot_tabs.addTab(self.plot_tab1, "Cell Map")
-        self.plot_tabs.addTab(self.plot_tab2, "Path Loss")
-        self.plot_tabs.addTab(self.plot_tab3, "RWM")
+    def setupFileControls(self):
+        self.file_control_box = QtWidgets.QVBoxLayout()
+        self.load_box = QtWidgets.QVBoxLayout()
+        self.set_data_box = QtWidgets.QVBoxLayout()
+        self.set_reference_box = QtWidgets.QVBoxLayout()
 
-    def setupControlTabs(self):
-        self.control_tabs = QtWidgets.QTabWidget()
-        self.rwm_control_tab = QtWidgets.QWidget()
-        self.pl_control_tab = QtWidgets.QWidget()
-        self.control_tabs.addTab(self.pl_control_tab, "Path Loss")
-        self.control_tabs.addTab(self.rwm_control_tab, "RWM")
+        self.file_controls_title = QtWidgets.QLabel('File Selection', self)
+        self.file_controls_title.setFont(QtGui.QFont('Arial', 14))
+        self.load_button = QtWidgets.QPushButton('Load', self)
+        self.load_button.clicked.connect(self.setDataSource)
+        self.set_data_button = QtWidgets.QPushButton('Set Dataset', self)
+        self.set_data_button.clicked.connect(self.showFileDialog)
+        self.set_data_text = QtWidgets.QLineEdit('None', self)
+        self.set_data_text.setReadOnly(True)
+        self.set_reference_button = QtWidgets.QPushButton('Set Reference', self)
+        self.set_reference_button.clicked.connect(self.showReferenceDialog)
+        self.set_reference_text = QtWidgets.QLineEdit('None', self)
+        self.set_reference_text.setReadOnly(True)
+
+        self.load_box.addWidget(self.load_button)
+        self.set_data_box.addWidget(self.set_data_button)
+        self.set_data_box.addWidget(self.set_data_text)
+        self.set_reference_box.addWidget(self.set_reference_button)
+        self.set_reference_box.addWidget(self.set_reference_text)
+        self.file_control_box.addWidget(self.file_controls_title)
+        self.file_control_box.addLayout(self.load_box)
+        self.file_control_box.addLayout(self.set_data_box)
+        self.file_control_box.addLayout(self.set_reference_box)
+
+    def setupRWMControls(self):
+        self.model_box = QtWidgets.QVBoxLayout()
+        self.density_box = QtWidgets.QHBoxLayout()
+        self.absorption_box = QtWidgets.QHBoxLayout()
+        self.offset_box = QtWidgets.QHBoxLayout()
+        self.gain_factor_box = QtWidgets.QHBoxLayout()
+
+        self.setupRWMSliders()
+
+        self.radio_2d = QtWidgets.QRadioButton("2D Model", self)
+        self.radio_3d = QtWidgets.QRadioButton("3D Model", self)
+        self.radio_3d.setChecked(True)
+        self.radio_2d.toggled.connect(self.updateRWMPlot)
+        self.radio_3d.toggled.connect(self.updateRWMPlot)
+
+        self.density_box.addWidget(self.density_slider_label)
+        self.density_box.addWidget(self.density_slider)
+        self.density_box.addWidget(self.density_value_label)
+        self.absorption_box.addWidget(self.absorption_slider_label)
+        self.absorption_box.addWidget(self.absorption_slider)
+        self.absorption_box.addWidget(self.absorption_value_label)
+        self.offset_box.addWidget(self.offset_slider_label)
+        self.offset_box.addWidget(self.offset_slider)
+        self.offset_box.addWidget(self.offset_value_label)
+        self.gain_factor_box.addWidget(self.gain_factor_slider_label)
+        self.gain_factor_box.addWidget(self.gain_factor_slider)
+        self.gain_factor_box.addWidget(self.gain_factor_value_label)
+
+        self.model_box.addWidget(self.radio_2d)
+        self.model_box.addWidget(self.radio_3d)
+        self.model_box.addLayout(self.density_box)
+        self.model_box.addLayout(self.absorption_box)
+        self.model_box.addLayout(self.offset_box)
+        self.model_box.addLayout(self.gain_factor_box)
+        self.model_box.setAlignment(QtCore.Qt.AlignTop)
 
     def setupPathLossControls(self):
         self.pl_box = QtWidgets.QVBoxLayout()
@@ -172,11 +218,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lonbox = QtWidgets.QHBoxLayout()
         self.location_button_box = QtWidgets.QHBoxLayout()
 
-        self._setupPLCheckBoxes()
-        self._setupPLSliders()
-        self._setupPLTextBoxes()
-        self._setupPLTitles()
-        self._setupLatLonBoxes()
+        self.setupPLCheckBoxes()
+        self.setupPLSliders()
+        self.setupPLTextBoxes()
+        self.setupPLTitles()
+        self.setupLatLonBoxes()
 
         self.pl_box.addLayout(self.pl_checkbox_title_box)
         self.pl_box.addLayout(self.pl_th_title_box)
@@ -203,20 +249,161 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_box.addLayout(self.location_button_box)
         self.pl_box.setAlignment(QtCore.Qt.AlignTop)
 
-    def _setupPLTitles(self):
-        self.pl_checkbox_title = QtWidgets.QLabel("Models")
-        self.pl_checkbox_title.setFont(QtGui.QFont("Arial", 12))
-        self.pl_checkbox_title_box.addWidget(self.pl_checkbox_title)
+    def setupCellControls(self):
+        self.tower_box = QtWidgets.QVBoxLayout()
+        self.cellid_box = QtWidgets.QHBoxLayout()
+        self.mcc_box = QtWidgets.QHBoxLayout()
+        self.mnc_box = QtWidgets.QHBoxLayout()
+        self.lac_box = QtWidgets.QHBoxLayout()
 
-        self.pl_th_title = QtWidgets.QLabel("Large-Scale")
-        self.pl_th_title.setFont(QtGui.QFont("Arial", 10))
-        self.pl_th_title_box.addWidget(self.pl_th_title)
+        self.tower_combo_title = QtWidgets.QLabel('Cell Selection', self)
+        self.tower_combo_title.setFont(QtGui.QFont('Arial', 14))
 
-        self.pl_oh_title = QtWidgets.QLabel("Okumura-Hata")
-        self.pl_oh_title.setFont(QtGui.QFont("Arial", 10))
-        self.pl_oh_title_box.addWidget(self.pl_oh_title)
+        self.cellid_label = QtWidgets.QLabel('Cell IDs', self)
+        self.mcc_label = QtWidgets.QLabel('MCCs', self)
+        self.mnc_label = QtWidgets.QLabel('MNCs', self)
+        self.lac_label = QtWidgets.QLabel('LACs', self)
 
-    def _setupPLSliders(self):
+        self.cellid_count = QtWidgets.QLabel('', self)
+        self.mcc_count = QtWidgets.QLabel('', self)
+        self.mnc_count = QtWidgets.QLabel('', self)
+        self.lac_count = QtWidgets.QLabel('', self)
+
+        self.cellid_combo = QtWidgets.QComboBox(self)
+        self.mcc_combo = QtWidgets.QComboBox(self)
+        self.mnc_combo = QtWidgets.QComboBox(self)
+        self.lac_combo = QtWidgets.QComboBox(self)
+
+        self.cellid_combo.activated.connect(self.setCell)
+
+        self.cellid_box.addWidget(self.cellid_label)
+        self.cellid_box.addWidget(self.cellid_count)
+        self.cellid_box.addWidget(self.cellid_combo)
+        self.mcc_box.addWidget(self.mcc_label)
+        self.mcc_box.addWidget(self.mcc_count)
+        self.mcc_box.addWidget(self.mcc_combo)
+        self.mnc_box.addWidget(self.mnc_label)
+        self.mnc_box.addWidget(self.mnc_count)
+        self.mnc_box.addWidget(self.mnc_combo)
+        self.lac_box.addWidget(self.lac_label)
+        self.lac_box.addWidget(self.lac_count)
+        self.lac_box.addWidget(self.lac_combo)
+        self.tower_load_button = QtWidgets.QPushButton('Load Cell Data', self)
+        self.tower_load_button.clicked.connect(self.loadCell)
+        self.tower_load_button.setEnabled(False)
+        
+        self.tower_box.addWidget(self.tower_combo_title)
+        self.tower_box.addLayout(self.cellid_box)
+        self.tower_box.addLayout(self.mcc_box)
+        self.tower_box.addLayout(self.mnc_box)
+        self.tower_box.addLayout(self.lac_box)
+        self.tower_box.addWidget(self.tower_load_button)
+        self.tower_box.setAlignment(QtCore.Qt.AlignTop)
+        print("Set up tower controls")
+
+    def setupFileMenu(self):
+        self.selectFile = QtWidgets.QAction(QtGui.QIcon('open.png'), 'Select File', self)
+        self.selectFile.setShortcut('Ctrl+O')
+        self.selectFile.setStatusTip('Select New File')
+        self.selectFile.triggered.connect(self.showFileDialog)
+        self.selectFile.triggered.connect(self.setDataSource)
+
+        self.referenceFile = QtWidgets.QAction(QtGui.QIcon('open.png'), 'Select Reference File', self)
+        self.referenceFile.setShortcut('Ctrl+R')
+        self.referenceFile.setStatusTip('Select Reference File')
+        self.referenceFile.triggered.connect(self.showReferenceDialog)
+        print("Set up file menu buttons")
+
+    def setupMenuBar(self):
+        self.menubar = self.menuBar()
+        self.fileMenu = self.menubar.addMenu('&File')
+        self.fileMenu.addAction(self.selectFile)
+        self.fileMenu.addAction(self.referenceFile)
+        print("Set up menu bar")
+
+    def setupPlotTabs(self):
+        self.plot_tabs = QtWidgets.QTabWidget()
+        self.map_box = QtWidgets.QVBoxLayout()
+        self.map_box.addWidget(self.map_toolbar)
+        self.map_box.addWidget(self.map_canvas)
+        self.plot_tab1 = QtWidgets.QWidget()
+        self.plot_tab1.setLayout(self.map_box)
+        self.plot_tab2 = self.pl_widget
+        self.plot_tab3 = self.model_widget
+        self.plot_tabs.resize(300, 200)
+        self.plot_tabs.addTab(self.plot_tab1, "Cell Map")
+        self.plot_tabs.addTab(self.plot_tab2, "Path Loss")
+        self.plot_tabs.addTab(self.plot_tab3, "RWM")
+
+    def setupControlTabs(self):
+        self.control_tabs = QtWidgets.QTabWidget()
+        self.rwm_control_tab = QtWidgets.QWidget()
+        self.pl_control_tab = QtWidgets.QWidget()
+        self.control_tabs.addTab(self.pl_control_tab, "Path Loss")
+        self.control_tabs.addTab(self.rwm_control_tab, "RWM")
+
+    def setupControlsSidebar(self):
+        self.plotSidebar = QtWidgets.QVBoxLayout()
+        self.rwm_control_tab.setLayout(self.model_box)
+        self.pl_control_tab.setLayout(self.pl_box)
+
+        self.controls_title = QtWidgets.QLabel('Controls', self)
+        self.controls_title.setFont(QtGui.QFont('Arial', 14))
+
+        self.plotSidebar.addWidget(self.controls_title)
+        self.plotSidebar.addWidget(self.control_tabs)
+        self.plotSidebar.setAlignment(QtCore.Qt.AlignTop)
+        self.plotSidebarWidget = QtWidgets.QWidget()
+        self.plotSidebarWidget.setLayout(self.plotSidebar)
+        print("Set up sidebar")
+
+    def setupDataSidebar(self):
+        self.dataSidebar = QtWidgets.QVBoxLayout()
+        self.dataSidebar.addLayout(self.file_control_box)
+        self.dataSidebar.addLayout(self.tower_box)
+        self.dataSidebar.addWidget(self.tower_load_button)
+        self.dataSidebar.setAlignment(QtCore.Qt.AlignTop)
+        self.dataSidebarWidget = QtWidgets.QWidget()
+        self.dataSidebarWidget.setLayout(self.dataSidebar)
+        print("Set up sidebar")
+
+    def setupPLCheckBoxes(self):
+        self.pl_fs_checkbox = QtWidgets.QCheckBox("FS")
+        self.pl_fs_checkbox.setChecked(True)
+        self.pl_fs_checkbox.stateChanged.connect(self.checkboxUpdate)
+        self.pl_checkbox_subbox_1.addWidget(self.pl_fs_checkbox)
+
+        self.pl_abg_checkbox = QtWidgets.QCheckBox("ABG")
+        self.pl_abg_checkbox.setChecked(True)
+        self.pl_abg_checkbox.stateChanged.connect(self.checkboxUpdate)
+        self.pl_checkbox_subbox_1.addWidget(self.pl_abg_checkbox)
+
+        self.pl_ci_checkbox = QtWidgets.QCheckBox("CI")
+        self.pl_ci_checkbox.setChecked(False)
+        self.pl_ci_checkbox.stateChanged.connect(self.checkboxUpdate)
+        self.pl_checkbox_subbox_1.addWidget(self.pl_ci_checkbox)
+
+        self.pl_oh_u_checkbox = QtWidgets.QCheckBox("Urban")
+        self.pl_oh_u_checkbox.setChecked(False)
+        self.pl_oh_u_checkbox.stateChanged.connect(self.checkboxUpdate)
+        self.pl_checkbox_subbox_2.addWidget(self.pl_oh_u_checkbox)
+
+        self.pl_oh_s_checkbox = QtWidgets.QCheckBox("Suburban")
+        self.pl_oh_s_checkbox.setChecked(False)
+        self.pl_oh_s_checkbox.stateChanged.connect(self.checkboxUpdate)
+        self.pl_checkbox_subbox_2.addWidget(self.pl_oh_s_checkbox)
+
+        self.pl_oh_r_checkbox = QtWidgets.QCheckBox("Rural")
+        self.pl_oh_r_checkbox.setChecked(False)
+        self.pl_oh_r_checkbox.stateChanged.connect(self.checkboxUpdate)
+        self.pl_checkbox_subbox_2.addWidget(self.pl_oh_r_checkbox)
+
+        self.pl_large_city_checkbox = QtWidgets.QCheckBox("Large City")
+        self.pl_large_city_checkbox.setChecked(True)
+        self.pl_large_city_checkbox.stateChanged.connect(self.checkboxUpdate)
+        self.pl_checkbox_subbox_3.addWidget(self.pl_large_city_checkbox)
+
+    def setupPLSliders(self):
         self.pl_alpha_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
         self.pl_alpha_slider.setRange(0, 100)
         self.pl_alpha_slider.setValue(10)
@@ -327,7 +514,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_ue_height_box.addWidget(self.pl_ue_height_slider)
         self.pl_ue_height_box.addWidget(self.pl_ue_height_value_label)
 
-    def _setupPLTextBoxes(self):
+    def setupPLTextBoxes(self):
         self.pl_freq_textbox = QtWidgets.QLineEdit(self)
         self.pl_freq_textbox.setText("50")
         self.pl_freq_textbox_label = QtWidgets.QLabel('Frequency', self)
@@ -355,43 +542,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_ref_freq_box.addWidget(self.pl_ref_freq_textbox)
         self.pl_ref_freq_box.addWidget(self.pl_ref_freq_value_label)
 
-    def _setupPLCheckBoxes(self):
-        self.pl_fs_checkbox = QtWidgets.QCheckBox("FS")
-        self.pl_fs_checkbox.setChecked(True)
-        self.pl_fs_checkbox.stateChanged.connect(self.checkboxUpdate)
-        self.pl_checkbox_subbox_1.addWidget(self.pl_fs_checkbox)
+    def setupPLTitles(self):
+        self.pl_checkbox_title = QtWidgets.QLabel("Models")
+        self.pl_checkbox_title.setFont(QtGui.QFont("Arial", 12))
+        self.pl_checkbox_title_box.addWidget(self.pl_checkbox_title)
 
-        self.pl_abg_checkbox = QtWidgets.QCheckBox("ABG")
-        self.pl_abg_checkbox.setChecked(True)
-        self.pl_abg_checkbox.stateChanged.connect(self.checkboxUpdate)
-        self.pl_checkbox_subbox_1.addWidget(self.pl_abg_checkbox)
+        self.pl_th_title = QtWidgets.QLabel("Large-Scale")
+        self.pl_th_title.setFont(QtGui.QFont("Arial", 10))
+        self.pl_th_title_box.addWidget(self.pl_th_title)
 
-        self.pl_ci_checkbox = QtWidgets.QCheckBox("CI")
-        self.pl_ci_checkbox.setChecked(False)
-        self.pl_ci_checkbox.stateChanged.connect(self.checkboxUpdate)
-        self.pl_checkbox_subbox_1.addWidget(self.pl_ci_checkbox)
+        self.pl_oh_title = QtWidgets.QLabel("Okumura-Hata")
+        self.pl_oh_title.setFont(QtGui.QFont("Arial", 10))
+        self.pl_oh_title_box.addWidget(self.pl_oh_title)
 
-        self.pl_oh_u_checkbox = QtWidgets.QCheckBox("Urban")
-        self.pl_oh_u_checkbox.setChecked(False)
-        self.pl_oh_u_checkbox.stateChanged.connect(self.checkboxUpdate)
-        self.pl_checkbox_subbox_2.addWidget(self.pl_oh_u_checkbox)
-
-        self.pl_oh_s_checkbox = QtWidgets.QCheckBox("Suburban")
-        self.pl_oh_s_checkbox.setChecked(False)
-        self.pl_oh_s_checkbox.stateChanged.connect(self.checkboxUpdate)
-        self.pl_checkbox_subbox_2.addWidget(self.pl_oh_s_checkbox)
-
-        self.pl_oh_r_checkbox = QtWidgets.QCheckBox("Rural")
-        self.pl_oh_r_checkbox.setChecked(False)
-        self.pl_oh_r_checkbox.stateChanged.connect(self.checkboxUpdate)
-        self.pl_checkbox_subbox_2.addWidget(self.pl_oh_r_checkbox)
-
-        self.pl_large_city_checkbox = QtWidgets.QCheckBox("Large City")
-        self.pl_large_city_checkbox.setChecked(True)
-        self.pl_large_city_checkbox.stateChanged.connect(self.checkboxUpdate)
-        self.pl_checkbox_subbox_3.addWidget(self.pl_large_city_checkbox)
-
-    def _setupLatLonBoxes(self):
+    def setupLatLonBoxes(self):
         self.lat_edit = QtWidgets.QLineEdit(self)
         self.lat_edit.editingFinished.connect(self.textboxUpdate)
         self.latbox_label = QtWidgets.QLabel("Tower Lat", self)
@@ -407,43 +571,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.set_latlon_button.clicked.connect(self.setCustomTowerLocation)
         self.location_button_box.addWidget(self.set_latlon_button)
 
-    def setupRWMControls(self):
-        self.model_box = QtWidgets.QVBoxLayout()
-        self.density_box = QtWidgets.QHBoxLayout()
-        self.absorption_box = QtWidgets.QHBoxLayout()
-        self.offset_box = QtWidgets.QHBoxLayout()
-        self.gain_factor_box = QtWidgets.QHBoxLayout()
-
-        self._setupRWMSliders()
-
-        self.radio_2d = QtWidgets.QRadioButton("2D Model", self)
-        self.radio_3d = QtWidgets.QRadioButton("3D Model", self)
-        self.radio_3d.setChecked(True)
-        self.radio_2d.toggled.connect(self.updateRWMPlot)
-        self.radio_3d.toggled.connect(self.updateRWMPlot)
-
-        self.density_box.addWidget(self.density_slider_label)
-        self.density_box.addWidget(self.density_slider)
-        self.density_box.addWidget(self.density_value_label)
-        self.absorption_box.addWidget(self.absorption_slider_label)
-        self.absorption_box.addWidget(self.absorption_slider)
-        self.absorption_box.addWidget(self.absorption_value_label)
-        self.offset_box.addWidget(self.offset_slider_label)
-        self.offset_box.addWidget(self.offset_slider)
-        self.offset_box.addWidget(self.offset_value_label)
-        self.gain_factor_box.addWidget(self.gain_factor_slider_label)
-        self.gain_factor_box.addWidget(self.gain_factor_slider)
-        self.gain_factor_box.addWidget(self.gain_factor_value_label)
-
-        self.model_box.addWidget(self.radio_2d)
-        self.model_box.addWidget(self.radio_3d)
-        self.model_box.addLayout(self.density_box)
-        self.model_box.addLayout(self.absorption_box)
-        self.model_box.addLayout(self.offset_box)
-        self.model_box.addLayout(self.gain_factor_box)
-        self.model_box.setAlignment(QtCore.Qt.AlignTop)
-
-    def _setupRWMSliders(self):
+    def setupRWMSliders(self):
         self.density_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
         self.density_slider.setRange(1, 100)
         self.density_slider.setValue(50)
@@ -477,131 +605,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.offset_slider.valueChanged[int].connect(self.rwmSliderUpdate)
         self.gain_factor_slider.valueChanged[int].connect(self.rwmSliderUpdate)
 
-    def setupFileControls(self):
-        self.file_control_box = QtWidgets.QVBoxLayout()
-        self.load_box = QtWidgets.QVBoxLayout()
-        self.set_data_box = QtWidgets.QVBoxLayout()
-        self.set_reference_box = QtWidgets.QVBoxLayout()
 
-        self.file_controls_title = QtWidgets.QLabel('File Selection', self)
-        self.file_controls_title.setFont(QtGui.QFont('Arial', 14))
-        self.load_button = QtWidgets.QPushButton('Load', self)
-        self.load_button.clicked.connect(self.setDataSource)
-        self.set_data_button = QtWidgets.QPushButton('Set Dataset', self)
-        self.set_data_button.clicked.connect(self.showFileDialog)
-        self.set_data_text = QtWidgets.QLineEdit('None', self)
-        self.set_data_text.setReadOnly(True)
-        self.set_reference_button = QtWidgets.QPushButton('Set Reference', self)
-        self.set_reference_button.clicked.connect(self.showReferenceDialog)
-        self.set_reference_text = QtWidgets.QLineEdit('None', self)
-        self.set_reference_text.setReadOnly(True)
-
-        self.load_box.addWidget(self.load_button)
-        self.set_data_box.addWidget(self.set_data_button)
-        self.set_data_box.addWidget(self.set_data_text)
-        self.set_reference_box.addWidget(self.set_reference_button)
-        self.set_reference_box.addWidget(self.set_reference_text)
-        self.file_control_box.addWidget(self.file_controls_title)
-        self.file_control_box.addLayout(self.load_box)
-        self.file_control_box.addLayout(self.set_data_box)
-        self.file_control_box.addLayout(self.set_reference_box)
-        
-    def setupCellControls(self):
-        self.tower_box = QtWidgets.QVBoxLayout()
-        self.cellid_box = QtWidgets.QHBoxLayout()
-        self.mcc_box = QtWidgets.QHBoxLayout()
-        self.mnc_box = QtWidgets.QHBoxLayout()
-        self.lac_box = QtWidgets.QHBoxLayout()
-
-        self.tower_combo_title = QtWidgets.QLabel('Cell Selection', self)
-        self.tower_combo_title.setFont(QtGui.QFont('Arial', 14))
-
-        self.cellid_label = QtWidgets.QLabel('Cell IDs', self)
-        self.mcc_label = QtWidgets.QLabel('MCCs', self)
-        self.mnc_label = QtWidgets.QLabel('MNCs', self)
-        self.lac_label = QtWidgets.QLabel('LACs', self)
-
-        self.cellid_count = QtWidgets.QLabel('', self)
-        self.mcc_count = QtWidgets.QLabel('', self)
-        self.mnc_count = QtWidgets.QLabel('', self)
-        self.lac_count = QtWidgets.QLabel('', self)
-
-        self.cellid_combo = QtWidgets.QComboBox(self)
-        self.mcc_combo = QtWidgets.QComboBox(self)
-        self.mnc_combo = QtWidgets.QComboBox(self)
-        self.lac_combo = QtWidgets.QComboBox(self)
-
-        self.cellid_combo.activated.connect(self.setCell)
-
-        self.cellid_box.addWidget(self.cellid_label)
-        self.cellid_box.addWidget(self.cellid_count)
-        self.cellid_box.addWidget(self.cellid_combo)
-        self.mcc_box.addWidget(self.mcc_label)
-        self.mcc_box.addWidget(self.mcc_count)
-        self.mcc_box.addWidget(self.mcc_combo)
-        self.mnc_box.addWidget(self.mnc_label)
-        self.mnc_box.addWidget(self.mnc_count)
-        self.mnc_box.addWidget(self.mnc_combo)
-        self.lac_box.addWidget(self.lac_label)
-        self.lac_box.addWidget(self.lac_count)
-        self.lac_box.addWidget(self.lac_combo)
-        self.tower_load_button = QtWidgets.QPushButton('Load Cell Data', self)
-        self.tower_load_button.clicked.connect(self.loadCell)
-        self.tower_load_button.setEnabled(False)
-        
-        self.tower_box.addWidget(self.tower_combo_title)
-        self.tower_box.addLayout(self.cellid_box)
-        self.tower_box.addLayout(self.mcc_box)
-        self.tower_box.addLayout(self.mnc_box)
-        self.tower_box.addLayout(self.lac_box)
-        self.tower_box.addWidget(self.tower_load_button)
-        self.tower_box.setAlignment(QtCore.Qt.AlignTop)
-        print("Set up tower controls")
-
-    def setupFileMenu(self):
-        self.selectFile = QtWidgets.QAction(QtGui.QIcon('open.png'), 'Select File', self)
-        self.selectFile.setShortcut('Ctrl+O')
-        self.selectFile.setStatusTip('Select New File')
-        self.selectFile.triggered.connect(self.showFileDialog)
-        self.selectFile.triggered.connect(self.setDataSource)
-
-        self.referenceFile = QtWidgets.QAction(QtGui.QIcon('open.png'), 'Select Reference File', self)
-        self.referenceFile.setShortcut('Ctrl+R')
-        self.referenceFile.setStatusTip('Select Reference File')
-        self.referenceFile.triggered.connect(self.showReferenceDialog)
-        print("Set up file menu buttons")
-
-    def setupMenuBar(self):
-        self.menubar = self.menuBar()
-        self.fileMenu = self.menubar.addMenu('&File')
-        self.fileMenu.addAction(self.selectFile)
-        self.fileMenu.addAction(self.referenceFile)
-        print("Set up menu bar")
-
-    def setupControlsSidebar(self):
-        self.plotSidebar = QtWidgets.QVBoxLayout()
-        self.rwm_control_tab.setLayout(self.model_box)
-        self.pl_control_tab.setLayout(self.pl_box)
-
-        self.controls_title = QtWidgets.QLabel('Controls', self)
-        self.controls_title.setFont(QtGui.QFont('Arial', 14))
-
-        self.plotSidebar.addWidget(self.controls_title)
-        self.plotSidebar.addWidget(self.control_tabs)
-        self.plotSidebar.setAlignment(QtCore.Qt.AlignTop)
-        self.plotSidebarWidget = QtWidgets.QWidget()
-        self.plotSidebarWidget.setLayout(self.plotSidebar)
-        print("Set up sidebar")
-
-    def setupDataSidebar(self):
-        self.dataSidebar = QtWidgets.QVBoxLayout()
-        self.dataSidebar.addLayout(self.file_control_box)
-        self.dataSidebar.addLayout(self.tower_box)
-        self.dataSidebar.addWidget(self.tower_load_button)
-        self.dataSidebar.setAlignment(QtCore.Qt.AlignTop)
-        self.dataSidebarWidget = QtWidgets.QWidget()
-        self.dataSidebarWidget.setLayout(self.dataSidebar)
-        print("Set up sidebar")
 
     def showFileDialog(self):
         home_dir = str(Path.home)
