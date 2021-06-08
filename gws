@@ -21,7 +21,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
 
-        self.setWindowTitle("walksignal 0.0.1")
+        self.setWindowTitle("walksignal 0.0.2")
         self.datafile = None
         self.reference = None
         self.towerset = None
