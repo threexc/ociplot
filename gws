@@ -10,6 +10,7 @@ from pathlib import Path
 import sys  # We need sys so that we can pass argv to QApplication
 import os
 import time
+import yaml
 import numpy as np
 from random import randint
 import walksignal.data as ds
@@ -22,8 +23,17 @@ class MainWindow(QtWidgets.QMainWindow):
         super(MainWindow, self).__init__(*args, **kwargs)
 
         self.setWindowTitle("walksignal 0.0.2")
-        self.datafile = None
-        self.reference = None
+        self.loaded_data = None
+        if os.path.isfile("lastcfg.yaml"):
+            with open("lastcfg.yaml", 'r') as stream:
+                self.loaded_data = yaml.safe_load(stream)
+        if self.loaded_data:
+            self.datafile = self.loaded_data['datafile']
+            self.reference = self.loaded_data['reference']
+        else:
+            self.datafile = None
+            self.reference = None
+        self.config_data = None
         self.towerset = None
         self.absorption = 0.5
         self.density = 0.5
@@ -61,6 +71,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.rwm_gain_factor = 1.0
 
         self.setupUI()
+    
+    def closeEvent(self, event):
+        self.setConfig()
+        self.saveConfig()
 
     def setupUI(self):
         self.setupPlotWidgets()
@@ -83,6 +97,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.model_widget = QtWidgets.QWidget()
         self.model_widget.setLayout(self.main_layout)
         self.setCentralWidget(self.model_widget)
+        if self.datafile:
+            self.loadDataSet()
+            self.set_data_text.setText(self.loaded_data['datafile'][0])
+            self.set_reference_text.setText(self.loaded_data['reference'])
 
     def setupPlotWidgets(self):
         self.pl_red_pen = pg.mkPen(color=(255, 0, 0))
@@ -605,8 +623,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.offset_slider.valueChanged[int].connect(self.rwmSliderUpdate)
         self.gain_factor_slider.valueChanged[int].connect(self.rwmSliderUpdate)
 
-
-
     def showFileDialog(self):
         home_dir = str(Path.home)
         fname = QtWidgets.QFileDialog.getOpenFileNames(self, 'Open file', home_dir)
@@ -746,6 +762,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.updateRWMPlot()
         self.updatePathLossPlot()
         self.setBoxText()
+        self.setConfig()
         print("Loaded data for {0} {1} {2} {3}".format(self.tower.mcc, self.tower.mnc, self.tower.lac, self.tower.cellid))
 
     def setBoxText(self):
@@ -755,6 +772,17 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self.lat_edit.setText("N/A")
             self.lon_edit.setText("N/A")
+
+    def setConfig(self):
+
+        self.config_data = {
+                'datafile': self.datafile,
+                'reference': self.reference,
+        }
+
+    def saveConfig(self):
+        with open("lastcfg.yaml", "w") as yamlfile:
+            data = yaml.dump(self.config_data, yamlfile)
 
     def updateCellPlot(self):
         points = self.tower.data_points
