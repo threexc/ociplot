@@ -85,13 +85,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self.model_widget)
 
     def setupPlotWidgets(self):
-        self.pl_data_pen = pg.mkPen(color=(255, 0, 0))
-        self.pl_abg_pen = pg.mkPen(color=(0, 0, 255))
-        self.pl_ci_pen = pg.mkPen(color=(64,192,64))
-        self.pl_fs_pen = pg.mkPen(color=(0, 0, 0))
+        self.pl_red_pen = pg.mkPen(color=(255, 0, 0))
+        self.pl_green_pen = pg.mkPen(color=(64, 192, 64))
+        self.pl_blue_pen = pg.mkPen(color=(0, 0, 255))
+        self.pl_green_pen = pg.mkPen(color=(64,192,64))
+        self.pl_black_pen = pg.mkPen(color=(0, 0, 0))
+        self.pl_orange_pen = pg.mkPen(color=(255, 145, 0))
         self.pl_oh_u_pen = pg.mkPen(color=(0, 255, 0))
         self.pl_oh_s_pen = pg.mkPen(color=(192,64,192))
-        self.pl_oh_r_pen = pg.mkPen(color=(32, 32, 128))
+        self.pl_oh_r_pen = pg.mkPen(color=(64, 64, 144))
 
         self.model_widget = pg.PlotWidget()
         self.model_widget.setBackground('w')
@@ -105,22 +107,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_widget.setYRange(-150, 150)
 
     def setupLines(self):
-        self.data_line = self.model_widget.plot(self.x, self.y, pen=self.pl_data_pen)
+        self.data_line = self.model_widget.plot(self.x, self.y, pen=self.pl_red_pen)
         self.tower_data_line = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='b'), symbol='o', size=1)
         self.model_widget.addItem(self.tower_data_line)
         self.styles = {'color':'b', 'font-size':'18px'}
         self.model_widget.setLabel('left', "Power (dBm)", **self.styles)
         self.model_widget.setLabel('bottom', "Distance (m)", **self.styles)
 
-        self.pl_data_line = self.pl_widget.plot(self.x, self.y,
-                pen=None, symbol="o", symbolPen=None, symbolSize=3,
-                symbolBrush=(255, 0, 0, 255), name="Measured")
-        self.pl_abg_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_abg_pen, name="ABG Model")
-        self.pl_ci_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_ci_pen, name="CI Model")
-        self.pl_fs_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_fs_pen, name="Free Space Model")
+        self.pl_abg_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_blue_pen, name="ABG Model")
+        self.pl_ci_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_green_pen, name="CI Model")
+        self.pl_fs_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_black_pen, name="Free Space Model")
         self.pl_oh_u_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_oh_u_pen, name="Okumura-Hata Urban")
         self.pl_oh_s_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_oh_s_pen, name="Okumura-Hata Suburban")
         self.pl_oh_r_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_oh_r_pen, name="Okumura-Hata Rural")
+        self.pl_data_line = self.pl_widget.plot(self.x, self.y, pen=None, symbol="o", symbolPen=self.pl_red_pen, symbolSize=3, symbolBrush=(255, 0, 0, 255), name="Measured")
 
         self.styles = {'color':'b', 'font-size':'18px'}
         self.pl_widget.setLabel('left', "Path Loss (dB)", **self.styles)
@@ -788,6 +788,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_data_line.clear()
         self.tower.get_path_loss(self.pl_tx_power)
         self.pl_data_line.setData(self.tower.distances, self.tower.path_loss)
+        if self.tower.distances:
+            self.pl_widget.setXRange(0, max(self.tower.distances) + 50)
         self.updateCILine()
         self.updateABGLine()
         self.updateFSLine()
