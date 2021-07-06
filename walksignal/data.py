@@ -14,11 +14,18 @@ class DataSet:
         self.data_file = data
         self.data_path = self.data_file[0].rsplit('/', 1)[0]
         self.dataset_name = self.data_path.rsplit('/', 1)[1]
+        self.reference_file = reference
         self.map_path = self.data_path + "/map.png"
         self.bbox_path = self.data_path + "/bbox.txt"
 
+        self.loadDataset()
+        self.loadReference()
+        self.loadCells()
+        self.loadPlot()
+
+    def loadDataset(self):
         self.start_time = time.time()
-        self.data_matrix = pd.concat([pd.read_csv(f) for f in data], ignore_index=True)
+        self.data_matrix = pd.concat([pd.read_csv(f) for f in self.data_file], ignore_index=True)
         self.duration = time.time() - self.start_time
         print("Done loading data_matrix in {:.2f} seconds".format(self.duration))
 
@@ -60,8 +67,9 @@ class DataSet:
         self.duration = time.time() - self.start_time
         print("Done loading dataset properties in {:.2f} seconds".format(self.duration))
 
+    def loadReference(self):
         self.start_time = time.time()
-        self.reference_matrix = pd.read_csv(reference)
+        self.reference_matrix = pd.read_csv(self.reference_file)
         self.reference_matrix = self.reference_matrix.loc[self.reference_matrix['cell'].isin(self.cellid_u)]
         self.duration = time.time() - self.start_time
         print("Done loading reference_matrix in {:.2f} seconds".format(self.duration))
@@ -77,6 +85,7 @@ class DataSet:
         self.duration = time.time() - self.start_time
         print("Done loading reference properties in {:.2f} seconds".format(self.duration))
 
+    def loadCells(self):
         self.start_time = time.time()
         self.cell_id_list = []
         self.cell_list = []
@@ -93,28 +102,20 @@ class DataSet:
         self.duration = time.time() - self.start_time
         print("Done loading cell properties in {:.2f} seconds".format(self.duration))
 
+    def loadPlot(self):
         self.start_time = time.time()
         self.plot_map = None
         self.map_bbox = None
         self.get_map_and_bbox()
-        self.fig = plt.figure()
-        self.ax1 = self.fig.add_subplot(111)
-        self.set_image()
         self.cm = plt.cm.get_cmap('gist_heat')
-        self.cm2 = plt.cm.get_cmap('gist_gray')
-        self.avg_lat_diff = np.average(np.ediff1d(self.lat_data))
-        self.avg_lon_diff = np.average(np.ediff1d(self.lon_data))
-        self.distances = np.array([])
         self.plotrange = np.linspace(1, 1500, 500)
         self.duration = time.time() - self.start_time
         print("Done loading plot properties in {:.2f} seconds".format(self.duration))
 
+
     def get_map_and_bbox(self):
         self.plot_map = plt.imread(self.map_path)
         self.map_bbox = [entry for entry in utils.get_bbox(self.bbox_path)]
-
-    def set_image(self):
-        self.ax1.imshow(self.plot_map, zorder=0, extent = self.map_bbox[0], aspect="equal")
 
     def get_cell_ids(self):
         for row in range(len(self.cellid_u)):
