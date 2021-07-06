@@ -761,20 +761,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.updateCellPlot()
         self.updateRWMPlot()
         self.updatePathLossPlot()
-        self.setBoxText()
         self.setConfig()
         print("Loaded data for {0} {1} {2} {3}".format(self.tower.mcc, self.tower.mnc, self.tower.lac, self.tower.cellid))
 
-    def setBoxText(self):
-        if self.tower:
-            self.lat_edit.setText(str(self.tower.lat))
-            self.lon_edit.setText(str(self.tower.lon))
-        else:
-            self.lat_edit.setText("N/A")
-            self.lon_edit.setText("N/A")
-
     def setConfig(self):
-
         self.config_data = {
                 'datafile': self.datafile,
                 'reference': self.reference,
