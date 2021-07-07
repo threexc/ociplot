@@ -97,8 +97,6 @@ class DataSet:
         self.get_distances_to_cells()
         self.get_power()
         self.get_path_loss(43) # 43dBm or ~20W for 4G antenna
-        self.cell_lat_data = self.get_cell_lats()
-        self.cell_lon_data = self.get_cell_lons()
         self.duration = time.time() - self.start_time
         print("Done loading cell properties in {:.2f} seconds".format(self.duration))
 
@@ -112,15 +110,17 @@ class DataSet:
         self.duration = time.time() - self.start_time
         print("Done loading plot properties in {:.2f} seconds".format(self.duration))
 
-
     def get_map_and_bbox(self):
         self.plot_map = plt.imread(self.map_path)
         self.map_bbox = [entry for entry in utils.get_bbox(self.bbox_path)]
 
+    # get a record of each unique cellid and its corresponding mcc,
+    # mnc, lac
     def get_cell_ids(self):
-        for row in range(len(self.cellid_u)):
-            self.cell_id_list.append((self.mcc[row], self.mnc[row], self.lac[row], self.cellid_u[row]))
+        self.cell_id_list = [(self.mcc[row], self.mnc[row], self.lac[row], self.cellid_u[row]) for row in range(len(self.cellid_u))]
 
+    # find dataset cellids (if any) in the reference and add them to the
+    # list of cells
     def get_dataset_cell_data(self):
         for cell_id in self.cell_id_list:
             if cell_id[3] in self.reference_matrix['cell'].unique():
@@ -132,6 +132,8 @@ class DataSet:
             else:
                 self.cell_list.append(Cell(mcc=cell_id[0], mnc=cell_id[1], lac=cell_id[2], cellid=cell_id[3]))
 
+    # pair each cell in self.cell_list with its corresponding
+    # measurement points in the dataset
     def get_cell_data_points(self):
         for index, row in self.data_matrix.iterrows():
             for cell in self.cell_list:
@@ -157,14 +159,7 @@ class DataSet:
         for cell in self.cell_list:
             cell.get_path_loss(tx_power)
 
-    def get_cell_lats(self):
-        cell_lats = [cell.lat for cell in self.cell_list]
-        return cell_lats
-
-    def get_cell_lons(self):
-        cell_lons = [cell.lon for cell in self.cell_list]
-        return cell_lons
-
+    # return the cell corresponding to a given mcc, mnc, lac, and cellid
     def get_cell_stats(self, mcc, mnc, lac, cellid):
         for cell in self.cell_list:
             if ((str(cell.mcc) == mcc) and (str(cell.mnc) == mnc) and (str(cell.lac) == lac) and (str(cell.cellid) == cellid)):
