@@ -34,8 +34,8 @@ class DataSet:
         self.data_start_time = time.strftime('%m/%d/%Y %H:%M:%S', time.gmtime(self.time_range[0]/1000.))
         self.data_end_time = time.strftime('%m/%d/%Y %H:%M:%S', time.gmtime(self.time_range[-1]/1000.))
         self.normalized_time_range = (self.time_range - self.time_range[0])/1000
-        self.lat = np.array(self.data_matrix['lat'], dtype=float)
-        self.lon = np.array(self.data_matrix['lon'], dtype=float)
+        self.lats = np.array(self.data_matrix['lat'], dtype=float)
+        self.lons = np.array(self.data_matrix['lon'], dtype=float)
         self.signal = np.array(self.data_matrix['signal'], dtype=float)
         self.pcis = np.array(self.data_matrix['pci'], dtype=float)
         self.speed = np.array(self.data_matrix['speed'], dtype=float)
@@ -89,14 +89,11 @@ class DataSet:
         self.start_time = time.time()
         self.cell_id_list = []
         self.cell_list = []
-        self.lat_data = self.lat
-        self.lon_data = self.lon
         self.get_cell_ids()
         self.get_dataset_cell_data()
         self.get_cell_data_points()
         self.get_distances_to_cells()
         self.get_power()
-        self.get_path_loss(43) # 43dBm or ~20W for 4G antenna
         self.duration = time.time() - self.start_time
         print("Done loading cell properties in {:.2f} seconds".format(self.duration))
 
