@@ -81,8 +81,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setupLines()
         self.setupFileControls()
         self.setupRWMControls()
-        self.setupPathLossControls()
         self.setupCellControls()
+        self.setupPathLossControls()
         self.setupFileMenu()
         self.setupMenuBar()
         self.setupPlotTabs()
@@ -232,9 +232,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_ref_freq_box = QtWidgets.QHBoxLayout()
         self.pl_bs_height_box = QtWidgets.QHBoxLayout()
         self.pl_ue_height_box = QtWidgets.QHBoxLayout()
-        self.latbox = QtWidgets.QHBoxLayout()
-        self.lonbox = QtWidgets.QHBoxLayout()
-        self.location_button_box = QtWidgets.QHBoxLayout()
 
         self.setupPLCheckBoxes()
         self.setupPLSliders()
@@ -262,9 +259,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_box.addLayout(self.pl_tx_power_box)
         self.pl_box.addLayout(self.pl_bs_height_box)
         self.pl_box.addLayout(self.pl_ue_height_box)
-        self.pl_box.addLayout(self.latbox)
-        self.pl_box.addLayout(self.lonbox)
-        self.pl_box.addLayout(self.location_button_box)
         self.pl_box.setAlignment(QtCore.Qt.AlignTop)
 
     def setupCellControls(self):
@@ -273,6 +267,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.mcc_box = QtWidgets.QHBoxLayout()
         self.mnc_box = QtWidgets.QHBoxLayout()
         self.lac_box = QtWidgets.QHBoxLayout()
+        self.latbox = QtWidgets.QHBoxLayout()
+        self.lonbox = QtWidgets.QHBoxLayout()
 
         self.tower_combo_title = QtWidgets.QLabel('Cell Selection', self)
         self.tower_combo_title.setFont(QtGui.QFont('Arial', 14))
@@ -316,7 +312,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tower_box.addLayout(self.mnc_box)
         self.tower_box.addLayout(self.lac_box)
         self.tower_box.addWidget(self.tower_load_button)
+        self.tower_box.addLayout(self.latbox)
+        self.tower_box.addLayout(self.lonbox)
         self.tower_box.setAlignment(QtCore.Qt.AlignTop)
+
         print("Set up tower controls")
 
     def setupFileMenu(self):
@@ -537,7 +536,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_freq_textbox.setText("50")
         self.pl_freq_textbox_label = QtWidgets.QLabel('Frequency', self)
         self.pl_freq_value_label = QtWidgets.QLabel('MHz', self)
-        self.pl_freq_textbox.editingFinished.connect(self.textboxUpdate)
+        self.pl_freq_textbox.textEdited.connect(self.textboxUpdate)
         self.pl_freq_box.addWidget(self.pl_freq_textbox_label)
         self.pl_freq_box.addWidget(self.pl_freq_textbox)
         self.pl_freq_box.addWidget(self.pl_freq_value_label)
@@ -546,7 +545,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_ref_dist_textbox.setText("1")
         self.pl_ref_dist_textbox_label = QtWidgets.QLabel('Ref Dist', self)
         self.pl_ref_dist_value_label = QtWidgets.QLabel('m', self)
-        self.pl_ref_dist_textbox.editingFinished.connect(self.textboxUpdate)
+        self.pl_ref_dist_textbox.textEdited.connect(self.textboxUpdate)
         self.pl_ref_dist_box.addWidget(self.pl_ref_dist_textbox_label)
         self.pl_ref_dist_box.addWidget(self.pl_ref_dist_textbox)
         self.pl_ref_dist_box.addWidget(self.pl_ref_dist_value_label)
@@ -555,7 +554,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_ref_freq_textbox.setText("1000")
         self.pl_ref_freq_textbox_label = QtWidgets.QLabel('Ref Freq', self)
         self.pl_ref_freq_value_label = QtWidgets.QLabel('MHz', self)
-        self.pl_ref_freq_textbox.editingFinished.connect(self.textboxUpdate)
+        self.pl_ref_freq_textbox.textEdited.connect(self.textboxUpdate)
         self.pl_ref_freq_box.addWidget(self.pl_ref_freq_textbox_label)
         self.pl_ref_freq_box.addWidget(self.pl_ref_freq_textbox)
         self.pl_ref_freq_box.addWidget(self.pl_ref_freq_value_label)
@@ -575,19 +574,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def setupLatLonBoxes(self):
         self.lat_edit = QtWidgets.QLineEdit(self)
-        self.lat_edit.editingFinished.connect(self.textboxUpdate)
+        self.lat_edit.textEdited.connect(self.setCustomTowerLocation)
         self.latbox_label = QtWidgets.QLabel("Tower Lat", self)
         self.latbox.addWidget(self.latbox_label)
         self.latbox.addWidget(self.lat_edit)
         self.lon_edit = QtWidgets.QLineEdit(self)
-        self.lon_edit.editingFinished.connect(self.textboxUpdate)
+        self.lon_edit.textEdited.connect(self.setCustomTowerLocation)
         self.lonbox_label = QtWidgets.QLabel("Tower Lon", self)
         self.lonbox.addWidget(self.lonbox_label)
         self.lonbox.addWidget(self.lon_edit)
-
-        self.set_latlon_button = QtWidgets.QPushButton("Set Tower Lat/Lon")
-        self.set_latlon_button.clicked.connect(self.setCustomTowerLocation)
-        self.location_button_box.addWidget(self.set_latlon_button)
 
     def setupRWMSliders(self):
         self.density_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
@@ -702,8 +697,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
             self.tower.get_distances()
             self.tower.get_path_loss(self.pl_tx_power)
-
-        self.loadCell()
 
     def textboxUpdate(self):
         self.pl_freq = float(self.pl_freq_textbox.text())
