@@ -92,7 +92,6 @@ class DataSet:
         self.get_cell_ids()
         self.get_dataset_cell_data()
         self.get_cell_data_points()
-        self.get_distances_to_cells()
         self.get_power()
         self.duration = time.time() - self.start_time
         print("Done loading cell properties in {:.2f} seconds".format(self.duration))
@@ -181,13 +180,10 @@ class Cell:
         self.peak_value = None
         self.path_loss = []
 
-    def get_distances(self):
+    def get_distances(self, tower_lat, tower_lon):
         self.distances.clear()
-        if (self.lat is None) or (self.lon is None):
-            print("Can't get distances for {0} {1} {2} {3}, lat/lon not available".format(self.mcc, self.mnc, self.lac, self.cellid))
-        else:
-            for datapoint in self.data_points:
-                self.distances.append(utils.get_distance(self.lat, self.lon, datapoint.lat, datapoint.lon) * 1000)
+        for datapoint in self.data_points:
+            self.distances.append(utils.get_distance(tower_lat, tower_lon, datapoint.lat, datapoint.lon) * 1000)
 
     def get_path_loss(self, tx_power):
         self.path_loss.clear()

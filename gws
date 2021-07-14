@@ -30,6 +30,9 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.loaded_data:
             self.datafile = self.loaded_data['datafile']
             self.reference = self.loaded_data['reference']
+            if "tower_lat" in self.loaded_data and "tower_lon" in self.loaded_data:
+                self.tower_lat = float(self.loaded_data['tower_lat'])
+                self.tower_lon = float(self.loaded_data['tower_lon'])
         else:
             self.datafile = None
             self.reference = None
@@ -575,11 +578,15 @@ class MainWindow(QtWidgets.QMainWindow):
     def setupLatLonBoxes(self):
         self.lat_edit = QtWidgets.QLineEdit(self)
         self.lat_edit.textEdited.connect(self.setTowerLocation)
+        if self.tower_lat:
+            self.lat_edit.setText(str(self.tower_lat))
         self.latbox_label = QtWidgets.QLabel("Tower Lat", self)
         self.latbox.addWidget(self.latbox_label)
         self.latbox.addWidget(self.lat_edit)
         self.lon_edit = QtWidgets.QLineEdit(self)
         self.lon_edit.textEdited.connect(self.setTowerLocation)
+        if self.tower_lon:
+            self.lon_edit.setText(str(self.tower_lon))
         self.lonbox_label = QtWidgets.QLabel("Tower Lon", self)
         self.lonbox.addWidget(self.lonbox_label)
         self.lonbox.addWidget(self.lon_edit)
@@ -692,10 +699,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def setTowerLocation(self):
         if self.lat_edit.text() and self.lon_edit.text():
-            self.tower.lat = float(self.lat_edit.text())
-            self.tower.lon = float(self.lon_edit.text())
+            self.tower_lat = float(self.lat_edit.text())
+            self.tower_lon = float(self.lon_edit.text())
 
-            self.tower.get_distances()
+            self.tower.get_distances(self.tower_lat, self.tower_lon)
             self.tower.get_path_loss(self.pl_tx_power)
 
     def textboxUpdate(self):
@@ -763,6 +770,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 'datafile': self.datafile,
                 'reference': self.reference,
         }
+        if self.tower_lat and self.tower_lon:
+            self.config_data['tower_lat'] = self.tower_lat
+            self.config_data['tower_lon'] = self.tower_lon
 
     def saveConfig(self):
         with open("lastcfg.yaml", "w") as yamlfile:
@@ -781,10 +791,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.map_canvas.axes.imshow(self.towerset.plot_map, zorder=0, extent = self.towerset.map_bbox[0], aspect="equal")
         powerscatter = self.map_canvas.axes.scatter(lon_series, lat_series, zorder=1, alpha=1.0, s=20, c=self.tower.signal_power, cmap=self.towerset.cm)
 
-        if (self.tower.lon is None) or (self.tower.lat is None):
+        if (self.tower_lon is None) or (self.tower_lat is None):
             print("Can't draw tower, bad lat/lon")
         else:
-            self.map_canvas.axes.scatter(float(self.tower.lon), float(self.tower.lat), zorder=1, alpha=1.0, s=20, color="blue")
+            self.map_canvas.axes.scatter(float(self.tower_lon), float(self.tower_lat), zorder=1, alpha=1.0, s=20, color="blue")
 
         self.map_canvas.axes.set_xlim(self.towerset.map_bbox[0][0], self.towerset.map_bbox[0][1])
         self.map_canvas.axes.set_ylim(self.towerset.map_bbox[0][2], self.towerset.map_bbox[0][3])
