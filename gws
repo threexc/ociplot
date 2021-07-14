@@ -574,12 +574,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def setupLatLonBoxes(self):
         self.lat_edit = QtWidgets.QLineEdit(self)
-        self.lat_edit.textEdited.connect(self.setCustomTowerLocation)
+        self.lat_edit.textEdited.connect(self.setTowerLocation)
         self.latbox_label = QtWidgets.QLabel("Tower Lat", self)
         self.latbox.addWidget(self.latbox_label)
         self.latbox.addWidget(self.lat_edit)
         self.lon_edit = QtWidgets.QLineEdit(self)
-        self.lon_edit.textEdited.connect(self.setCustomTowerLocation)
+        self.lon_edit.textEdited.connect(self.setTowerLocation)
         self.lonbox_label = QtWidgets.QLabel("Tower Lon", self)
         self.lonbox.addWidget(self.lonbox_label)
         self.lonbox.addWidget(self.lon_edit)
@@ -690,7 +690,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tower_load_button.setText("Load Cell Data ({0} points)".format(point_count))
             self.tower_load_button.setEnabled(True)
 
-    def setCustomTowerLocation(self):
+    def setTowerLocation(self):
         if self.lat_edit.text() and self.lon_edit.text():
             self.tower.lat = float(self.lat_edit.text())
             self.tower.lon = float(self.lon_edit.text())
@@ -751,6 +751,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def loadCell(self):
         print("Loading cell data...")
         self.setCell()
+        self.setTowerLocation()
         self.updateCellPlot()
         self.updateRWMPlot()
         self.updatePathLossPlot()
