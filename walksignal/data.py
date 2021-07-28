@@ -24,12 +24,8 @@ class DataSet:
         self.loadPlot()
 
     def loadDataset(self):
-        self.start_time = time.time()
         self.data_matrix = pd.concat([pd.read_csv(f) for f in self.data_file], ignore_index=True)
-        self.duration = time.time() - self.start_time
-        print("Done loading data_matrix in {:.2f} seconds".format(self.duration))
 
-        self.start_time = time.time()
         self.time_range = np.array(self.data_matrix['measured_at'], dtype=float)
         self.data_start_time = time.strftime('%m/%d/%Y %H:%M:%S', time.gmtime(self.time_range[0]/1000.))
         self.data_end_time = time.strftime('%m/%d/%Y %H:%M:%S', time.gmtime(self.time_range[-1]/1000.))
@@ -51,30 +47,11 @@ class DataSet:
         self.direction = np.array(self.data_matrix['direction'], dtype=float)
         self.timing_advance = np.array(self.data_matrix['ta'], dtype=float)
         self.access_type = self.data_matrix['act']
-        self.access_type_color_codes = np.zeros(len(self.access_type),dtype="str")
-        for x in range(len(self.access_type)):
-            if self.access_type[x] == "LTE":
-                self.access_type_color_codes[x] = "r"
-            elif self.access_type[x] == "LTE+":
-                self.access_type_color_codes[x] = "b"
-            elif self.access_type[x] == "UMTS":
-                self.access_type_color_codes[x] = "g"
-            elif self.access_type[x] == "HSPA+":
-                self.access_type_color_codes[x] = "k"
-            else:
-                self.access_type_color_codes[x] = "y"
-
-        self.duration = time.time() - self.start_time
-        print("Done loading dataset properties in {:.2f} seconds".format(self.duration))
 
     def loadReference(self):
-        self.start_time = time.time()
         self.reference_matrix = pd.read_csv(self.reference_file)
         self.reference_matrix = self.reference_matrix.loc[self.reference_matrix['cell'].isin(self.cellid_u)]
-        self.duration = time.time() - self.start_time
-        print("Done loading reference_matrix in {:.2f} seconds".format(self.duration))
 
-        self.start_time = time.time()
         self.ref_mcc = np.array(self.reference_matrix['mcc'])
         self.ref_mnc = np.array(self.reference_matrix['net'])
         self.ref_lac = np.array(self.reference_matrix['area'])
@@ -82,29 +59,21 @@ class DataSet:
         self.ref_lon = np.array(self.reference_matrix['lon'])
         self.ref_lat = np.array(self.reference_matrix['lat'])
         self.ref_access = np.array(self.reference_matrix['radio'])
-        self.duration = time.time() - self.start_time
-        print("Done loading reference properties in {:.2f} seconds".format(self.duration))
 
     def loadCells(self):
-        self.start_time = time.time()
         self.cell_id_list = []
         self.cell_list = []
         self.get_cell_ids()
         self.get_dataset_cell_data()
         self.get_cell_data_points()
         self.get_power()
-        self.duration = time.time() - self.start_time
-        print("Done loading cell properties in {:.2f} seconds".format(self.duration))
 
     def loadPlot(self):
-        self.start_time = time.time()
         self.plot_map = None
         self.map_bbox = None
         self.get_map_and_bbox()
         self.cm = plt.cm.get_cmap('gist_heat')
         self.plotrange = np.linspace(1, 1500, 500)
-        self.duration = time.time() - self.start_time
-        print("Done loading plot properties in {:.2f} seconds".format(self.duration))
 
     def get_map_and_bbox(self):
         self.plot_map = plt.imread(self.map_path)
@@ -120,10 +89,8 @@ class DataSet:
     def get_dataset_cell_data(self):
         for cell_id in self.cell_id_list:
             if cell_id[3] in self.reference_matrix['cell'].unique():
-                print("Found {0} in reference".format(cell_id[3]))
                 for index, row in self.reference_matrix.iterrows():
                     if row['cell'] == cell_id[3]:
-                        print("Added {0}".format(row['cell']))
                         self.cell_list.append(Cell(row['radio'], row['mcc'], row['net'], row['area'], row['cell'], row['lon'], row['lat'], row['range'], row['samples']))
             else:
                 self.cell_list.append(Cell(mcc=cell_id[0], mnc=cell_id[1], lac=cell_id[2], cellid=cell_id[3]))
@@ -187,7 +154,6 @@ class Cell:
 
     def get_path_loss(self, tx_power):
         self.path_loss.clear()
-        #self.peak_value = max(self.signal_power)
         self.path_loss = [tx_power - xi for xi in self.signal_power]
 
 class CellDataPoint:
