@@ -25,11 +25,7 @@ class DataSet:
 
     def loadDataset(self):
         self.data_matrix = pd.concat([pd.read_csv(f) for f in self.data_file], ignore_index=True)
-
         self.time_range = np.array(self.data_matrix['measured_at'], dtype=float)
-        self.data_start_time = time.strftime('%m/%d/%Y %H:%M:%S', time.gmtime(self.time_range[0]/1000.))
-        self.data_end_time = time.strftime('%m/%d/%Y %H:%M:%S', time.gmtime(self.time_range[-1]/1000.))
-        self.normalized_time_range = (self.time_range - self.time_range[0])/1000
         self.lats = np.array(self.data_matrix['lat'], dtype=float)
         self.lons = np.array(self.data_matrix['lon'], dtype=float)
         self.signal = np.array(self.data_matrix['signal'], dtype=float)
@@ -39,14 +35,19 @@ class DataSet:
         self.mnc = np.array(self.data_matrix['mnc'], dtype=int)
         self.lac = np.array(self.data_matrix['lac'], dtype=int)
         self.cellid = np.array(self.data_matrix['cellid'], dtype=int)
-        self.mcc_u = np.unique(self.mcc)
-        self.mnc_u = np.unique(self.mnc)
-        self.lac_u = np.unique(self.lac)
-        self.cellid_u = np.unique(self.cellid)
         self.rating = np.array(self.data_matrix['rating'], dtype=float)
         self.direction = np.array(self.data_matrix['direction'], dtype=float)
         self.timing_advance = np.array(self.data_matrix['ta'], dtype=float)
         self.access_type = self.data_matrix['act']
+
+        self.data_start_time = time.strftime('%m/%d/%Y %H:%M:%S', time.gmtime(self.time_range[0]/1000.))
+        self.data_end_time = time.strftime('%m/%d/%Y %H:%M:%S', time.gmtime(self.time_range[-1]/1000.))
+        self.normalized_time_range = (self.time_range - self.time_range[0])/1000
+
+        self.mcc_u = np.unique(self.mcc)
+        self.mnc_u = np.unique(self.mnc)
+        self.lac_u = np.unique(self.lac)
+        self.cellid_u = np.unique(self.cellid)
 
     def loadReference(self):
         self.reference_matrix = pd.read_csv(self.reference_file)
