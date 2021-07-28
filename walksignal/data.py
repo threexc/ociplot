@@ -103,13 +103,7 @@ class DataSet:
         for index, row in self.data_matrix.iterrows():
             for cell in self.cell_list:
                 if (cell.cellid == row['cellid']):
-                    cell.data_points.append(CellDataPoint(row['mcc'],
-                        row['mnc'], row['lac'], row['cellid'],
-                        row['lat'], row['lon'], row['signal'],
-                        row['measured_at'], row['rating'],
-                        row['speed'], row['direction'],
-                        row['act'], row['ta'],
-                        row['pci']))
+                    cell.data_points.append(CellDataPoint(row))
 
     def get_distances_to_cells(self):
         for cell in self.cell_list:
@@ -131,16 +125,16 @@ class DataSet:
                 return cell
 
 class Cell:
-    def __init__(self, measurement):
-        self.mcc = measurement['mcc']
-        self.mnc = measurement['net']
-        self.lac = measurement['area']
-        self.cellid = measurement['cell']
-        self.lat = measurement['lat']
-        self.lon = measurement['lon']
-        self.range = measurement['range']
-        self.samples = measurement['samples']
-        self.signal_type = measurement['radio']
+    def __init__(self, record):
+        self.mcc = record['mcc']
+        self.mnc = record['net']
+        self.lac = record['area']
+        self.cellid = record['cell']
+        self.lat = record['lat']
+        self.lon = record['lon']
+        self.range = record['range']
+        self.samples = record['samples']
+        self.signal_type = record['radio']
         self.data_points = []
         self.distances = []
         self.signal_power = []
@@ -157,18 +151,18 @@ class Cell:
         self.path_loss = [tx_power - xi for xi in self.signal_power]
 
 class CellDataPoint:
-    def __init__(self, mcc, mnc, lac, cellid, lat, lon, signal, measured_at, rating, speed, direction, access_type, timing_advance, pci):
-      self.mcc = mcc
-      self.mnc = mnc
-      self.lac = lac
-      self.cellid = cellid
-      self.lat = lat
-      self.lon = lon
-      self.signal = signal
-      self.measured_at = measured_at
-      self.rating = rating
-      self.speed = speed
-      self.direction = direction
-      self.access_type = access_type
-      self.timing_advance = timing_advance
-      self.pci = pci
+    def __init__(self, datapoint):
+      self.mcc = datapoint['mcc']
+      self.mnc = datapoint['mnc']
+      self.lac = datapoint['lac']
+      self.cellid = datapoint['cellid']
+      self.lat = datapoint['lat']
+      self.lon = datapoint['lon']
+      self.signal = datapoint['signal']
+      self.measured_at = datapoint['measured_at']
+      self.rating = datapoint['rating']
+      self.speed = datapoint['speed']
+      self.direction = datapoint['direction']
+      self.access_type = datapoint['act']
+      self.timing_advance = datapoint['ta']
+      self.pci = datapoint['pci']
