@@ -91,17 +91,11 @@ class DataSet:
             if cell[3] in self.cellid_u:
                 for index, row in self.reference_matrix.iterrows():
                     if row['cell'] == cell[3]:
-                        cell_list.append(self.get_cell_data(row))
+                        cell_list.append(Cell(row))
             else:
                 cell_list.append(Cell(mcc=cell_id[0], mnc=cell_id[1], lac=cell_id[2], cellid=cell_id[3]))
 
         return cell_list
-
-
-    def get_cell_data(self, entry):
-        return Cell(entry['radio'], entry['mcc'], entry['net'],
-                entry['area'], entry['cell'], entry['lon'],
-                entry['lat'], entry['range'], entry['samples'])
 
     # pair each cell in self.cell_list with its corresponding
     # measurement points in the dataset
@@ -134,21 +128,19 @@ class DataSet:
     def get_cell_stats(self, mcc, mnc, lac, cellid):
         for cell in self.cell_list:
             if ((str(cell.mcc) == mcc) and (str(cell.mnc) == mnc) and (str(cell.lac) == lac) and (str(cell.cellid) == cellid)):
-                print(cell.cellid)
-                print(cell.lat, cell.lon)
                 return cell
 
 class Cell:
-    def __init__(self, signal_type=None, mcc=None, mnc=None, lac=None, cellid=None, lon=None, lat=None, cell_range=None, samples=None):
-        self.mcc = mcc
-        self.mnc = mnc
-        self.lac = lac
-        self.cellid = cellid
-        self.lat = lat
-        self.lon = lon
-        self.range = cell_range
-        self.samples = samples
-        self.signal_type = signal_type
+    def __init__(self, measurement):
+        self.mcc = measurement['mcc']
+        self.mnc = measurement['net']
+        self.lac = measurement['area']
+        self.cellid = measurement['cell']
+        self.lat = measurement['lat']
+        self.lon = measurement['lon']
+        self.range = measurement['range']
+        self.samples = measurement['samples']
+        self.signal_type = measurement['radio']
         self.data_points = []
         self.distances = []
         self.signal_power = []
