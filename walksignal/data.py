@@ -62,11 +62,9 @@ class DataSet:
         self.ref_access = np.array(self.reference_matrix['radio'])
 
     def loadCells(self):
-        self.cell_id_list = []
-        self.cell_list = []
-        self.get_cell_ids()
-        self.get_dataset_cell_data()
-        self.get_cell_data_points()
+        self.cell_id_list = self.get_cell_ids()
+        self.cell_list = self.get_dataset_cells()
+        self.get_cell_measurements()
         self.get_power()
 
     def loadPlot(self):
@@ -83,22 +81,31 @@ class DataSet:
     # get a record of each unique cellid and its corresponding mcc,
     # mnc, lac
     def get_cell_ids(self):
-        self.cell_id_list = [(self.mcc[row], self.mnc[row], self.lac[row], self.cellid_u[row]) for row in range(len(self.cellid_u))]
+        return [(self.mcc[row], self.mnc[row], self.lac[row], self.cellid_u[row]) for row in range(len(self.cellid_u))]
 
     # find dataset cellids (if any) in the reference and add them to the
     # list of cells
-    def get_dataset_cell_data(self):
-        for cell_id in self.cell_id_list:
-            if cell_id[3] in self.reference_matrix['cell'].unique():
+    def get_dataset_cells(self):
+        cell_list = []
+        for cell in self.cell_id_list:
+            if cell[3] in self.cellid_u:
                 for index, row in self.reference_matrix.iterrows():
-                    if row['cell'] == cell_id[3]:
-                        self.cell_list.append(Cell(row['radio'], row['mcc'], row['net'], row['area'], row['cell'], row['lon'], row['lat'], row['range'], row['samples']))
+                    if row['cell'] == cell[3]:
+                        cell_list.append(self.get_cell_data(row))
             else:
-                self.cell_list.append(Cell(mcc=cell_id[0], mnc=cell_id[1], lac=cell_id[2], cellid=cell_id[3]))
+                cell_list.append(Cell(mcc=cell_id[0], mnc=cell_id[1], lac=cell_id[2], cellid=cell_id[3]))
+
+        return cell_list
+
+
+    def get_cell_data(self, entry):
+        return Cell(entry['radio'], entry['mcc'], entry['net'],
+                entry['area'], entry['cell'], entry['lon'],
+                entry['lat'], entry['range'], entry['samples'])
 
     # pair each cell in self.cell_list with its corresponding
     # measurement points in the dataset
-    def get_cell_data_points(self):
+    def get_cell_measurements(self):
         for index, row in self.data_matrix.iterrows():
             for cell in self.cell_list:
                 if (cell.cellid == row['cellid']):
