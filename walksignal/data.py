@@ -18,12 +18,12 @@ class DataSet:
         self.map_path = self.data_path + "/map.png"
         self.bbox_path = self.data_path + "/bbox.txt"
 
-        self.loadDataset()
-        self.loadReference()
-        self.loadCells()
-        self.loadPlot()
+        self.__loadDataset()
+        self.__loadReference()
+        self.__loadCells()
+        self.__loadPlot()
 
-    def loadDataset(self):
+    def __loadDataset(self):
         self.data_matrix = pd.concat([pd.read_csv(f) for f in self.data_file], ignore_index=True)
         self.time_range = np.array(self.data_matrix['measured_at'], dtype=float)
         self.lats = np.array(self.data_matrix['lat'], dtype=float)
@@ -49,7 +49,7 @@ class DataSet:
         self.lac_u = np.unique(self.lac)
         self.cellid_u = np.unique(self.cellid)
 
-    def loadReference(self):
+    def __loadReference(self):
         self.reference_matrix = pd.read_csv(self.reference_file)
         self.reference_matrix = self.reference_matrix.loc[self.reference_matrix['cell'].isin(self.cellid_u)]
 
@@ -61,13 +61,13 @@ class DataSet:
         self.ref_lat = np.array(self.reference_matrix['lat'])
         self.ref_access = np.array(self.reference_matrix['radio'])
 
-    def loadCells(self):
+    def __loadCells(self):
         self.cell_id_list = self.get_cell_ids()
         self.cell_list = self.get_dataset_cells()
         self.get_cell_measurements()
         self.get_power()
 
-    def loadPlot(self):
+    def __loadPlot(self):
         self.plot_map = self.get_map()
         self.map_bbox = self.get_bbox()
         self.cm = plt.cm.get_cmap('gist_heat')
