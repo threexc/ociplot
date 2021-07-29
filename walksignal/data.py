@@ -1,13 +1,13 @@
 #!/usr/bin/python3 
 import csv
 import sys
+import time
 import numpy as np
 import pandas as pd
-import time
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 import walksignal.utils as utils
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 class DataSet:
     def __init__(self, data, reference):
@@ -104,10 +104,6 @@ class DataSet:
             for cell in self.cell_list:
                 if (cell.cellid == row['cellid']):
                     cell.data_points.append(CellDataPoint(row))
-
-    def get_distances_to_cells(self):
-        for cell in self.cell_list:
-            cell.get_distances()
 
     def get_power(self):
         for cell in self.cell_list:
