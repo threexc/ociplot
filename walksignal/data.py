@@ -68,15 +68,16 @@ class DataSet:
         self.get_power()
 
     def loadPlot(self):
-        self.plot_map = None
-        self.map_bbox = None
-        self.get_map_and_bbox()
+        self.plot_map = self.get_map()
+        self.map_bbox = self.get_bbox()
         self.cm = plt.cm.get_cmap('gist_heat')
         self.plotrange = np.linspace(1, 1500, 500)
 
-    def get_map_and_bbox(self):
-        self.plot_map = plt.imread(self.map_path)
-        self.map_bbox = [entry for entry in utils.get_bbox(self.bbox_path)]
+    def get_map(self):
+        return plt.imread(self.map_path)
+
+    def get_bbox(self):
+        return [entry for entry in utils.get_bbox(self.bbox_path)]
 
     # get a record of each unique cellid and its corresponding mcc,
     # mnc, lac
