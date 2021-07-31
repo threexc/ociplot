@@ -13,7 +13,7 @@ import time
 import yaml
 import numpy as np
 from random import randint
-import walksignal.data as ds
+import walksignal.dataset as ds
 import walksignal.equations as eq
 import walksignal.plottools as pt
 
