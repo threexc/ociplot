@@ -22,7 +22,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
 
-        self.setWindowTitle("walksignal 0.0.2")
+        self.setWindowTitle("walksignal 0.3.0")
         self.loaded_data = None
         if os.path.isfile("lastcfg.yaml"):
             with open("lastcfg.yaml", 'r') as stream:
@@ -37,7 +37,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.datafile = None
             self.reference = None
         self.config_data = None
-        self.towerset = None
+        self.dataset = None
         self.absorption = 0.5
         self.density = 0.5
         self.x_range = None
@@ -62,6 +62,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_large_city = True
         self.pl_path_gain = False
 
+        self.cell = None
         self.tower = None
         self.tower_x = None
         self.tower_y = None
@@ -306,16 +307,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lac_box.addWidget(self.lac_label)
         self.lac_box.addWidget(self.lac_count)
         self.lac_box.addWidget(self.lac_combo)
-        self.tower_load_button = QtWidgets.QPushButton('Load Cell Data', self)
-        self.tower_load_button.clicked.connect(self.loadCell)
-        self.tower_load_button.setEnabled(False)
+        self.cell_load_button = QtWidgets.QPushButton('Load Cell Data', self)
+        self.cell_load_button.clicked.connect(self.loadCell)
+        self.cell_load_button.setEnabled(False)
         
         self.tower_box.addWidget(self.tower_combo_title)
         self.tower_box.addLayout(self.cellid_box)
         self.tower_box.addLayout(self.mcc_box)
         self.tower_box.addLayout(self.mnc_box)
         self.tower_box.addLayout(self.lac_box)
-        self.tower_box.addWidget(self.tower_load_button)
+        self.tower_box.addWidget(self.cell_load_button)
         self.tower_box.addLayout(self.latbox)
         self.tower_box.addLayout(self.lonbox)
         self.tower_box.setAlignment(QtCore.Qt.AlignTop)
@@ -382,7 +383,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dataSidebar = QtWidgets.QVBoxLayout()
         self.dataSidebar.addLayout(self.file_control_box)
         self.dataSidebar.addLayout(self.tower_box)
-        self.dataSidebar.addWidget(self.tower_load_button)
+        self.dataSidebar.addWidget(self.cell_load_button)
         self.dataSidebar.setAlignment(QtCore.Qt.AlignTop)
         self.dataSidebarWidget = QtWidgets.QWidget()
         self.dataSidebarWidget.setLayout(self.dataSidebar)
@@ -662,7 +663,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def loadDataSet(self):
         print("Loading data...")
         self.start_time = time.time()
-        self.towerset = ds.DataSet(self.datafile, self.reference)
+        self.dataset = ds.DataSet(self.datafile, self.reference)
         self.duration = time.time() - self.start_time
         print("Done loading data in {:.2f} seconds".format(self.duration))
         print("Setting up tower selectors...")
@@ -670,52 +671,45 @@ class MainWindow(QtWidgets.QMainWindow):
         self.mcc_combo.clear()
         self.mnc_combo.clear()
         self.lac_combo.clear()
-        self.cellid_count.setText("(" + str(len(self.towerset.cellid_u)) + ")")
-        self.mcc_count.setText("(" + str(len(self.towerset.mcc_u)) + ")")
-        self.mnc_count.setText("(" + str(len(self.towerset.mnc_u)) + ")")
-        self.lac_count.setText("(" + str(len(self.towerset.lac_u)) + ")")
+        self.cellid_count.setText("(" + str(len(self.dataset.cellid_u)) + ")")
+        self.mcc_count.setText("(" + str(len(self.dataset.mcc_u)) + ")")
+        self.mnc_count.setText("(" + str(len(self.dataset.mnc_u)) + ")")
+        self.lac_count.setText("(" + str(len(self.dataset.lac_u)) + ")")
 
-        for mcc in self.towerset.mcc:
+        for mcc in self.dataset.mcc_u:
             self.mcc_combo.addItem(str(mcc))
-        for mnc in self.towerset.mnc_u:
+        for mnc in self.dataset.mnc_u:
             self.mnc_combo.addItem(str(mnc))
-        for lac in self.towerset.lac_u:
+        for lac in self.dataset.lac_u:
             self.lac_combo.addItem(str(lac))
-        for cellid in self.towerset.cellid_u:
+        for cellid in self.dataset.cellid_u:
             self.cellid_combo.addItem(str(cellid))
 
         print("Generating default plot...")
+
         self.loadCell()
+
         print("Done.")
 
     def setCell(self):
-        print(self.mcc_combo.currentText(),
-                self.mnc_combo.currentText(),
-                self.lac_combo.currentText(),
-                self.cellid_combo.currentText())
-        self.tower = self.towerset.get_cell_stats(self.mcc_combo.currentText(), self.mnc_combo.currentText(), self.lac_combo.currentText(), self.cellid_combo.currentText())
-
-        if self.tower is None:
-            self.tower_load_button.setText("No Valid Reference")
-            self.tower_load_button.setEnabled(False)
-        else:
-            point_count = len(self.tower.signal_power)
-            self.tower_load_button.setText("Load Cell Data ({0} points)".format(point_count))
-            self.tower_load_button.setEnabled(True)
+        self.cell = self.dataset.get_cell(self.cellid_combo.currentText())
+        point_count = len(self.cell.signal_power)
+        self.cell_load_button.setText("Load Cell Data ({0} points)".format(point_count))
+        self.cell_load_button.setEnabled(True)
 
     def setTowerLocation(self):
         if self.lat_edit.text() and self.lon_edit.text():
             self.tower_lat = float(self.lat_edit.text())
             self.tower_lon = float(self.lon_edit.text())
 
-            self.tower.get_distances(self.tower_lat, self.tower_lon)
-            self.tower.get_path_loss(self.pl_tx_power)
+            self.cell.get_distances(self.tower_lat, self.tower_lon)
+            self.cell.get_path_loss(self.pl_tx_power)
 
     def textboxUpdate(self):
         self.pl_freq = float(self.pl_freq_textbox.text())
         self.pl_ref_dist = float(self.pl_ref_dist_textbox.text())
         self.pl_ref_freq = float(self.pl_ref_freq_textbox.text())
-        if self.towerset:
+        if self.dataset:
             self.updatePathLossPlot()
     
     def checkboxUpdate(self):
@@ -741,7 +735,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.absorption_value_label.setText(str(self.absorption))
         self.offset_value_label.setText(str(self.rwm_offset) + " dB")
         self.gain_factor_value_label.setText(str(self.rwm_gain_factor) + u" Wm\u00B2")
-        if self.towerset:
+        if self.dataset:
             self.updateRWMPlot()
 
     def plSliderUpdate(self):
@@ -765,7 +759,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_rx_gain_value_label.setText(str(self.pl_rx_gain) + " dB")
         self.pl_bs_height_value_label.setText(str(self.pl_bs_height) + " m")
         self.pl_ue_height_value_label.setText(str(self.pl_ue_height) + " m")
-        if self.towerset:
+        if self.dataset:
             self.updatePathLossPlot()
 
     def loadCell(self):
@@ -776,7 +770,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.updateRWMPlot()
         self.updatePathLossPlot()
         self.setConfig()
-        print("Loaded data for {0} {1} {2} {3}".format(self.tower.mcc, self.tower.mnc, self.tower.lac, self.tower.cellid))
 
     def setConfig(self):
         self.config_data = {
@@ -792,7 +785,7 @@ class MainWindow(QtWidgets.QMainWindow):
             data = yaml.dump(self.config_data, yamlfile)
 
     def updateCellPlot(self):
-        points = self.tower.data_points
+        points = self.cell.data_points
         lon_series = np.array([point.lon for point in points], dtype=float)
         lat_series = np.array([point.lat for point in points], dtype=float)
 
@@ -801,16 +794,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.map_canvas.axes.cla()
         divider = make_axes_locatable(self.map_canvas.axes)
         cax = divider.append_axes("right", size="5%", pad=0.1)
-        self.map_canvas.axes.imshow(self.towerset.plot_map, zorder=0, extent = self.towerset.map_bbox[0], aspect="equal")
-        powerscatter = self.map_canvas.axes.scatter(lon_series, lat_series, zorder=1, alpha=1.0, s=20, c=self.tower.signal_power, cmap=self.towerset.cm)
+        self.map_canvas.axes.imshow(self.dataset.plot_map, zorder=0, extent = self.dataset.map_bbox[0], aspect="equal")
+        powerscatter = self.map_canvas.axes.scatter(lon_series, lat_series, zorder=1, alpha=1.0, s=20, c=self.cell.signal_power, cmap=self.dataset.cm)
 
         if (self.tower_lon is None) or (self.tower_lat is None):
             print("Can't draw tower, bad lat/lon")
         else:
             self.map_canvas.axes.scatter(float(self.tower_lon), float(self.tower_lat), zorder=1, alpha=1.0, s=20, color="blue")
 
-        self.map_canvas.axes.set_xlim(self.towerset.map_bbox[0][0], self.towerset.map_bbox[0][1])
-        self.map_canvas.axes.set_ylim(self.towerset.map_bbox[0][2], self.towerset.map_bbox[0][3])
+        self.map_canvas.axes.set_xlim(self.dataset.map_bbox[0][0], self.dataset.map_bbox[0][1])
+        self.map_canvas.axes.set_ylim(self.dataset.map_bbox[0][2], self.dataset.map_bbox[0][3])
         self.map_canvas.axes.set_xlabel("Longitude")
         self.map_canvas.axes.set_ylabel("Latitude")
         self.map_canvas.axes.set_title("Signal Power vs Position")
@@ -831,25 +824,25 @@ class MainWindow(QtWidgets.QMainWindow):
         self.updateOHRLine()
 
     def updateXScale(self):
-        if self.tower.distances:
-            self.pl_widget.setXRange(0, max(self.tower.distances) + 50)
+        self.pl_widget.setXRange(0, max(self.cell.distances) + 50)
 
     def updateYScale(self):
         if self.pl_path_gain:
-            y_min = max(self.tower.path_loss) * -1 - 20
-            y_max = min(self.tower.path_loss) * -1 + 20
+            y_min = max(self.cell.path_loss) * -1 - 20
+            y_max = min(self.cell.path_loss) * -1 + 20
         else:
-            y_min = min(self.tower.path_loss) - 20
-            y_max = max(self.tower.path_loss) + 20
+            y_min = min(self.cell.path_loss) - 20
+            y_max = max(self.cell.path_loss) + 20
         self.pl_widget.setYRange(y_min, y_max)
 
     def updateMeasuredLine(self):
-        self.tower.get_path_loss(self.pl_tx_power)
+        self.cell.get_distances(self.tower_lat, self.tower_lon)
+        self.cell.get_path_loss(self.pl_tx_power)
         if self.pl_path_gain:
-            measured_inverted = [element * -1 for element in self.tower.path_loss]
-            self.pl_measured_line.setData(self.tower.distances, measured_inverted)
+            measured_inverted = [element * -1 for element in self.cell.path_loss]
+            self.pl_measured_line.setData(self.cell.distances, measured_inverted)
         else:
-            self.pl_measured_line.setData(self.tower.distances, self.tower.path_loss)
+            self.pl_measured_line.setData(self.cell.distances, self.cell.path_loss)
 
     def updateFSLine(self):
         if self.pl_fs_checkbox.isChecked():
@@ -918,7 +911,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.pl_oh_r_line.clear()
 
     def updateRWMPlot(self):
-        self.x_range = self.towerset.plotrange
+        self.x_range = self.dataset.plotrange
         if self.radio_2d.isChecked():
             self.y_range = self.rwm_offset + eq.gplt_rwm_fpd2d(self.density, self.absorption, self.x_range, self.rwm_gain_factor)
         else:
