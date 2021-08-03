@@ -149,9 +149,7 @@ class MeasuredCell:
         self.data_points = [CellDataPoint(row) for index, row in data.iterrows()]
 
     def get_distances(self, tower_lat, tower_lon):
-        self.distances.clear()
-        for datapoint in self.data_points:
-            self.distances.append(utils.get_distance(tower_lat, tower_lon, datapoint.lat, datapoint.lon) * 1000)
+        return [utils.get_distance(tower_lat, tower_lon, datapoint.lat, datapoint.lon) * 1000 for datapoint in self.data_points]
 
     def get_path_loss(self, tx_power):
         return [tx_power - xi for xi in self.signal_power]
