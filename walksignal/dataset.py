@@ -37,7 +37,7 @@ class DataSet:
         self.reference_matrix = self.reference_matrix.loc[self.reference_matrix['cell'].isin(self.cellid_u)]
 
         self.cell_id_list = self.get_cell_ids()
-        self.ref_cells = self.get_ref_cells(self.cell_id_list)
+        self.ref_cells = self.get_reference_cell_list(self.cell_id_list)
 
         self.cellmap = CellMap(self.map_path, self.bbox_path)
         self.plot_map = self.cellmap.get_map()
@@ -108,7 +108,7 @@ class DataSet:
 
     # find dataset cellids (if any) in the reference and add them to the
     # list of cells
-    def get_ref_cells(self, cellid_list):
+    def get_reference_cell_list(self, cellid_list):
         ref_cells = []
         for cell in cellid_list:
             for index, row in self.reference_matrix.iterrows():
@@ -119,10 +119,6 @@ class DataSet:
 
     def get_measured_cell_list(self):
         return [MeasuredCell(self.data_matrix.loc[self.data_matrix['cellid'] == cellid], cellid) for cellid in self.cellid_u]
-
-    def get_path_loss(self, tx_power):
-        for cell in self.ref_cells:
-            cell.get_path_loss(tx_power)
 
     # return the cell corresponding to a given mcc, mnc, lac, and cellid
     def get_cell_stats(self, mcc, mnc, lac, cellid):
@@ -158,8 +154,7 @@ class MeasuredCell:
             self.distances.append(utils.get_distance(tower_lat, tower_lon, datapoint.lat, datapoint.lon) * 1000)
 
     def get_path_loss(self, tx_power):
-        self.path_loss.clear()
-        self.path_loss = [tx_power - xi for xi in self.signal_power]
+        return [tx_power - xi for xi in self.signal_power]
 
 class RefCell:
     def __init__(self, ref):

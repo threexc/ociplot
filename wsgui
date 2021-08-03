@@ -63,6 +63,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_path_gain = False
 
         self.cell = None
+        self.cell_pl = None
         self.tower = None
         self.tower_x = None
         self.tower_y = None
@@ -703,7 +704,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tower_lon = float(self.lon_edit.text())
 
             self.cell.get_distances(self.tower_lat, self.tower_lon)
-            self.cell.get_path_loss(self.pl_tx_power)
+            self.cell_pl = self.cell.get_path_loss(self.pl_tx_power)
 
     def textboxUpdate(self):
         self.pl_freq = float(self.pl_freq_textbox.text())
@@ -828,21 +829,21 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def updateYScale(self):
         if self.pl_path_gain:
-            y_min = max(self.cell.path_loss) * -1 - 20
-            y_max = min(self.cell.path_loss) * -1 + 20
+            y_min = max(self.cell_pl) * -1 - 20
+            y_max = min(self.cell_pl) * -1 + 20
         else:
-            y_min = min(self.cell.path_loss) - 20
-            y_max = max(self.cell.path_loss) + 20
+            y_min = min(self.cell_pl) - 20
+            y_max = max(self.cell_pl) + 20
         self.pl_widget.setYRange(y_min, y_max)
 
     def updateMeasuredLine(self):
         self.cell.get_distances(self.tower_lat, self.tower_lon)
-        self.cell.get_path_loss(self.pl_tx_power)
+        self.cell_pl = self.cell.get_path_loss(self.pl_tx_power)
         if self.pl_path_gain:
-            measured_inverted = [element * -1 for element in self.cell.path_loss]
+            measured_inverted = [element * -1 for element in self.cell_pl]
             self.pl_measured_line.setData(self.cell.distances, measured_inverted)
         else:
-            self.pl_measured_line.setData(self.cell.distances, self.cell.path_loss)
+            self.pl_measured_line.setData(self.cell.distances, self.cell_pl)
 
     def updateFSLine(self):
         if self.pl_fs_checkbox.isChecked():
