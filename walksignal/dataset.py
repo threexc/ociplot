@@ -11,6 +11,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from dataclasses import dataclass
 from abc import ABC
 
+"""Class for loading and grooming OpenCellID formatted data and related reference files."""
 class DataSet:
     def __init__(self, data, reference):
         self.measurements = MeasurementSet(data)
@@ -32,11 +33,12 @@ class DataSet:
         self.measured_cells = self.get_measured_cell_list()
 
         self.reference_matrix = self.reference.reference_matrix()
+
         # Only deal with reference entries that show up in the
         # measurement set
         self.reference_matrix = self.reference_matrix.loc[self.reference_matrix['cell'].isin(self.cellid_u)]
 
-        self.cell_id_list = self.get_cell_ids()
+        self.cell_id_list = [(self.mcc[row], self.mnc[row], self.lac[row], self.cellid_u[row]) for row in range(len(self.cellid_u))]
         self.ref_cells = self.get_reference_cell_list(self.cell_id_list)
 
         self.cellmap = CellMap(self.map_path, self.bbox_path)
@@ -101,13 +103,11 @@ class DataSet:
             if str(cell.cellid) == cellid:
                 return cell
 
-    # get a record of each unique cellid and its corresponding mcc,
-    # mnc, lac
+    """Get a tuple consisting of a cell's MCC, MNC, LAC, and Cell ID respectively."""
     def get_cell_ids(self):
         return [(self.mcc[row], self.mnc[row], self.lac[row], self.cellid_u[row]) for row in range(len(self.cellid_u))]
 
-    # find dataset cellids (if any) in the reference and add them to the
-    # list of cells
+    """Return a list of all cells in the reference list detected in the data matrix."""
     def get_reference_cell_list(self, cellid_list):
         ref_cells = []
         for cell in cellid_list:
@@ -117,14 +117,9 @@ class DataSet:
 
         return ref_cells
 
+    """Return a list of all cells in the data matrix and their measured characteristics."""
     def get_measured_cell_list(self):
         return [MeasuredCell(self.data_matrix.loc[self.data_matrix['cellid'] == cellid], cellid) for cellid in self.cellid_u]
-
-    # return the cell corresponding to a given mcc, mnc, lac, and cellid
-    def get_cell_stats(self, mcc, mnc, lac, cellid):
-        for cell in self.ref_cells:
-            if ((str(cell.mcc) == mcc) and (str(cell.mnc) == mnc) and (str(cell.lac) == lac) and (str(cell.cellid) == cellid)):
-                return cell
 
 class MeasuredCell:
     def __init__(self, data, cellid):
