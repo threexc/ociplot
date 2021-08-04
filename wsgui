@@ -66,8 +66,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.cell_pl = None
         self.cell_distances = None
         self.tower = None
-        self.tower_x = None
-        self.tower_y = None
+        self.tower_lat = None
+        self.tower_lon = None
         self.cbar = None
         self.map_canvas = pt.MplCanvas(self, width=5, height=4, dpi=100)
         self.map_toolbar = NavigationToolbar(self.map_canvas, self)
