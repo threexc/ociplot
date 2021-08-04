@@ -50,15 +50,15 @@ Run the following to start the GUI:
 
 ### Path Loss
 
-![path loss](example_pathloss.png?raw=true "Path Loss")
+![path loss](media/example_pathloss.png?raw=true "Path Loss")
 
 ### Tower Map
 
-![tower map](example_towermap.png?raw=true "Tower Map")
+![tower map](media/example_towermap.png?raw=true "Tower Map")
 
 ### Random Walk Model Plot
 
-![random_walk](example_rwm.png?raw=true "Random Walk Model")
+![random_walk](media/example_rwm.png?raw=true "Random Walk Model")
 
 ## Path Loss Models
 
