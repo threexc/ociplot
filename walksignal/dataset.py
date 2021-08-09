@@ -5,7 +5,7 @@ import time
 import numpy as np
 import pandas as pd
 import matplotlib.patches as mpatches
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as pyplot
 import walksignal.utils as utils
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from dataclasses import dataclass
@@ -44,7 +44,7 @@ class DataSet:
         self.cellmap = CellMap(self.map_path, self.bbox_path)
         self.plot_map = self.cellmap.get_map()
         self.map_bbox = self.cellmap.get_bbox()
-        self.cm = plt.cm.get_cmap('gist_heat')
+        self.cm = pyplot.cm.get_cmap('gist_heat')
         self.plotrange = np.linspace(1, 1500, 500)
 
     def m_time_range(self):
@@ -185,7 +185,7 @@ class CellMap:
     bbox_path: str
 
     def get_map(self):
-        return plt.imread(self.map_path)
+        return pyplot.imread(self.map_path)
 
     def get_bbox(self):
         return [entry for entry in utils.get_bbox(self.bbox_path)]
