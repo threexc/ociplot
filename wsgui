@@ -712,7 +712,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_ref_dist = float(self.pl_ref_dist_textbox.text())
         self.pl_ref_freq = float(self.pl_ref_freq_textbox.text())
         if self.dataset:
-            self.updatePathLossPlot()
+            self.plUpdatePlot()
     
     def checkboxUpdate(self):
         if self.pl_large_city_checkbox.isChecked():
@@ -726,7 +726,7 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self.pl_path_gain = False
             self.pl_widget.setLabel('left', "Path Loss (dB)", **self.styles)
-        self.updatePathLossPlot()
+        self.plUpdatePlot()
 
     def rwmSliderUpdate(self):
         self.density = self.density_slider.value() / 100.0
@@ -762,7 +762,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_bs_height_value_label.setText(str(self.pl_bs_height) + " m")
         self.pl_ue_height_value_label.setText(str(self.pl_ue_height) + " m")
         if self.dataset:
-            self.updatePathLossPlot()
+            self.plUpdatePlot()
 
     def loadCell(self):
         print("Loading cell data...")
@@ -770,7 +770,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setTowerLocation()
         self.updateCellPlot()
         self.updateRWMPlot()
-        self.updatePathLossPlot()
+        self.plUpdatePlot()
         self.setConfig()
 
     def setConfig(self):
@@ -814,10 +814,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.map_canvas.draw()
 
-    def updatePathLossPlot(self):
+    def plUpdatePlot(self):
         self.updateMeasuredLine()
-        self.updateXScale()
-        self.updateYScale()
+        self.plUpdateXScale()
+        self.plUpdateYScale()
         self.updateCILine()
         self.updateABGLine()
         self.updateFSLine()
@@ -825,10 +825,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.updateOHSLine()
         self.updateOHRLine()
 
-    def updateXScale(self):
+    def plUpdateXScale(self):
         self.pl_widget.setXRange(0, max(self.cell_distances) + 50)
 
-    def updateYScale(self):
+    def plUpdateYScale(self):
         if self.pl_path_gain:
             y_min = max(self.cell_pl) * -1 - 20
             y_max = min(self.cell_pl) * -1 + 20
