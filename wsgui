@@ -276,6 +276,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lac_box = QtWidgets.QHBoxLayout()
         self.latbox = QtWidgets.QHBoxLayout()
         self.lonbox = QtWidgets.QHBoxLayout()
+        self.set_tower_box = QtWidgets.QHBoxLayout()
 
         self.tower_combo_title = QtWidgets.QLabel('Cell Selection', self)
         self.tower_combo_title.setFont(QtGui.QFont('Arial', 14))
@@ -321,6 +322,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tower_box.addWidget(self.cell_load_button)
         self.tower_box.addLayout(self.latbox)
         self.tower_box.addLayout(self.lonbox)
+        self.tower_box.addLayout(self.set_tower_box)
         self.tower_box.setAlignment(QtCore.Qt.AlignTop)
 
         print("Set up tower controls")
@@ -586,19 +588,21 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def setupLatLonBoxes(self):
         self.lat_edit = QtWidgets.QLineEdit(self)
-        self.lat_edit.textEdited.connect(self.setTowerLocation)
         if self.tower_lat:
             self.lat_edit.setText(str(self.tower_lat))
         self.latbox_label = QtWidgets.QLabel("Tower Lat", self)
         self.latbox.addWidget(self.latbox_label)
         self.latbox.addWidget(self.lat_edit)
         self.lon_edit = QtWidgets.QLineEdit(self)
-        self.lon_edit.textEdited.connect(self.setTowerLocation)
         if self.tower_lon:
             self.lon_edit.setText(str(self.tower_lon))
         self.lonbox_label = QtWidgets.QLabel("Tower Lon", self)
         self.lonbox.addWidget(self.lonbox_label)
         self.lonbox.addWidget(self.lon_edit)
+
+        self.set_tower_button = QtWidgets.QPushButton('Set Tower', self)
+        self.set_tower_button.clicked.connect(self.setTowerLocation)
+        self.set_tower_box.addWidget(self.set_tower_button)
 
     def setupRWMSliders(self):
         self.density_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
@@ -703,9 +707,13 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.lat_edit.text() and self.lon_edit.text():
             self.tower_lat = float(self.lat_edit.text())
             self.tower_lon = float(self.lon_edit.text())
-
+            self.map_canvas.axes.scatter(float(self.tower_lon), float(self.tower_lat), zorder=1, alpha=1.0, s=20, color="blue")
+            self.map_canvas.draw()
             self.cell_distances = self.cell.get_distances(self.tower_lat, self.tower_lon)
             self.cell_pl = self.cell.get_path_loss(self.pl_tx_power)
+            self.plUpdatePlot()
+        else:
+            print("Can't draw tower, bad lat/lon")
 
     def textboxUpdate(self):
         self.pl_freq = float(self.pl_freq_textbox.text())
@@ -768,7 +776,7 @@ class MainWindow(QtWidgets.QMainWindow):
         print("Loading cell data...")
         self.setCell()
         self.setTowerLocation()
-        self.updateCellPlot()
+        self.updateCellMap()
         self.updateRWMPlot()
         self.plUpdatePlot()
         self.setConfig()
@@ -786,7 +794,7 @@ class MainWindow(QtWidgets.QMainWindow):
         with open("lastcfg.yaml", "w") as yamlfile:
             data = yaml.dump(self.config_data, yamlfile)
 
-    def updateCellPlot(self):
+    def updateCellMap(self):
         points = self.cell.data_points
         lon_series = np.array([point.lon for point in points], dtype=float)
         lat_series = np.array([point.lat for point in points], dtype=float)
@@ -799,11 +807,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.map_canvas.axes.imshow(self.dataset.plot_map, zorder=0, extent = self.dataset.map_bbox[0], aspect="equal")
         powerscatter = self.map_canvas.axes.scatter(lon_series, lat_series, zorder=1, alpha=1.0, s=20, c=self.cell.signal_power, cmap=self.dataset.cm)
 
-        if (self.tower_lon is None) or (self.tower_lat is None):
-            print("Can't draw tower, bad lat/lon")
-        else:
-            self.map_canvas.axes.scatter(float(self.tower_lon), float(self.tower_lat), zorder=1, alpha=1.0, s=20, color="blue")
-
         self.map_canvas.axes.set_xlim(self.dataset.map_bbox[0][0], self.dataset.map_bbox[0][1])
         self.map_canvas.axes.set_ylim(self.dataset.map_bbox[0][2], self.dataset.map_bbox[0][3])
         self.map_canvas.axes.set_xlabel("Longitude")
@@ -815,15 +818,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.map_canvas.draw()
 
     def plUpdatePlot(self):
-        self.updateMeasuredLine()
+        self.updateMeasurements()
+        self.updateModels()
         self.plUpdateXScale()
         self.plUpdateYScale()
-        self.updateCILine()
-        self.updateABGLine()
-        self.updateFSLine()
-        self.updateOHULine()
-        self.updateOHSLine()
-        self.updateOHRLine()
 
     def plUpdateXScale(self):
         self.pl_widget.setXRange(0, max(self.cell_distances) + 50)
@@ -837,7 +835,7 @@ class MainWindow(QtWidgets.QMainWindow):
             y_max = max(self.cell_pl) + 20
         self.pl_widget.setYRange(y_min, y_max)
 
-    def updateMeasuredLine(self):
+    def updateMeasurements(self):
         self.cell_distances = self.cell.get_distances(self.tower_lat, self.tower_lon)
         self.cell_pl = self.cell.get_path_loss(self.pl_tx_power)
         if self.pl_path_gain:
@@ -846,7 +844,7 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self.pl_measured_line.setData(self.cell_distances, self.cell_pl)
 
-    def updateFSLine(self):
+    def updateModels(self):
         if self.pl_fs_checkbox.isChecked():
             self.fs_y = eq.v_pl_fs(self.pl_points, self.pl_freq) - self.pl_tx_gain - self.pl_rx_gain
             if self.pl_path_gain:
@@ -857,7 +855,6 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self.pl_fs_line.clear()
 
-    def updateCILine(self):
         if self.pl_ci_checkbox.isChecked():
             self.ci_y = eq.v_pl_ci(self.pl_points, self.pl_freq, self.pl_sigma, self.pl_exp, self.pl_ref_dist) - self.pl_tx_gain - self.pl_rx_gain
             if self.pl_path_gain:
@@ -868,7 +865,6 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self.pl_ci_line.clear()
 
-    def updateABGLine(self):
         if self.pl_abg_checkbox.isChecked():
             self.abg_y = eq.v_pl_abg(self.pl_points, self.pl_freq, self.pl_alpha, self.pl_beta, self.pl_gamma, self.pl_sigma, self.pl_ref_dist, self.pl_ref_freq) - self.pl_tx_gain - self.pl_rx_gain
             if self.pl_path_gain:
@@ -879,7 +875,6 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self.pl_abg_line.clear()
 
-    def updateOHULine(self):
         if self.pl_oh_u_checkbox.isChecked():
             self.pl_oh_u_y = eq.v_pl_oh_urban(self.pl_points, self.pl_freq, self.pl_bs_height, self.pl_ue_height, self.pl_large_city) - self.pl_tx_gain - self.pl_rx_gain
             if self.pl_path_gain:
@@ -890,7 +885,6 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self.pl_oh_u_line.clear()
 
-    def updateOHSLine(self):
         if self.pl_oh_s_checkbox.isChecked():
             self.pl_oh_s_y = eq.v_pl_oh_suburban(self.pl_points, self.pl_freq, self.pl_bs_height, self.pl_ue_height) - self.pl_tx_gain - self.pl_rx_gain
             if self.pl_path_gain:
@@ -901,7 +895,6 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self.pl_oh_s_line.clear()
 
-    def updateOHRLine(self):
         if self.pl_oh_r_checkbox.isChecked():
             self.pl_oh_r_y = eq.v_pl_oh_rural(self.pl_points, self.pl_freq, self.pl_bs_height, self.pl_ue_height) - self.pl_tx_gain - self.pl_rx_gain
             if self.pl_path_gain:
