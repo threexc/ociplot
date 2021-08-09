@@ -16,6 +16,7 @@ from random import randint
 import walksignal.dataset as ds
 import walksignal.equations as eq
 import walksignal.plottools as pt
+import walksignal.utils as utils
 
 class MainWindow(QtWidgets.QMainWindow):
 
@@ -24,19 +25,23 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.setWindowTitle("walksignal 0.3.0")
         self.loaded_data = None
-        if os.path.isfile("lastcfg.yaml"):
-            with open("lastcfg.yaml", 'r') as stream:
-                self.loaded_data = yaml.safe_load(stream)
-        if self.loaded_data:
-            self.datafile = self.loaded_data['datafile']
-            self.reference = self.loaded_data['reference']
-            if "tower_lat" in self.loaded_data and "tower_lon" in self.loaded_data:
-                self.tower_lat = float(self.loaded_data['tower_lat'])
-                self.tower_lon = float(self.loaded_data['tower_lon'])
+        self.config = utils.Config("lastcfg.yaml")
+        if self.config is not None:
+            print("Datafile found in lastcfg.yaml")
+            self.datafile = self.config.loaded_data['datafile']
+
+            print("Reference found in lastcfg.yaml")
+            self.reference = self.config.loaded_data['reference']
+
+            print("lat/lon found in lastcfg.yaml")
+            self.tower_lat = float(self.config.loaded_data['tower_lat'])
+            self.tower_lon = float(self.config.loaded_data['tower_lon'])
         else:
             self.datafile = None
             self.reference = None
-        self.config_data = None
+            self.tower_lat = None
+            self.tower_lon = None
+        self.write_config = None
         self.dataset = None
         self.absorption = 0.5
         self.density = 0.5
@@ -66,8 +71,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.cell_pl = None
         self.cell_distances = None
         self.tower = None
-        self.tower_lat = None
-        self.tower_lon = None
         self.cbar = None
         self.map_canvas = pt.MplCanvas(self, width=5, height=4, dpi=100)
         self.map_toolbar = NavigationToolbar(self.map_canvas, self)
@@ -106,8 +109,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self.model_widget)
         if self.datafile:
             self.loadDataSet()
-            self.set_data_text.setText(self.loaded_data['datafile'][0])
-            self.set_reference_text.setText(self.loaded_data['reference'])
+            self.set_data_text.setText(' '.join(self.config.loaded_data['datafile']))
+            self.set_reference_text.setText(self.config.loaded_data['reference'])
 
     def setupPlotWidgets(self):
         self.pl_red_pen = pg.mkPen(color=(255, 0, 0))
@@ -778,21 +781,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setTowerLocation()
         self.updateCellMap()
         self.updateRWMPlot()
-        self.plUpdatePlot()
         self.setConfig()
 
     def setConfig(self):
-        self.config_data = {
+        self.write_config = {
                 'datafile': self.datafile,
                 'reference': self.reference,
         }
         if self.tower_lat and self.tower_lon:
-            self.config_data['tower_lat'] = self.tower_lat
-            self.config_data['tower_lon'] = self.tower_lon
+            self.write_config['tower_lat'] = self.tower_lat
+            self.write_config['tower_lon'] = self.tower_lon
 
     def saveConfig(self):
         with open("lastcfg.yaml", "w") as yamlfile:
-            data = yaml.dump(self.config_data, yamlfile)
+            data = yaml.dump(self.write_config, yamlfile)
 
     def updateCellMap(self):
         points = self.cell.data_points

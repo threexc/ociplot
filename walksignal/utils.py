@@ -1,7 +1,20 @@
 import csv
 import math
 import utm
+import os
+import yaml
 from geopy import distance
+
+class Config:
+    def __init__(self, config):
+        if os.path.isfile(config):
+            with open(config) as stream:
+                self.loaded_data = yaml.safe_load(stream)
+        else:
+            self.loaded_data = None
+
+    def get(self, prop):
+        return self.loaded_data[prop] if prop in self.loaded_data else None
 
 def read_csv(data_file):
       with open(data_file) as csv_file:
