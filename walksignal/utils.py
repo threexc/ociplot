@@ -4,17 +4,19 @@ import utm
 import os
 import yaml
 from geopy import distance
+from dataclasses import dataclass
 
+@dataclass
 class Config:
-    def __init__(self, config):
-        if os.path.isfile(config):
-            with open(config) as stream:
-                self.loaded_data = yaml.safe_load(stream)
-        else:
-            self.loaded_data = None
+    filename: str = "lastcfg.yaml"
 
-    def get(self, prop):
-        return self.loaded_data[prop] if prop in self.loaded_data else None
+    def load(self):
+        with open(self.filename) as stream:
+            return yaml.safe_load(stream)
+
+    def save(self, data):
+        with open(self.filename, "w") as stream:
+            yaml.dump(data, stream)
 
 def read_csv(data_file):
       with open(data_file) as csv_file:

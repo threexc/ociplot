@@ -26,21 +26,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle("walksignal 0.3.0")
         self.loaded_data = None
         self.config = utils.Config("lastcfg.yaml")
-        if self.config is not None:
-            print("Datafile found in lastcfg.yaml")
-            self.datafile = self.config.loaded_data['datafile']
+        self.configdata = self.config.load()
 
-            print("Reference found in lastcfg.yaml")
-            self.reference = self.config.loaded_data['reference']
+        self.datafile = self.configdata.get("datafile")
+        self.reference = self.configdata.get("reference")
+        self.tower_lat = self.configdata.get("tower_lat")
+        self.tower_lon = self.configdata.get("tower_lon")
 
-            print("lat/lon found in lastcfg.yaml")
-            self.tower_lat = float(self.config.loaded_data['tower_lat'])
-            self.tower_lon = float(self.config.loaded_data['tower_lon'])
-        else:
-            self.datafile = None
-            self.reference = None
-            self.tower_lat = None
-            self.tower_lon = None
         self.write_config = None
         self.dataset = None
         self.absorption = 0.5
@@ -109,8 +101,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self.model_widget)
         if self.datafile:
             self.loadDataSet()
-            self.set_data_text.setText(' '.join(self.config.loaded_data['datafile']))
-            self.set_reference_text.setText(self.config.loaded_data['reference'])
+            self.set_data_text.setText(' '.join(self.datafile))
+            self.set_reference_text.setText(self.reference)
 
     def setupPlotWidgets(self):
         self.pl_red_pen = pg.mkPen(color=(255, 0, 0))
@@ -793,8 +785,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.write_config['tower_lon'] = self.tower_lon
 
     def saveConfig(self):
-        with open("lastcfg.yaml", "w") as yamlfile:
-            data = yaml.dump(self.write_config, yamlfile)
+        self.config.save(self.write_config)
 
     def updateCellMap(self):
         points = self.cell.data_points
