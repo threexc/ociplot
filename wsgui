@@ -698,6 +698,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.cell_load_button.setText("Load Cell Data ({0} points)".format(point_count))
         self.cell_load_button.setEnabled(True)
 
+    def setConfig(self):
+        self.write_config = {
+                'datafile': self.datafile,
+                'reference': self.reference,
+        }
+        if self.tower_lat and self.tower_lon:
+            self.write_config['tower_lat'] = self.tower_lat
+            self.write_config['tower_lon'] = self.tower_lon
+
     def setTowerLocation(self):
         if self.lat_edit.text() and self.lon_edit.text():
             self.tower_lat = float(self.lat_edit.text())
@@ -709,6 +718,17 @@ class MainWindow(QtWidgets.QMainWindow):
             self.plUpdatePlot()
         else:
             print("Can't draw tower, bad lat/lon")
+
+    def loadCell(self):
+        print("Loading cell data...")
+        self.setCell()
+        self.updateCellMap()
+        self.setTowerLocation()
+        self.updateRWMPlot()
+        self.setConfig()
+
+    def saveConfig(self):
+        self.config.save(self.write_config)
 
     def textboxUpdate(self):
         self.pl_freq = float(self.pl_freq_textbox.text())
@@ -766,26 +786,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pl_ue_height_value_label.setText(str(self.pl_ue_height) + " m")
         if self.dataset:
             self.plUpdatePlot()
-
-    def loadCell(self):
-        print("Loading cell data...")
-        self.setCell()
-        self.setTowerLocation()
-        self.updateCellMap()
-        self.updateRWMPlot()
-        self.setConfig()
-
-    def setConfig(self):
-        self.write_config = {
-                'datafile': self.datafile,
-                'reference': self.reference,
-        }
-        if self.tower_lat and self.tower_lon:
-            self.write_config['tower_lat'] = self.tower_lat
-            self.write_config['tower_lon'] = self.tower_lon
-
-    def saveConfig(self):
-        self.config.save(self.write_config)
 
     def updateCellMap(self):
         points = self.cell.data_points
