@@ -566,6 +566,8 @@ class MainWindow(QtWidgets.QMainWindow):
             for cellid in self.dataset.cellid_u:
                 self.cellid_combo.addItem(str(cellid))
 
+            self.loadCell()
+
         else:
             print("No files selected. Select one or more datafiles")
 
