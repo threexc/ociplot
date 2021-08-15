@@ -18,10 +18,10 @@ import walksignal.models as md
 import walksignal.plottools as pt
 import walksignal.utils as utils
 
-class MainWindow(QtWidgets.QMainWindow):
+class WSWindow(QtWidgets.QMainWindow):
 
     def __init__(self, *args, **kwargs):
-        super(MainWindow, self).__init__(*args, **kwargs)
+        super(WSWindow, self).__init__(*args, **kwargs)
 
         self.setWindowTitle("walksignal 0.1.1")
         self.loaded_data = None
@@ -763,6 +763,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.pl_oh_r_line.clear()
 
 app = QtWidgets.QApplication(sys.argv)
-w = MainWindow()
+w = WSWindow()
 w.show()
 sys.exit(app.exec_())
