@@ -1,18 +1,13 @@
 #!/usr/bin/python3 
-import csv
-import sys
 import time
 import numpy as np
 import pandas as pd
-import matplotlib.patches as mpatches
 import matplotlib.pyplot as pyplot
 import walksignal.utils as utils
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 from dataclasses import dataclass
-from abc import ABC
 
-"""Class for loading and grooming OpenCellID formatted data and related files."""
 class DataSet:
+    """Class for loading and grooming OpenCellID formatted data and related files."""
     def __init__(self, data):
         self.measurements = MeasurementSet(data)
         self.map_path = self.measurements.data_path() + "/map.png"
@@ -104,6 +99,7 @@ class DataSet:
         return [MeasuredCell(self.data_matrix.loc[self.data_matrix['cellid'] == cellid], cellid) for cellid in self.cellid_u]
 
 class MeasuredCell:
+    """Class containing the complete set of data for a single cell."""
     def __init__(self, data, cellid):
         self.cellid = cellid
         self.distances = []
@@ -132,6 +128,7 @@ class MeasuredCell:
         return [tx_power - xi for xi in self.signal_power]
 
 class CellDataPoint:
+    """Class containing the contents of a signal data point."""
     def __init__(self, datapoint):
       self.mcc = datapoint['mcc']
       self.mnc = datapoint['mnc']
