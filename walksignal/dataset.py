@@ -131,18 +131,6 @@ class MeasuredCell:
     def get_path_loss(self, tx_power):
         return [tx_power - xi for xi in self.signal_power]
 
-class RefCell:
-    def __init__(self, ref):
-        self.mcc = ref['mcc']
-        self.mnc = ref['net']
-        self.lat = ref['lat']
-        self.lon = ref['lon']
-        self.lac = ref['area']
-        self.cellid = ref['cell']
-        self.range = ref['range']
-        self.samples = ref['samples']
-        self.signal_type = ref['radio']
-
 class CellDataPoint:
     def __init__(self, datapoint):
       self.mcc = datapoint['mcc']
