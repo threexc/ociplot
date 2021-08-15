@@ -11,11 +11,10 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from dataclasses import dataclass
 from abc import ABC
 
-"""Class for loading and grooming OpenCellID formatted data and related reference files."""
+"""Class for loading and grooming OpenCellID formatted data and related files."""
 class DataSet:
-    def __init__(self, data, reference):
+    def __init__(self, data):
         self.measurements = MeasurementSet(data)
-        self.reference = ReferenceSet(reference)
         self.map_path = self.measurements.data_path() + "/map.png"
         self.bbox_path = self.measurements.data_path() + "/bbox.txt"
 
@@ -32,14 +31,7 @@ class DataSet:
 
         self.measured_cells = self.get_measured_cell_list()
 
-        self.reference_matrix = self.reference.reference_matrix()
-
-        # Only deal with reference entries that show up in the
-        # measurement set
-        self.reference_matrix = self.reference_matrix.loc[self.reference_matrix['cell'].isin(self.cellid_u)]
-
         self.cell_id_list = [(self.mcc[row], self.mnc[row], self.lac[row], self.cellid_u[row]) for row in range(len(self.cellid_u))]
-        self.ref_cells = self.get_reference_cell_list(self.cell_id_list)
 
         self.cellmap = CellMap(self.map_path, self.bbox_path)
         self.plot_map = self.cellmap.get_map()
@@ -106,16 +98,6 @@ class DataSet:
     """Get a tuple consisting of a cell's MCC, MNC, LAC, and Cell ID respectively."""
     def get_cell_ids(self):
         return [(self.mcc[row], self.mnc[row], self.lac[row], self.cellid_u[row]) for row in range(len(self.cellid_u))]
-
-    """Return a list of all cells in the reference list detected in the data matrix."""
-    def get_reference_cell_list(self, cellid_list):
-        ref_cells = []
-        for cell in cellid_list:
-            for index, row in self.reference_matrix.iterrows():
-                if row['cell'] == cell[3]:
-                        ref_cells.append(RefCell(row))
-
-        return ref_cells
 
     """Return a list of all cells in the data matrix and their measured characteristics."""
     def get_measured_cell_list(self):
@@ -219,15 +201,3 @@ class MeasurementSet:
 
     def data_matrix(self):
         return pd.concat([pd.read_csv(f) for f in self.data_file], ignore_index=True)
-
-@dataclass
-class ReferenceSet:
-    """Class containing the reference set info."""
-
-    reference_file: str
-
-    def reference_path(self):
-        return self.reference_file[0].rsplit('/', 1)[0]
-
-    def reference_matrix(self):
-        return pd.read_csv(self.reference_file)
