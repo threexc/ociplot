@@ -1,6 +1,6 @@
 import unittest
 
-from walksignal.models import ABGModel, pl_abg
+from walksignal.models import ABGModel
 
 class TestABGModel(unittest.TestCase):
     def test_min_input(self):

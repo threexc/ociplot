@@ -1,6 +1,6 @@
 import unittest
 
-from walksignal.models import FreeSpaceModel, pl_fs
+from walksignal.models import FreeSpaceModel
 
 class TestFreeSpaceModel(unittest.TestCase):
     def test_min_input(self):

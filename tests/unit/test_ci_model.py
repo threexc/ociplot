@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from walksignal.models import CIModel, pl_ci
+from walksignal.models import CIModel
 
 class TestABGModel(unittest.TestCase):
     def test_min_input(self):
