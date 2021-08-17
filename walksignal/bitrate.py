@@ -33,18 +33,3 @@ class BitRateSet:
 
     def get_min(self, field):
         return self.data[field].min()
-
-def main():
-   bitrateset = BitRateSet("07022021.txt") 
-
-   points = bitrateset.get_points()
-   for point in points:
-       print(point.down)
-
-   print(bitrateset.get_mean("jitter"))
-   print(bitrateset.get_mean("down"))
-   print(bitrateset.get_max("down"))
-
-
-if __name__ == "__main__":
-    main()
