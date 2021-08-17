@@ -75,7 +75,7 @@ class ABGModel(FreeSpaceModel):
         return 10 * self.alpha * np.log10(dist/self.ref_dist) + self.beta + 10 * self.gamma * np.log10(self.freq/self.ref_freq) + np.random.normal(0, self.sigma)
 
     def v_path_loss(self, array):
-        return np.array([self.path_loss(xi, self.freq, self.alpha, self.beta, self.gamma, self.sigma, self.ref_dist, self.ref_freq) for xi in array])
+        return np.array([self.path_loss(xi) for xi in array])
 
 @dataclass
 class CIModel(FreeSpaceModel):
@@ -87,10 +87,10 @@ class CIModel(FreeSpaceModel):
     ref_dist: float = 1
 
     def path_loss(self, dist):
-        return super().path_loss(self.ref_dist, self.freq) + 10 * self.pl_exp * np.log10(dist/self.ref_dist) + np.random.normal(0, self.sigma)
+        return super().path_loss(self.ref_dist) + 10 * self.pl_exp * np.log10(dist/self.ref_dist) + np.random.normal(0, self.sigma)
 
     def v_path_loss(self, array):
-        return np.array([self.path_loss(xi, self.freq, self.sigma, self.pl_exp, self.ref_dist) for xi in array])
+        return np.array([self.path_loss(xi) for xi in array])
 
 @dataclass
 class OHUrbanModel:
