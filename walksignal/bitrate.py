@@ -19,8 +19,13 @@ class BitRate:
 
 class BitRateSet:
     """A set of speed test data extracted from a Pandas dataframe."""
+
     def __init__(self, datafile):
-        self.data = pd.read_csv(datafile)
+        self.datafile = datafile
+        self.data = pd.concat([pd.read_csv(f) for f in self.datafile], ignore_index=True)
+
+    def data_path(self):
+        return self.datafile[0].rsplit('/', 1)[0]
 
     def get_points(self):
         return [BitRate(row) for index, row in self.data.iterrows()]

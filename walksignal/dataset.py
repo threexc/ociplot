@@ -13,8 +13,6 @@ class DataSet:
         self.map_path = self.measurements.data_path() + "/map.png"
         self.bbox_path = self.measurements.data_path() + "/bbox.txt"
 
-        self.data_matrix = self.measurements.data_matrix()
-
         self.mcc = self.m_mcc()
         self.mnc = self.m_mnc()
         self.lac = self.m_lac()
@@ -35,7 +33,7 @@ class DataSet:
         self.plotrange = np.linspace(1, 1500, 500)
 
     def m_time_range(self):
-        return np.array(self.data_matrix['measured_at'], dtype=float)
+        return np.array(self.measurements.data['measured_at'], dtype=float)
 
     def m_start_time(self):
         return time.strftime('%m/%d/%Y %H:%M:%S', time.gmtime(self.time_range[0]/1000.))
@@ -47,43 +45,43 @@ class DataSet:
         return (self.time_range - self.time_range[0])/1000
     
     def m_lats(self):
-        return np.array(self.data_matrix['lat'], dtype=float)
+        return np.array(self.measurements.data['lat'], dtype=float)
 
     def m_lons(self):
-        return np.array(self.data_matrix['lon'], dtype=float)
+        return np.array(self.measurements.data['lon'], dtype=float)
 
     def m_signal(self):
-        return np.array(self.data_matrix['signal'], dtype=float)
+        return np.array(self.measurements.data['signal'], dtype=float)
 
     def m_pci(self):
-        return np.array(self.data_matrix['pci'], dtype=float)
+        return np.array(self.measurements.data['pci'], dtype=float)
 
     def m_speed(self):
-        return np.array(self.data_matrix['speed'], dtype=float)
+        return np.array(self.measurements.data['speed'], dtype=float)
 
     def m_mcc(self):
-        return np.array(self.data_matrix['mcc'], dtype=int)
+        return np.array(self.measurements.data['mcc'], dtype=int)
 
     def m_mnc(self):
-        return np.array(self.data_matrix['mnc'], dtype=int)
+        return np.array(self.measurements.data['mnc'], dtype=int)
 
     def m_lac(self):
-        return np.array(self.data_matrix['lac'], dtype=int)
+        return np.array(self.measurements.data['lac'], dtype=int)
 
     def m_cellid(self):
-        return np.array(self.data_matrix['cellid'], dtype=int)
+        return np.array(self.measurements.data['cellid'], dtype=int)
 
     def m_rating(self):
-        return np.array(self.data_matrix['rating'], dtype=float)
+        return np.array(self.measurements.data['rating'], dtype=float)
 
     def m_direction(self):
-        return np.array(self.data_matrix['direction'], dtype=float)
+        return np.array(self.measurements.data['direction'], dtype=float)
 
     def m_ta(self):
-        return np.array(self.data_matrix['ta'], dtype=float)
+        return np.array(self.measurements.data['ta'], dtype=float)
 
     def m_act(self):
-        return self.data_matrix['act']
+        return self.measurements.data['act']
 
     def get_cell(self, cellid):
         for cell in self.measured_cells:
@@ -96,7 +94,7 @@ class DataSet:
 
     """Return a list of all cells in the data matrix and their measured characteristics."""
     def get_measured_cell_list(self):
-        return [MeasuredCell(self.data_matrix.loc[self.data_matrix['cellid'] == cellid], cellid) for cellid in self.cellid_u]
+        return [MeasuredCell(self.measurements.data.loc[self.measurements.data['cellid'] == cellid], cellid) for cellid in self.cellid_u]
 
 class MeasuredCell:
     """Class containing the complete set of data for a single cell."""
@@ -179,10 +177,9 @@ class BaseStation:
 class MeasurementSet:
     """Class containing the measured data info."""
 
-    data_file: str
+    def __init__(self, datafile):
+        self.datafile = datafile
+        self.data = pd.concat([pd.read_csv(f) for f in self.datafile], ignore_index=True)
 
     def data_path(self):
-        return self.data_file[0].rsplit('/', 1)[0]
-
-    def data_matrix(self):
-        return pd.concat([pd.read_csv(f) for f in self.data_file], ignore_index=True)
+        return self.datafile[0].rsplit('/', 1)[0]
