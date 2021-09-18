@@ -56,9 +56,9 @@ Run the following to start the GUI:
 
 ![tower map](media/example_towermap.png?raw=true "Tower Map")
 
-### Random Walk Model Plot
+### Bitrate Plot
 
-![random_walk](media/example_rwm.png?raw=true "Random Walk Model")
+![bitrate](media/example_bitrate.png?raw=true "Bitrate")
 
 ## Path Loss Models
 
@@ -98,20 +98,6 @@ the ABG and CI models:
 - Set **beta** to `20 * np.log10((4 * np.pi * 10^9)/c)`, where **c** is
   the speed of light
 
-## Random Walk Models
-
-The random walk model is taken from [[2]](#2), specifically from
-equation 13, which is a radio link expression for the power received by
-an antenna at a distance r from the transmitter. The full expression is
-too complex to list here, but it has the following parameters:
-
-- **density** of the obstacles in the environment
-- **absorption** absorptive rate of the environment
-- **gain factor** accounting for TX power, gain of the TX antenna,
-  effective area of the receiving antenna, and miscellaneous hardware
-  loss in the link, in Wm^2
-- **offset** to manually adjust the model curve by a factor in dB
-
 ## Challenges
 
 - Accurate tower positioning info is still difficult to obtain - the
@@ -149,12 +135,7 @@ Parameter Stability of Large-Scale Propagation Path
 Loss Models for 5G Wireless Communications*,
 IEEE TRANSACTIONS ON VEHICULAR TECHNOLOGY, VOL. 65, NO. 5, MAY 2016
 
-<a id="2">[2]</a> 
-M. Franceschetti, J. Bruck, L. J. Schulman,
-*A Random Walk Model of Wave Propagation*,
-IEEE TRANSACTIONS ON ANTENNAS AND PROPAGATION, VOL. 52, NO. 5, MAY 2004
-
-<a id="3">[3]</a>
+<a id="2">[3]</a>
 M2Catalyst, LLC.,
 *Network Cell Info: The Ultimate Network Cell Signal Information Tool*,
 https://m2catalyst.com/apps/network-cell-info
