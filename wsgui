@@ -24,7 +24,7 @@ class WSWindow(QtWidgets.QMainWindow):
     def __init__(self, *args, **kwargs):
         super(WSWindow, self).__init__(*args, **kwargs)
 
-        self.setWindowTitle("walksignal 0.2.0")
+        self.setWindowTitle("walksignal 0.4.0")
         self.config = utils.Config("lastcfg.yaml")
         self.configdata = self.config.load()
 
