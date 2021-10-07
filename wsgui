@@ -33,6 +33,9 @@ class WSWindow(QtWidgets.QMainWindow):
             self.bitrate_data_file = self.configdata.get("bitrate_data_file")
             self.tower_lat = self.configdata.get("tower_lat")
             self.tower_lon = self.configdata.get("tower_lon")
+        else:
+            self.tower_lat = None
+            self.tower_lon = None
 
         self.write_config = None
         self.signal_dataset = None
