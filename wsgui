@@ -28,10 +28,11 @@ class WSWindow(QtWidgets.QMainWindow):
         self.config = utils.Config("lastcfg.yaml")
         self.configdata = self.config.load()
 
-        self.signal_data_file = self.configdata.get("signal_data_file")
-        self.bitrate_data_file = self.configdata.get("bitrate_data_file")
-        self.tower_lat = self.configdata.get("tower_lat")
-        self.tower_lon = self.configdata.get("tower_lon")
+        if self.configdata is not None:
+            self.signal_data_file = self.configdata.get("signal_data_file")
+            self.bitrate_data_file = self.configdata.get("bitrate_data_file")
+            self.tower_lat = self.configdata.get("tower_lat")
+            self.tower_lon = self.configdata.get("tower_lon")
 
         self.write_config = None
         self.signal_dataset = None
