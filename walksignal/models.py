@@ -89,3 +89,26 @@ class OHRuralModel(OHUrbanModel):
 
     def v_path_loss(self, array):
         return super().v_path_loss(array)
+
+@dataclass
+class CompositeModel:
+    """Class representing the Composite Propagation Model which consists
+    of the Free Space Model below the critical distance, and the Two-Ray
+    Multipath propagation model above it"""
+    freq: float
+    bs_height: float
+    ue_height: float
+
+    def crit_dist(self):
+        return (4 * constants.pi * self.ue_height * self.bs_height * self.freq) / constants.speed_of_light
+
+    def path_loss(self, dist):
+        if dist < self.crit_dist():
+            # Free space model below this distance
+            return 20 * np.log10(dist) + 20 * np.log10(self.freq) - 27.55
+        else:
+            # Two-Ray Multipath Model
+            return 40 * np.log10(dist) - 20 * np.log10(self.bs_height * self.ue_height)
+
+    def v_path_loss(self, array):
+        return np.array([self.path_loss(xi) for xi in array])
