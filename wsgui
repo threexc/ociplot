@@ -111,7 +111,6 @@ class WSWindow(QtWidgets.QMainWindow):
         self.main_layout = QtWidgets.QHBoxLayout()
         self.main_layout.addWidget(self.dataSidebarWidget, 1)
         self.main_layout.addWidget(self.plot_tabs, 3)
-        self.main_layout.addWidget(self.plotSidebarWidget, 1)
         self.br_widget = QtWidgets.QWidget()
         self.br_widget.setLayout(self.main_layout)
         self.setCentralWidget(self.br_widget)
@@ -313,9 +312,16 @@ class WSWindow(QtWidgets.QMainWindow):
         self.map_box = QtWidgets.QVBoxLayout()
         self.map_box.addWidget(self.map_toolbar)
         self.map_box.addWidget(self.map_canvas)
+
+        self.pl_plot_box = QtWidgets.QHBoxLayout()
+        self.pl_plot_box.addWidget(self.pl_widget)
+        self.pl_plot_box.addLayout(self.pl_box)
+
         self.plot_tab1 = QtWidgets.QWidget()
         self.plot_tab1.setLayout(self.map_box)
-        self.plot_tab2 = self.pl_widget
+        self.plot_tab2 = QtWidgets.QWidget()
+        self.plot_tab2.setLayout(self.pl_plot_box)
+        #self.plot_tab2 = self.pl_widget
         self.plot_tab3 = self.br_widget
         self.plot_tabs.resize(300, 200)
         self.plot_tabs.addTab(self.plot_tab1, "Cell Map")
