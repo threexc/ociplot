@@ -197,7 +197,6 @@ class WSWindow(QtWidgets.QMainWindow):
     def setupPathLossControls(self):
         self.pl_box = QtWidgets.QVBoxLayout()
         self.br_box = QtWidgets.QVBoxLayout()
-        self.pl_checkbox_title_box = QtWidgets.QHBoxLayout()
         self.pl_checkbox_box = QtWidgets.QVBoxLayout()
         self.pl_pl_title_box = QtWidgets.QHBoxLayout()
         self.pl_th_title_box = QtWidgets.QHBoxLayout()
@@ -226,7 +225,6 @@ class WSWindow(QtWidgets.QMainWindow):
         self.setupPLTitles()
         self.setupLatLonBoxes()
 
-        self.pl_box.addLayout(self.pl_checkbox_title_box)
         self.pl_box.addLayout(self.pl_th_title_box)
         self.pl_checkbox_box.addLayout(self.pl_checkbox_subbox_1)
         self.pl_checkbox_box.addLayout(self.pl_oh_title_box)
@@ -328,7 +326,7 @@ class WSWindow(QtWidgets.QMainWindow):
         self.control_tabs = QtWidgets.QTabWidget()
         self.pl_control_tab = QtWidgets.QWidget()
         self.br_control_tab = QtWidgets.QWidget()
-        self.control_tabs.addTab(self.pl_control_tab, "Path Loss")
+        self.control_tabs.addTab(self.pl_control_tab, "Path Loss Models")
         self.control_tabs.addTab(self.br_control_tab, "Bitrate")
 
     def setupControlsSidebar(self):
@@ -336,10 +334,6 @@ class WSWindow(QtWidgets.QMainWindow):
         self.pl_control_tab.setLayout(self.pl_box)
         self.br_control_tab.setLayout(self.br_box)
 
-        self.controls_title = QtWidgets.QLabel('Controls', self)
-        self.controls_title.setFont(QtGui.QFont('Arial', 14))
-
-        self.plotSidebar.addWidget(self.controls_title)
         self.plotSidebar.addWidget(self.control_tabs)
         self.plotSidebar.setAlignment(QtCore.Qt.AlignTop)
         self.plotSidebarWidget = QtWidgets.QWidget()
@@ -549,10 +543,6 @@ class WSWindow(QtWidgets.QMainWindow):
         self.pl_ref_freq_box.addWidget(self.pl_ref_freq_value_label)
 
     def setupPLTitles(self):
-        self.pl_checkbox_title = QtWidgets.QLabel("Models")
-        self.pl_checkbox_title.setFont(QtGui.QFont("Arial", 12))
-        self.pl_checkbox_title_box.addWidget(self.pl_checkbox_title)
-
         self.pl_th_title = QtWidgets.QLabel("Large-Scale")
         self.pl_th_title.setFont(QtGui.QFont("Arial", 10))
         self.pl_th_title_box.addWidget(self.pl_th_title)
