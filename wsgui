@@ -524,7 +524,7 @@ class WSWindow(QtWidgets.QMainWindow):
         self.pl_ref_pl_textbox = QtWidgets.QLineEdit(self)
         self.pl_ref_pl_textbox.setText("1")
         self.pl_ref_pl_textbox_label = QtWidgets.QLabel('Ref Path Loss', self)
-        self.pl_ref_pl_value_label = QtWidgets.QLabel('m', self)
+        self.pl_ref_pl_value_label = QtWidgets.QLabel('dB', self)
         self.pl_ref_pl_textbox.textEdited.connect(self.plTextboxUpdate)
         self.pl_ref_pl_box.addWidget(self.pl_ref_pl_textbox_label)
         self.pl_ref_pl_box.addWidget(self.pl_ref_pl_textbox)
@@ -749,8 +749,6 @@ class WSWindow(QtWidgets.QMainWindow):
     def plUpdatePlot(self):
         self.plUpdateMeasurements()
         self.plUpdateModels()
-        self.plUpdateXScale()
-        self.plUpdateYScale()
 
     def plUpdateXScale(self):
         self.pl_widget.setXRange(0, max(self.cell_distances) + 50)
