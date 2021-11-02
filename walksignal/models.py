@@ -91,8 +91,8 @@ class OHRuralModel(OHUrbanModel):
         return super().v_path_loss(array)
 
 @dataclass
-class CompositeModel:
-    """Class representing the Composite Propagation Model which consists
+class MultiSlopeModel:
+    """Class representing the Multi-Slope Propagation Model which consists
     of the Free Space Model below the critical distance, and the Two-Ray
     Multipath propagation model above it"""
     freq: float
