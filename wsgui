@@ -114,11 +114,14 @@ class WSWindow(QtWidgets.QMainWindow):
         self.br_widget = QtWidgets.QWidget()
         self.br_widget.setLayout(self.main_layout)
         self.setCentralWidget(self.br_widget)
-        if self.signal_data_file and self.bitrate_data_file:
-            self.setDataSource()
-            self.loadCell()
-            self.set_signal_data_text.setText(' '.join(self.signal_data_file))
-            self.set_bitrate_data_text.setText(' '.join(self.bitrate_data_file))
+        if self.signal_data_file:
+            self.setSignalDataSource()
+        if self.bitrate_data_file:
+            self.setBitrateDataSource()
+
+        self.loadCell()
+        self.set_signal_data_text.setText(' '.join(self.signal_data_file))
+        self.set_bitrate_data_text.setText(' '.join(self.bitrate_data_file))
 
 
     def setupPlotWidgets(self):
@@ -157,7 +160,6 @@ class WSWindow(QtWidgets.QMainWindow):
 
     def setupFileControls(self):
         self.file_control_box = QtWidgets.QVBoxLayout()
-        self.load_box = QtWidgets.QVBoxLayout()
         self.set_signal_data_box = QtWidgets.QHBoxLayout()
         self.set_bitrate_data_box = QtWidgets.QHBoxLayout()
 
@@ -178,10 +180,6 @@ class WSWindow(QtWidgets.QMainWindow):
         self.set_bitrate_data_text = QtWidgets.QLineEdit('None', self)
         self.set_bitrate_data_text.setReadOnly(True)
 
-        self.load_button = QtWidgets.QPushButton('Load', self)
-        self.load_button.clicked.connect(self.setDataSource)
-
-        self.load_box.addWidget(self.load_button)
         self.set_signal_data_box.addWidget(self.signal_data_section_title)
         self.set_signal_data_box.addWidget(self.set_signal_data_text)
         self.set_signal_data_box.addWidget(self.set_signal_data_button)
@@ -191,7 +189,6 @@ class WSWindow(QtWidgets.QMainWindow):
         self.file_control_box.addWidget(self.file_controls_title)
         self.file_control_box.addLayout(self.set_signal_data_box)
         self.file_control_box.addLayout(self.set_bitrate_data_box)
-        self.file_control_box.addLayout(self.load_box)
 
     def setupPathLossControls(self):
         self.pl_box = QtWidgets.QVBoxLayout()
@@ -584,6 +581,8 @@ class WSWindow(QtWidgets.QMainWindow):
             self.signal_data_file = fname[0]
             self.set_signal_data_text.setText(str(self.signal_data_file))
 
+        self.setSignalDataSource()
+
     def showBitrateFileDialog(self):
         home_dir = str(Path.home)
         fname = QtWidgets.QFileDialog.getOpenFileNames(self, 'Open file', home_dir)
@@ -593,7 +592,9 @@ class WSWindow(QtWidgets.QMainWindow):
             self.bitrate_data_file = fname[0]
             self.set_bitrate_data_text.setText(str(self.bitrate_data_file))
 
-    def setDataSource(self):
+        self.setBitrateDataSource()
+
+    def setSignalDataSource(self):
         if self.signal_data_file:
             print("Loading data...")
             self.start_time = time.time()
@@ -620,6 +621,7 @@ class WSWindow(QtWidgets.QMainWindow):
         else:
             print("No data files selected")
 
+    def setBitrateDataSource(self):
         if self.bitrate_data_file:
             self.bitrate_dataset = br.BitRateSet(self.bitrate_data_file)
         else:
