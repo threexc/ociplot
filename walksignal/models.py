@@ -16,6 +16,43 @@ class FreeSpaceModel:
         return np.array([self.path_loss(xi) for xi in array])
 
 @dataclass
+class TwoRayModel:
+    """Class representing the two-ray path loss model for line-of-sight
+    communications."""
+    ref_pl: float
+    pl_exp: float
+    ref_dist: float
+
+    def path_loss(self, dist):
+        return self.ref_pl + 10 * self.pl_exp * np.log10(dist/self.ref_dist)
+
+    def v_path_loss(self, array):
+        return np.array([self.path_loss(xi) for xi in array])
+
+@dataclass
+class MultiSlopeModel:
+    """Class representing the Multi-Slope Propagation Model which consists
+    of the Free Space Model below the critical distance, and the Two-Ray
+    Multipath propagation model above it"""
+    freq: float
+    bs_height: float
+    ue_height: float
+
+    def crit_dist(self):
+        return (4 * constants.pi * self.ue_height * self.bs_height * self.freq) / constants.speed_of_light
+
+    def path_loss(self, dist):
+        if dist < self.crit_dist():
+            # Free space model below this distance
+            return 20 * np.log10(dist) + 20 * np.log10(self.freq) - 27.55
+        else:
+            # Two-Ray Multipath Model
+            return 40 * np.log10(dist) - 20 * np.log10(self.bs_height * self.ue_height)
+
+    def v_path_loss(self, array):
+        return np.array([self.path_loss(xi) for xi in array])
+
+@dataclass
 class ABGModel(FreeSpaceModel):
     """Class representing the Alpha-Beta-Gamma path loss model for
     line-of-sight communications."""
@@ -90,25 +127,3 @@ class OHRuralModel(OHUrbanModel):
     def v_path_loss(self, array):
         return super().v_path_loss(array)
 
-@dataclass
-class MultiSlopeModel:
-    """Class representing the Multi-Slope Propagation Model which consists
-    of the Free Space Model below the critical distance, and the Two-Ray
-    Multipath propagation model above it"""
-    freq: float
-    bs_height: float
-    ue_height: float
-
-    def crit_dist(self):
-        return (4 * constants.pi * self.ue_height * self.bs_height * self.freq) / constants.speed_of_light
-
-    def path_loss(self, dist):
-        if dist < self.crit_dist():
-            # Free space model below this distance
-            return 20 * np.log10(dist) + 20 * np.log10(self.freq) - 27.55
-        else:
-            # Two-Ray Multipath Model
-            return 40 * np.log10(dist) - 20 * np.log10(self.bs_height * self.ue_height)
-
-    def v_path_loss(self, array):
-        return np.array([self.path_loss(xi) for xi in array])

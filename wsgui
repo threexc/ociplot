@@ -66,6 +66,7 @@ class WSWindow(QtWidgets.QMainWindow):
         self.pl_sigma = 1
         self.pl_exp = 1
         self.pl_ref_dist = 1
+        self.pl_ref_pl = 80
         self.pl_ref_freq = 1000000000
         self.pl_fs_y = None
         self.pl_tx_power = 43
@@ -142,7 +143,7 @@ class WSWindow(QtWidgets.QMainWindow):
         self.pl_abg_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_blue_pen, name="ABG Model")
         self.pl_ci_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_green_pen, name="CI Model")
         self.pl_fs_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_black_pen, name="Free Space Model")
-        self.pl_multislope_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_orange_pen, name="MultiSlope Model")
+        self.pl_tworay_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_orange_pen, name="TwoRay Model")
         self.pl_oh_u_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_oh_u_pen, name="Okumura-Hata Urban")
         self.pl_oh_s_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_oh_s_pen, name="Okumura-Hata Suburban")
         self.pl_oh_r_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_oh_r_pen, name="Okumura-Hata Rural")
@@ -214,6 +215,7 @@ class WSWindow(QtWidgets.QMainWindow):
         self.pl_tx_gain_box = QtWidgets.QHBoxLayout()
         self.pl_rx_gain_box = QtWidgets.QHBoxLayout()
         self.pl_ref_dist_box = QtWidgets.QHBoxLayout()
+        self.pl_ref_pl_box = QtWidgets.QHBoxLayout()
         self.pl_ref_freq_box = QtWidgets.QHBoxLayout()
         self.pl_bs_height_box = QtWidgets.QHBoxLayout()
         self.pl_ue_height_box = QtWidgets.QHBoxLayout()
@@ -233,6 +235,7 @@ class WSWindow(QtWidgets.QMainWindow):
         self.pl_box.addLayout(self.pl_checkbox_box)
         self.pl_box.addLayout(self.pl_freq_box)
         self.pl_box.addLayout(self.pl_ref_dist_box)
+        self.pl_box.addLayout(self.pl_ref_pl_box)
         self.pl_box.addLayout(self.pl_ref_freq_box)
         self.pl_box.addLayout(self.pl_alpha_box)
         self.pl_box.addLayout(self.pl_beta_box)
@@ -357,10 +360,10 @@ class WSWindow(QtWidgets.QMainWindow):
         self.pl_fs_checkbox.stateChanged.connect(self.plCheckboxUpdate)
         self.pl_checkbox_subbox_1.addWidget(self.pl_fs_checkbox)
 
-        self.pl_multislope_checkbox = QtWidgets.QCheckBox("MultiSlope")
-        self.pl_multislope_checkbox.setChecked(True)
-        self.pl_multislope_checkbox.stateChanged.connect(self.plCheckboxUpdate)
-        self.pl_checkbox_subbox_1.addWidget(self.pl_multislope_checkbox)
+        self.pl_tworay_checkbox = QtWidgets.QCheckBox("TwoRay")
+        self.pl_tworay_checkbox.setChecked(True)
+        self.pl_tworay_checkbox.stateChanged.connect(self.plCheckboxUpdate)
+        self.pl_checkbox_subbox_1.addWidget(self.pl_tworay_checkbox)
 
         self.pl_abg_checkbox = QtWidgets.QCheckBox("ABG")
         self.pl_abg_checkbox.setChecked(True)
@@ -518,6 +521,15 @@ class WSWindow(QtWidgets.QMainWindow):
         self.pl_freq_box.addWidget(self.pl_freq_textbox)
         self.pl_freq_box.addWidget(self.pl_freq_value_label)
 
+        self.pl_ref_pl_textbox = QtWidgets.QLineEdit(self)
+        self.pl_ref_pl_textbox.setText("1")
+        self.pl_ref_pl_textbox_label = QtWidgets.QLabel('Ref Path Loss', self)
+        self.pl_ref_pl_value_label = QtWidgets.QLabel('m', self)
+        self.pl_ref_pl_textbox.textEdited.connect(self.plTextboxUpdate)
+        self.pl_ref_pl_box.addWidget(self.pl_ref_pl_textbox_label)
+        self.pl_ref_pl_box.addWidget(self.pl_ref_pl_textbox)
+        self.pl_ref_pl_box.addWidget(self.pl_ref_pl_value_label)
+
         self.pl_ref_dist_textbox = QtWidgets.QLineEdit(self)
         self.pl_ref_dist_textbox.setText("1")
         self.pl_ref_dist_textbox_label = QtWidgets.QLabel('Ref Dist', self)
@@ -657,6 +669,7 @@ class WSWindow(QtWidgets.QMainWindow):
     def plTextboxUpdate(self):
         self.pl_freq = float(self.pl_freq_textbox.text())
         self.pl_ref_dist = float(self.pl_ref_dist_textbox.text())
+        self.pl_ref_pl = float(self.pl_ref_pl_textbox.text())
         self.pl_ref_freq = float(self.pl_ref_freq_textbox.text())
         if self.signal_dataset:
             self.plUpdatePlot()
@@ -772,16 +785,16 @@ class WSWindow(QtWidgets.QMainWindow):
         else:
             self.pl_fs_line.clear()
 
-        if self.pl_multislope_checkbox.isChecked():
-            self.comp_model = md.MultiSlopeModel(freq=self.pl_freq, bs_height=self.pl_bs_height, ue_height=self.pl_ue_height)
-            self.comp_y = self.comp_model.v_path_loss(self.pl_points) - self.pl_tx_gain - self.pl_rx_gain
+        if self.pl_tworay_checkbox.isChecked():
+            self.two_ray_model = md.TwoRayModel(ref_pl=self.pl_ref_pl, pl_exp=self.pl_exp, ref_dist=self.pl_ref_dist)
+            self.two_ray_y = self.two_ray_model.v_path_loss(self.pl_points) - self.pl_tx_gain - self.pl_rx_gain
             if self.pl_path_gain:
-                comp_inverted = [element * -1 for element in self.comp_y]
-                self.pl_multislope_line.setData(self.pl_points, comp_inverted)
+                two_ray_inverted = [element * -1 for element in self.two_ray_y]
+                self.pl_tworay_line.setData(self.pl_points, two_ray_inverted)
             else:
-                self.pl_multislope_line.setData(self.pl_points, self.comp_y)
+                self.pl_tworay_line.setData(self.pl_points, self.two_ray_y)
         else:
-            self.pl_multislope_line.clear()
+            self.pl_tworay_line.clear()
 
         if self.pl_ci_checkbox.isChecked():
             self.ci_model = md.CIModel(freq=self.pl_freq, pl_exp=self.pl_exp, sigma=self.pl_sigma, ref_dist=self.pl_ref_dist)
