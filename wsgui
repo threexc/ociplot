@@ -360,6 +360,7 @@ class WSWindow(QtWidgets.QMainWindow):
         self.dataSidebar.addWidget(self.cell_load_button)
         self.dataSidebar.setAlignment(QtCore.Qt.AlignTop)
         self.dataSidebarWidget = QtWidgets.QWidget()
+        self.dataSidebarWidget.setFixedWidth(360)
         self.dataSidebarWidget.setLayout(self.dataSidebar)
 
     def setupPLCheckBoxes(self):
