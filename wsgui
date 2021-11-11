@@ -24,14 +24,10 @@ class WSWindow(QtWidgets.QMainWindow):
     def __init__(self, *args, **kwargs):
         super(WSWindow, self).__init__(*args, **kwargs)
 
-        self.setWindowTitle("walksignal 0.4.0")
+        self.setWindowTitle("walksignal 0.5.0")
+        self.config = utils.Config("lastcfg.yaml")
         if os.path.isfile("./lastcfg.yaml"):
-            self.config = utils.Config("lastcfg.yaml")
             self.configdata = self.config.load()
-        else:
-            self.configdata = None
-
-        if self.configdata is not None:
             self.signal_data_file = self.configdata.get("signal_data_file")
             self.bitrate_data_file = self.configdata.get("bitrate_data_file")
             self.tower_lat = self.configdata.get("tower_lat")
@@ -110,7 +106,8 @@ class WSWindow(QtWidgets.QMainWindow):
 
         self.main_layout = QtWidgets.QHBoxLayout()
         self.main_layout.addWidget(self.dataSidebarWidget, 1)
-        self.main_layout.addWidget(self.plot_tabs, 3)
+        self.main_layout.addWidget(self.tabs, 3)
+        self.main_layout.addWidget(self.plotSidebarWidget, 1)
         self.br_widget = QtWidgets.QWidget()
         self.br_widget.setLayout(self.main_layout)
         self.setCentralWidget(self.br_widget)
@@ -120,9 +117,6 @@ class WSWindow(QtWidgets.QMainWindow):
             self.setBitrateDataSource()
 
         self.loadCell()
-        self.set_signal_data_text.setText(' '.join(self.signal_data_file))
-        self.set_bitrate_data_text.setText(' '.join(self.bitrate_data_file))
-
 
     def setupPlotWidgets(self):
         self.br_widget = pg.PlotWidget()
@@ -160,35 +154,21 @@ class WSWindow(QtWidgets.QMainWindow):
 
     def setupFileControls(self):
         self.file_control_box = QtWidgets.QVBoxLayout()
-        self.set_signal_data_box = QtWidgets.QHBoxLayout()
-        self.set_bitrate_data_box = QtWidgets.QHBoxLayout()
+        self.file_load_box = QtWidgets.QHBoxLayout()
 
         self.file_controls_title = QtWidgets.QLabel('File Selection', self)
         self.file_controls_title.setFont(QtGui.QFont('Arial', 16))
 
-        self.signal_data_section_title = QtWidgets.QLabel("Signal", self)
-        self.signal_data_section_title.setFont(QtGui.QFont('Arial', 12))
-        self.set_signal_data_button = QtWidgets.QPushButton('Set', self)
+        self.set_signal_data_button = QtWidgets.QPushButton('Set Signal', self)
         self.set_signal_data_button.clicked.connect(self.showSignalFileDialog)
-        self.set_signal_data_text = QtWidgets.QLineEdit('None', self)
-        self.set_signal_data_text.setReadOnly(True)
 
-        self.bitrate_data_section_title = QtWidgets.QLabel("Bitrate", self)
-        self.bitrate_data_section_title.setFont(QtGui.QFont('Arial', 12))
-        self.set_bitrate_data_button = QtWidgets.QPushButton('Set', self)
+        self.set_bitrate_data_button = QtWidgets.QPushButton('Set Bitrate', self)
         self.set_bitrate_data_button.clicked.connect(self.showBitrateFileDialog)
-        self.set_bitrate_data_text = QtWidgets.QLineEdit('None', self)
-        self.set_bitrate_data_text.setReadOnly(True)
 
-        self.set_signal_data_box.addWidget(self.signal_data_section_title)
-        self.set_signal_data_box.addWidget(self.set_signal_data_text)
-        self.set_signal_data_box.addWidget(self.set_signal_data_button)
-        self.set_bitrate_data_box.addWidget(self.bitrate_data_section_title)
-        self.set_bitrate_data_box.addWidget(self.set_bitrate_data_text)
-        self.set_bitrate_data_box.addWidget(self.set_bitrate_data_button)
+        self.file_load_box.addWidget(self.set_signal_data_button)
+        self.file_load_box.addWidget(self.set_bitrate_data_button)
         self.file_control_box.addWidget(self.file_controls_title)
-        self.file_control_box.addLayout(self.set_signal_data_box)
-        self.file_control_box.addLayout(self.set_bitrate_data_box)
+        self.file_control_box.addLayout(self.file_load_box)
 
     def setupPathLossControls(self):
         self.pl_box = QtWidgets.QVBoxLayout()
@@ -250,14 +230,14 @@ class WSWindow(QtWidgets.QMainWindow):
 
     def setupCellControls(self):
         self.tower_box = QtWidgets.QVBoxLayout()
-        self.cell_box = QtWidgets.QHBoxLayout()
-        self.cellid_box = QtWidgets.QVBoxLayout()
+        self.cell_box = QtWidgets.QVBoxLayout()
+        self.cellid_box = QtWidgets.QHBoxLayout()
         self.cellid_text_box = QtWidgets.QHBoxLayout()
-        self.mcc_box = QtWidgets.QVBoxLayout()
+        self.mcc_box = QtWidgets.QHBoxLayout()
         self.mcc_text_box = QtWidgets.QHBoxLayout()
-        self.mnc_box = QtWidgets.QVBoxLayout()
+        self.mnc_box = QtWidgets.QHBoxLayout()
         self.mnc_text_box = QtWidgets.QHBoxLayout()
-        self.lac_box = QtWidgets.QVBoxLayout()
+        self.lac_box = QtWidgets.QHBoxLayout()
         self.lac_text_box = QtWidgets.QHBoxLayout()
         self.latbox = QtWidgets.QHBoxLayout()
         self.lonbox = QtWidgets.QHBoxLayout()
@@ -316,25 +296,25 @@ class WSWindow(QtWidgets.QMainWindow):
         self.tower_box.setAlignment(QtCore.Qt.AlignTop)
 
     def setupPlotTabs(self):
-        self.plot_tabs = QtWidgets.QTabWidget()
+        self.tabs = QtWidgets.QTabWidget()
         self.map_box = QtWidgets.QVBoxLayout()
         self.map_box.addWidget(self.map_toolbar)
         self.map_box.addWidget(self.map_canvas)
 
-        self.pl_plot_box = QtWidgets.QHBoxLayout()
-        self.pl_plot_box.addWidget(self.pl_widget)
-        self.pl_plot_box.addLayout(self.pl_box)
+        self.stats_box = QtWidgets.QGridLayout()
+        self.stats_tab = QtWidgets.QWidget()
+        self.stats_tab.setLayout(self.stats_box)
 
-        self.plot_tab1 = QtWidgets.QWidget()
-        self.plot_tab1.setLayout(self.map_box)
-        self.plot_tab2 = QtWidgets.QWidget()
-        self.plot_tab2.setLayout(self.pl_plot_box)
-        #self.plot_tab2 = self.pl_widget
-        self.plot_tab3 = self.br_widget
-        self.plot_tabs.resize(300, 200)
-        self.plot_tabs.addTab(self.plot_tab1, "Cell Map")
-        self.plot_tabs.addTab(self.plot_tab2, "Path Loss")
-        self.plot_tabs.addTab(self.plot_tab3, "Bitrate")
+        self.map_tab = QtWidgets.QWidget()
+        self.map_tab.setLayout(self.map_box)
+
+        self.pl_plot_tab = self.pl_widget
+        self.br_plot_tab = self.br_widget
+
+        self.tabs.addTab(self.stats_tab, "Statistics")
+        self.tabs.addTab(self.map_tab, "Cell Map")
+        self.tabs.addTab(self.pl_plot_tab, "Path Loss")
+        self.tabs.addTab(self.br_plot_tab, "Bitrate")
 
     def setupControlTabs(self):
         self.control_tabs = QtWidgets.QTabWidget()
@@ -360,7 +340,6 @@ class WSWindow(QtWidgets.QMainWindow):
         self.dataSidebar.addWidget(self.cell_load_button)
         self.dataSidebar.setAlignment(QtCore.Qt.AlignTop)
         self.dataSidebarWidget = QtWidgets.QWidget()
-        self.dataSidebarWidget.setFixedWidth(360)
         self.dataSidebarWidget.setLayout(self.dataSidebar)
 
     def setupPLCheckBoxes(self):
@@ -591,7 +570,6 @@ class WSWindow(QtWidgets.QMainWindow):
         if fname[0]:
             print("Selected signal signal_data_file {0}".format(fname[0]))
             self.signal_data_file = fname[0]
-            self.set_signal_data_text.setText(str(self.signal_data_file))
 
         self.setSignalDataSource()
 
@@ -602,7 +580,6 @@ class WSWindow(QtWidgets.QMainWindow):
         if fname[0]:
             print("Selected bitrate signal_data_file {0}".format(fname[0]))
             self.bitrate_data_file = fname[0]
-            self.set_bitrate_data_text.setText(str(self.bitrate_data_file))
 
         self.setBitrateDataSource()
 
@@ -640,11 +617,12 @@ class WSWindow(QtWidgets.QMainWindow):
             print("No bitrate file selected")
 
     def loadCell(self):
-        print("Loading cell data...")
-        self.setCell()
-        self.updateCellMap()
-        self.setTowerLocation()
-        self.setConfig()
+        if self.signal_dataset is not None:
+            print("Loading cell data...")
+            self.setCell()
+            self.updateCellMap()
+            self.setTowerLocation()
+            self.setConfig()
 
     def setCell(self):
         self.cell = self.signal_dataset.get_cell(self.cellid_combo.currentText())
