@@ -9,7 +9,7 @@ class FreeSpaceModel:
     line-of-sight communications."""
     freq: float
 
-    def path_loss(self, dist):
+    def path_loss_array(self, dist):
         return 20 * np.log10(dist) + 20 * np.log10(self.freq) - 27.55
 
     def v_path_loss(self, array):
@@ -23,7 +23,7 @@ class TwoRayModel:
     pl_exp: float
     ref_dist: float
 
-    def path_loss(self, dist):
+    def path_loss_array(self, dist):
         return self.ref_pl + 10 * self.pl_exp * np.log10(dist/self.ref_dist)
 
     def v_path_loss(self, array):
@@ -41,7 +41,7 @@ class MultiSlopeModel:
     def crit_dist(self):
         return (4 * constants.pi * self.ue_height * self.bs_height * self.freq) / constants.speed_of_light
 
-    def path_loss(self, dist):
+    def path_loss_array(self, dist):
         if dist < self.crit_dist():
             # Free space model below this distance
             return 20 * np.log10(dist) + 20 * np.log10(self.freq) - 27.55
@@ -63,7 +63,7 @@ class ABGModel(FreeSpaceModel):
     ref_dist: float = 1
     ref_freq: float = 1000000000
 
-    def path_loss(self, dist):
+    def path_loss_array(self, dist):
         return 10 * self.alpha * np.log10(dist/self.ref_dist) + self.beta + 10 * self.gamma * np.log10(self.freq/self.ref_freq) + np.random.normal(0, self.sigma)
 
     def v_path_loss(self, array):
@@ -78,7 +78,7 @@ class CIModel(FreeSpaceModel):
     sigma: float
     ref_dist: float = 1
 
-    def path_loss(self, dist):
+    def path_loss_array(self, dist):
         return super().path_loss(self.ref_dist) + 10 * self.pl_exp * np.log10(dist/self.ref_dist) + np.random.normal(0, self.sigma)
 
     def v_path_loss(self, array):
@@ -101,7 +101,7 @@ class OHUrbanModel:
         else:
             return (1.1 * np.log10(self.freq) - 0.7) * self.ue_height - (1.56 * np.log10(self.freq) - 0.8)
 
-    def path_loss(self, dist):
+    def path_loss_array(self, dist):
         return 69.55 + 26.26 * np.log10(self.freq) + (44.9 - 6.55 * np.log10(self.bs_height)) * np.log10(dist / 1000) - 13.65 * np.log10(self.bs_height) - self.corr_factor()
 
     def v_path_loss(self, array):
@@ -111,7 +111,7 @@ class OHUrbanModel:
 class OHSuburbanModel(OHUrbanModel):
     """Class representing the Okumura-Hata suburban propagation model."""
 
-    def path_loss(self, dist):
+    def path_loss_array(self, dist):
         return super().path_loss(dist) - 2 * np.square(np.log10(self.freq / 28)) - 5.4
 
     def v_path_loss(self, array):
@@ -121,7 +121,7 @@ class OHSuburbanModel(OHUrbanModel):
 class OHRuralModel(OHUrbanModel):
     """Class representing the Okumura-Hata rural propagation model."""
 
-    def path_loss(self, dist):
+    def path_loss_array(self, dist):
         return super().path_loss(dist) - 4.78 * np.square(np.log10(self.freq)) + 18.33 * np.log10(self.freq) - 40.94
 
     def v_path_loss(self, array):

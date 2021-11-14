@@ -6,17 +6,24 @@ import yaml
 from geopy import distance
 from dataclasses import dataclass
 
-@dataclass
 class Config:
-    filename: str = "lastcfg.yaml"
+    def __init__(self, filename="lastcfg.yaml"):
 
-    def load(self):
+        self.filename = filename
         with open(self.filename) as stream:
-            return yaml.safe_load(stream)
+            self.data = yaml.safe_load(stream)
 
-    def save(self, data):
+        self.signal_data_file = self.data.get("signal_data_file")
+        self.bitrate_data_file = self.data.get("bitrate_data_file")
+        self.tower_lat = self.data.get("tower_lat")
+        self.tower_lon = self.data.get("tower_lon")
+
+    def save(self):
         with open(self.filename, "w") as stream:
-            yaml.dump(data, stream)
+            yaml.dump(self.data, stream)
+
+    def set(self, newconfig):
+        self.data = newconfig
 
 def read_csv(data_file):
       with open(data_file) as csv_file:

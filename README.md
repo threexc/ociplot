@@ -15,7 +15,7 @@ online services:
 
 See [requirements.txt](requirements.txt) , or just run `pip install -r requirements.txt`.
 
-At least one measurement set and one reference set are required for use.
+At least one measurement set is required for use.
 
 #### The Measurement Set
 
@@ -31,20 +31,10 @@ In order to compile a dataset for use, the following things are required:
 
 Examples can be found in the `data` directory.
 
-#### The Reference Data Set
-
-A reference set is required to be set for analysis of the measurement
-set. An example is provided in `data/oci_ref`
-
-If a tower in the measurement set is not in the reference set, the Path
-Loss plot will not display the measurement data until a tower position
-is manually set. Doing this will draw the tower in the specified
-location on the tower plot.
-
 ### Using gws
 
 Run the following to start the GUI:
-`./gws`
+`./wsgui`
 
 ## Screenshots
 

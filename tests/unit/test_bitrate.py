@@ -1,12 +1,12 @@
 import unittest
 import os
-from walksignal.bitrate import BitRate, BitRateSet
+import walksignal.bitrate as bitrate
 
 TESTDATA_FILENAME = os.path.join(os.path.dirname(__file__), 'sample.txt')
 
 class TestBitRateSet(unittest.TestCase):
     def test_bitrateset_means(self):
-        bitrateset = BitRateSet(TESTDATA_FILENAME) 
+        bitrateset = bitrate.BitRateSet(TESTDATA_FILENAME) 
         points = bitrateset.get_points()
         self.assertAlmostEqual(bitrateset.get_mean("jitter").round(2), 10.42)
         self.assertAlmostEqual(bitrateset.get_mean("down").round(2), 40.27)

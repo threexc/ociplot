@@ -9,18 +9,18 @@ from dataclasses import dataclass
 class DataSet:
     """Class for loading and grooming OpenCellID formatted data and related files."""
     def __init__(self, data):
-        self.measurements = MeasurementSet(data)
+        self.measurements = MeasurementMultiSet(data)
         self.map_path = self.measurements.data_path() + "/map.png"
         self.bbox_path = self.measurements.data_path() + "/bbox.txt"
 
-        self.mcc = self.m_mcc()
-        self.mnc = self.m_mnc()
-        self.lac = self.m_lac()
-        self.cellid = self.m_cellid()
-        self.mcc_u = np.unique(self.m_mcc())
-        self.mnc_u = np.unique(self.m_mnc())
-        self.lac_u = np.unique(self.m_lac())
-        self.cellid_u = np.unique(self.m_cellid())
+        self.mcc = np.array(self.measurements.data['mcc'], dtype=int)
+        self.mnc = np.array(self.measurements.data['mnc'], dtype=int)
+        self.lac = np.array(self.measurements.data['lac'], dtype=int)
+        self.cellid = np.array(self.measurements.data['cellid'], dtype=int)
+        self.mcc_u = np.unique(self.mcc)
+        self.mnc_u = np.unique(self.mnc)
+        self.lac_u = np.unique(self.lac)
+        self.cellid_u = np.unique(self.cellid)
 
         self.measured_cells = self.get_measured_cell_list()
 
@@ -31,57 +31,6 @@ class DataSet:
         self.map_bbox = self.cellmap.get_bbox()
         self.cm = pyplot.cm.get_cmap('gist_heat')
         self.plotrange = np.linspace(1, 1500, 500)
-
-    def m_time_range(self):
-        return np.array(self.measurements.data['measured_at'], dtype=float)
-
-    def m_start_time(self):
-        return time.strftime('%m/%d/%Y %H:%M:%S', time.gmtime(self.time_range[0]/1000.))
-
-    def m_end_time(self):
-        return time.strftime('%m/%d/%Y %H:%M:%S', time.gmtime(self.time_range[-1]/1000.))
-
-    def m_normalized_time_range(self):
-        return (self.time_range - self.time_range[0])/1000
-    
-    def m_lats(self):
-        return np.array(self.measurements.data['lat'], dtype=float)
-
-    def m_lons(self):
-        return np.array(self.measurements.data['lon'], dtype=float)
-
-    def m_signal(self):
-        return np.array(self.measurements.data['signal'], dtype=float)
-
-    def m_pci(self):
-        return np.array(self.measurements.data['pci'], dtype=float)
-
-    def m_speed(self):
-        return np.array(self.measurements.data['speed'], dtype=float)
-
-    def m_mcc(self):
-        return np.array(self.measurements.data['mcc'], dtype=int)
-
-    def m_mnc(self):
-        return np.array(self.measurements.data['mnc'], dtype=int)
-
-    def m_lac(self):
-        return np.array(self.measurements.data['lac'], dtype=int)
-
-    def m_cellid(self):
-        return np.array(self.measurements.data['cellid'], dtype=int)
-
-    def m_rating(self):
-        return np.array(self.measurements.data['rating'], dtype=float)
-
-    def m_direction(self):
-        return np.array(self.measurements.data['direction'], dtype=float)
-
-    def m_ta(self):
-        return np.array(self.measurements.data['ta'], dtype=float)
-
-    def m_act(self):
-        return self.measurements.data['act']
 
     def get_cell(self, cellid):
         for cell in self.measured_cells:
@@ -179,7 +128,22 @@ class MeasurementSet:
 
     def __init__(self, datafile):
         self.datafile = datafile
-        self.data = pd.concat([pd.read_csv(f) for f in self.datafile], ignore_index=True)
+        self.data = pd.read_csv(datafile).drop('bid', axis=1).drop('sid', axis=1).drop('nid', axis=1).drop('psc', axis=1)
+        self.summary = self.data.describe()
+        self.rx_power = self.data['signal'].describe()
+
+class MeasurementMultiSet:
+    """Class containing an aggregate of MeasurementSet data"""
+    
+    def __init__(self, file_list):
+        self.file_list = file_list
+        self.sets = [MeasurementSet(f) for f in self.file_list]
+        self.set_summaries = [mset.summary for mset in self.sets]
+        self.data = pd.concat([mset.data for mset in self.sets], ignore_index=True)
+        self.summary = self.data.describe()
+        print(self.summary)
+        for summary in self.set_summaries:
+            print(summary)
 
     def data_path(self):
-        return self.datafile[0].rsplit('/', 1)[0]
+        return self.file_list[0].rsplit('/', 1)[0]
