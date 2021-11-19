@@ -49,9 +49,6 @@ class BitrateMultiSet:
         self.set_summaries = [brset.summary for brset in self.sets]
         self.data = pd.concat([brset.data for brset in self.sets], ignore_index=True)
         self.summary = self.data.describe()
-        print(self.summary)
-        for summary in self.set_summaries:
-            print(summary)
 
     def data_path(self):
         return self.file_list[0].rsplit('/', 1)[0]

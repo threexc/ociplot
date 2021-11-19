@@ -24,14 +24,13 @@ class DataSet:
 
         self.measured_cells = self.get_measured_cell_list()
 
-        self.cell_id_list = [(self.mcc[row], self.mnc[row], self.lac[row], self.cellid_u[row]) for row in range(len(self.cellid_u))]
-
         self.cellmap = CellMap(self.map_path, self.bbox_path)
         self.plot_map = self.cellmap.get_map()
         self.map_bbox = self.cellmap.get_bbox()
         self.cm = pyplot.cm.get_cmap('gist_heat')
         self.plotrange = np.linspace(1, 1500, 500)
 
+    """Get the MeasuredCell matching a particular cellid."""
     def get_cell(self, cellid):
         for cell in self.measured_cells:
             if str(cell.cellid) == cellid:
@@ -105,14 +104,6 @@ class CellMap:
         return [entry for entry in utils.get_bbox(self.bbox_path)]
 
 @dataclass
-class CellID:
-    """Class containing cell identification information."""
-    mcc: int
-    mnc: int
-    lac: int
-    cellid: int
-
-@dataclass
 class BaseStation:
     """Class containing basic information about a base station."""
 
@@ -122,14 +113,13 @@ class BaseStation:
     def get_distances(self, points):
         return [utils.get_distance(self.lat, self.lon, point.lat, point.lon) for point in points]
 
-@dataclass
 class MeasurementSet:
     """Class containing the measured data info."""
 
     def __init__(self, datafile):
         self.datafile = datafile
         self.data = pd.read_csv(datafile).drop('bid', axis=1).drop('sid', axis=1).drop('nid', axis=1).drop('psc', axis=1)
-        self.summary = self.data.describe()
+        self.summary = self.data.drop(['measured_at', 'pci', 'mcc', 'mnc', 'lac', 'cellid', 'tac', 'direction', 'ta'], axis=1).describe().apply(lambda s: s.apply('{0:.6f}'.format))
         self.rx_power = self.data['signal'].describe()
 
 class MeasurementMultiSet:
@@ -140,10 +130,10 @@ class MeasurementMultiSet:
         self.sets = [MeasurementSet(f) for f in self.file_list]
         self.set_summaries = [mset.summary for mset in self.sets]
         self.data = pd.concat([mset.data for mset in self.sets], ignore_index=True)
-        self.summary = self.data.describe()
-        print(self.summary)
-        for summary in self.set_summaries:
-            print(summary)
+        self.cellids = self.data['cellid'].unique()
+        self.cellid_subsets = [self.data.loc[self.data['cellid'] == cellid] for cellid in self.cellids]
+        self.cellid_subset_summaries = [subset.drop(['measured_at', 'pci', 'mcc', 'mnc', 'lac', 'cellid', 'tac', 'direction', 'ta'], axis=1).describe() for subset in self.cellid_subsets]
+        self.summary = self.data.drop(['measured_at', 'pci', 'mcc', 'mnc', 'lac', 'cellid', 'tac', 'direction', 'ta'], axis=1).describe().apply(lambda s: s.apply('{0:.6f}'.format))
 
     def data_path(self):
         return self.file_list[0].rsplit('/', 1)[0]
