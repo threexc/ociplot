@@ -15,6 +15,9 @@ online services:
 
 See [requirements.txt](requirements.txt) , or just run `pip install -r requirements.txt`.
 
+You will also need to install the matplotlib PyQt5 backend for your
+distribution, e.g. python3-matplotlib-pyqt5 (on Fedora).
+
 At least one measurement set is required for use.
 
 #### The Measurement Set

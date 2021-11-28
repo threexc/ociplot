@@ -6,44 +6,6 @@ import matplotlib.pyplot as pyplot
 import walksignal.utils as utils
 from dataclasses import dataclass
 
-class DataSet:
-    """Class for loading and grooming OpenCellID formatted data and related files."""
-    def __init__(self, data):
-        self.measurements = MeasurementMultiSet(data)
-        self.map_path = self.measurements.data_path() + "/map.png"
-        self.bbox_path = self.measurements.data_path() + "/bbox.txt"
-
-        self.mcc = np.array(self.measurements.data['mcc'], dtype=int)
-        self.mnc = np.array(self.measurements.data['mnc'], dtype=int)
-        self.lac = np.array(self.measurements.data['lac'], dtype=int)
-        self.cellid = np.array(self.measurements.data['cellid'], dtype=int)
-        self.mcc_u = np.unique(self.mcc)
-        self.mnc_u = np.unique(self.mnc)
-        self.lac_u = np.unique(self.lac)
-        self.cellid_u = np.unique(self.cellid)
-
-        self.measured_cells = self.get_measured_cell_list()
-
-        self.cellmap = CellMap(self.map_path, self.bbox_path)
-        self.plot_map = self.cellmap.get_map()
-        self.map_bbox = self.cellmap.get_bbox()
-        self.cm = pyplot.cm.get_cmap('gist_heat')
-        self.plotrange = np.linspace(1, 1500, 500)
-
-    """Get the MeasuredCell matching a particular cellid."""
-    def get_cell(self, cellid):
-        for cell in self.measured_cells:
-            if str(cell.cellid) == cellid:
-                return cell
-
-    """Get a tuple consisting of a cell's MCC, MNC, LAC, and Cell ID respectively."""
-    def get_cell_ids(self):
-        return [(self.mcc[row], self.mnc[row], self.lac[row], self.cellid_u[row]) for row in range(len(self.cellid_u))]
-
-    """Return a list of all cells in the data matrix and their measured characteristics."""
-    def get_measured_cell_list(self):
-        return [MeasuredCell(self.measurements.data.loc[self.measurements.data['cellid'] == cellid], cellid) for cellid in self.cellid_u]
-
 class MeasuredCell:
     """Class containing the complete set of data for a single cell."""
     def __init__(self, data, cellid):
@@ -130,10 +92,103 @@ class MeasurementMultiSet:
         self.sets = [MeasurementSet(f) for f in self.file_list]
         self.set_summaries = [mset.summary for mset in self.sets]
         self.data = pd.concat([mset.data for mset in self.sets], ignore_index=True)
-        self.cellids = self.data['cellid'].unique()
-        self.cellid_subsets = [self.data.loc[self.data['cellid'] == cellid] for cellid in self.cellids]
+
+        self.mobile_country_codes = self.data['mcc']
+        self.mobile_network_codes = self.data['mnc']
+        self.local_area_codes = self.data['lac']
+        self.cellids = self.data['cellid']
+        self.unique_mobile_country_codes = self.mobile_country_codes.unique()
+        self.unique_mobile_network_codes = self.mobile_network_codes.unique()
+        self.unique_local_area_codes = self.local_area_codes.unique()
+        self.unique_cellids = self.cellids.unique()
+        self.cellid_subsets = [self.data.loc[self.data['cellid'] == cellid] for cellid in self.unique_cellids]
         self.cellid_subset_summaries = [subset.drop(['measured_at', 'pci', 'mcc', 'mnc', 'lac', 'cellid', 'tac', 'direction', 'ta'], axis=1).describe() for subset in self.cellid_subsets]
         self.summary = self.data.drop(['measured_at', 'pci', 'mcc', 'mnc', 'lac', 'cellid', 'tac', 'direction', 'ta'], axis=1).describe().apply(lambda s: s.apply('{0:.6f}'.format))
+        self.measured_cells = self.get_measured_cell_list()
+        self.map_path = self.data_path() + "/map.png"
+        self.bbox_path = self.data_path() + "/bbox.txt"
+        self.cellmap = CellMap(self.map_path, self.bbox_path)
+        self.plot_map = self.cellmap.get_map()
+        self.map_bbox = self.cellmap.get_bbox()
+        self.cm = pyplot.cm.get_cmap('gist_heat')
 
     def data_path(self):
         return self.file_list[0].rsplit('/', 1)[0]
+
+    """Return a list of all cells in the data matrix and their measured characteristics."""
+    def get_measured_cell_list(self):
+        return [MeasuredCell(self.data.loc[self.data['cellid'] == cellid], cellid) for cellid in self.data['cellid'].unique()]
+
+    """Get the MeasuredCell matching a particular cellid."""
+    def get_cell(self, cellid):
+        for cell in self.measured_cells:
+            if str(cell.cellid) == cellid:
+                return cell
+
+@dataclass
+class Bitrate:
+    """A class that stores a single datapoint of speed test data 
+    extracted from a given row of a Pandas dataframe."""
+    def __init__(self, point):
+        self.type = point['type']
+        self.ping = point['ping']
+        self.jitter = point['jitter']
+        self.down = point['down']
+        self.up = point['up']
+        self.time = point['time']
+        self.lat = point['lat']
+        self.lon = point['lon']
+        self.accuracy = point['accuracy']
+
+class BitrateSet:
+    """A set of speed test data extracted from a Pandas dataframe."""
+
+    def __init__(self, datafile):
+        self.datafile = datafile
+        self.data = pd.read_csv(self.datafile)
+        self.summary = self.data.describe()
+
+    def data_path(self):
+        return self.datafile[0].rsplit('/', 1)[0]
+
+    def get_points(self):
+        return [Bitrate(row) for index, row in self.data.iterrows()]
+
+    def get_mean(self, field):
+        return self.data[field].mean()
+
+    def get_max(self, field):
+        return self.data[field].max()
+
+    def get_min(self, field):
+        return self.data[field].min()
+
+class BitrateMultiSet:
+    """Collection of BitrateSets."""
+
+    def __init__(self, file_list):
+        self.file_list = file_list
+        self.sets = [BitrateSet(f) for f in self.file_list]
+        self.set_summaries = [brset.summary for brset in self.sets]
+        self.data = pd.concat([brset.data for brset in self.sets], ignore_index=True)
+        self.summary = self.data.describe()
+        self.map_path = self.data_path() + "/map.png"
+        self.bbox_path = self.data_path() + "/bbox.txt"
+        self.cellmap = CellMap(self.map_path, self.bbox_path)
+        self.plot_map = self.cellmap.get_map()
+        self.map_bbox = self.cellmap.get_bbox()
+
+    def data_path(self):
+        return self.file_list[0].rsplit('/', 1)[0]
+
+    def get_points(self):
+        return [Bitrate(row) for index, row in self.data.iterrows()]
+
+    def get_mean(self, field):
+        return self.data[field].mean()
+
+    def get_max(self, field):
+        return self.data[field].max()
+
+    def get_min(self, field):
+        return self.data[field].min()

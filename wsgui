@@ -18,7 +18,6 @@ import walksignal.models as md
 import walksignal.plottools as pt
 import walksignal.utils as utils
 import walksignal.config as cfg
-import walksignal.bitrate as br
 import walksignal.gui.tablemodel as tm
 
 class WSWindow(QtWidgets.QMainWindow):
@@ -26,21 +25,19 @@ class WSWindow(QtWidgets.QMainWindow):
     def __init__(self, *args, **kwargs):
         super(WSWindow, self).__init__(*args, **kwargs)
 
-        self.setWindowTitle("walksignal 0.6.0")
+        self.setWindowTitle("walksignal 0.8.0")
         self.config = cfg.Config("lastcfg.yaml")
 
         self.signal_dataset = None
+        self.bitrate_dataset = None
         self.x_range = None
         self.y_range = None
-        self.bitrate_dataset = None
 
         self.cell = None
         self.cell_pl = None
         self.cell_distances = None
         self.tower = None
         self.cbar = None
-        self.map_canvas = pt.MplCanvas(self, width=5, height=4, dpi=100)
-        self.map_toolbar = NavigationToolbar(self.map_canvas, self)
 
         self.br_distances = None
 
@@ -66,7 +63,17 @@ class WSWindow(QtWidgets.QMainWindow):
     def closeEvent(self, event):
         self.config.save()
 
+    def setupCanvases(self):
+        self.signal_map_canvas = pt.MplCanvas(self, width=5, height=4, dpi=100)
+        self.signal_map_toolbar = NavigationToolbar(self.signal_map_canvas, self)
+
+        self.signal_cm = plt.cm.get_cmap('gist_heat')
+
+        self.bitrate_map_canvas = pt.MplCanvas(self, width=5, height=4, dpi=100)
+        self.bitrate_map_toolbar = NavigationToolbar(self.bitrate_map_canvas, self)
+
     def setupUI(self):
+        self.setupCanvases()
         self.setupPlotWidgets()
         self.setupLines()
         self.setupFileControls()
@@ -82,8 +89,11 @@ class WSWindow(QtWidgets.QMainWindow):
         self.br_widget.setLayout(self.main_layout)
         self.setCentralWidget(self.br_widget)
         if self.config.signal_data_files:
-            self.setDataset()
+            self.setSignalData()
             self.loadCell()
+
+        if self.config.bitrate_data_files:
+            self.setBitrateData()
 
     def setupPlotWidgets(self):
         self.br_widget = pg.PlotWidget()
@@ -198,12 +208,12 @@ class WSWindow(QtWidgets.QMainWindow):
         self.cell_box = QtWidgets.QVBoxLayout()
         self.cellid_box = QtWidgets.QHBoxLayout()
         self.cellid_text_box = QtWidgets.QHBoxLayout()
-        self.mcc_box = QtWidgets.QHBoxLayout()
-        self.mcc_text_box = QtWidgets.QHBoxLayout()
-        self.mnc_box = QtWidgets.QHBoxLayout()
-        self.mnc_text_box = QtWidgets.QHBoxLayout()
-        self.lac_box = QtWidgets.QHBoxLayout()
-        self.lac_text_box = QtWidgets.QHBoxLayout()
+        self.mobile_country_codes_box = QtWidgets.QHBoxLayout()
+        self.mobile_country_codes_text_box = QtWidgets.QHBoxLayout()
+        self.mobile_network_codes_box = QtWidgets.QHBoxLayout()
+        self.mobile_network_codes_text_box = QtWidgets.QHBoxLayout()
+        self.local_area_codes_box = QtWidgets.QHBoxLayout()
+        self.local_area_codes_text_box = QtWidgets.QHBoxLayout()
         self.latbox = QtWidgets.QHBoxLayout()
         self.lonbox = QtWidgets.QHBoxLayout()
         self.set_tower_box = QtWidgets.QHBoxLayout()
@@ -215,17 +225,17 @@ class WSWindow(QtWidgets.QMainWindow):
         self.cellid_count = QtWidgets.QLabel('')
         self.cellid_combo = QtWidgets.QComboBox(self)
 
-        self.mcc_label = QtWidgets.QLabel('MCCs')
-        self.mcc_count = QtWidgets.QLabel('')
-        self.mcc_combo = QtWidgets.QComboBox(self)
+        self.mobile_country_codes_label = QtWidgets.QLabel('MCCs')
+        self.mobile_country_codes_count = QtWidgets.QLabel('')
+        self.mobile_country_codes_combo = QtWidgets.QComboBox(self)
 
-        self.mnc_label = QtWidgets.QLabel('MNCs')
-        self.mnc_count = QtWidgets.QLabel('')
-        self.mnc_combo = QtWidgets.QComboBox(self)
+        self.mobile_network_codes_label = QtWidgets.QLabel('MNCs')
+        self.mobile_network_codes_count = QtWidgets.QLabel('')
+        self.mobile_network_codes_combo = QtWidgets.QComboBox(self)
 
-        self.lac_label = QtWidgets.QLabel('LACs')
-        self.lac_count = QtWidgets.QLabel('')
-        self.lac_combo = QtWidgets.QComboBox(self)
+        self.local_area_codes_label = QtWidgets.QLabel('LACs')
+        self.local_area_codes_count = QtWidgets.QLabel('')
+        self.local_area_codes_combo = QtWidgets.QComboBox(self)
 
         self.cellid_combo.activated.connect(self.setCell)
 
@@ -233,24 +243,24 @@ class WSWindow(QtWidgets.QMainWindow):
         self.cellid_text_box.addWidget(self.cellid_count)
         self.cellid_box.addLayout(self.cellid_text_box)
         self.cellid_box.addWidget(self.cellid_combo)
-        self.mcc_text_box.addWidget(self.mcc_label)
-        self.mcc_text_box.addWidget(self.mcc_count)
-        self.mcc_box.addLayout(self.mcc_text_box)
-        self.mcc_box.addWidget(self.mcc_combo)
-        self.mnc_text_box.addWidget(self.mnc_label)
-        self.mnc_text_box.addWidget(self.mnc_count)
-        self.mnc_box.addLayout(self.mnc_text_box)
-        self.mnc_box.addWidget(self.mnc_combo)
-        self.lac_text_box.addWidget(self.lac_label)
-        self.lac_text_box.addWidget(self.lac_count)
-        self.lac_box.addLayout(self.lac_text_box)
-        self.lac_box.addWidget(self.lac_combo)
+        self.mobile_country_codes_text_box.addWidget(self.mobile_country_codes_label)
+        self.mobile_country_codes_text_box.addWidget(self.mobile_country_codes_count)
+        self.mobile_country_codes_box.addLayout(self.mobile_country_codes_text_box)
+        self.mobile_country_codes_box.addWidget(self.mobile_country_codes_combo)
+        self.mobile_network_codes_text_box.addWidget(self.mobile_network_codes_label)
+        self.mobile_network_codes_text_box.addWidget(self.mobile_network_codes_count)
+        self.mobile_network_codes_box.addLayout(self.mobile_network_codes_text_box)
+        self.mobile_network_codes_box.addWidget(self.mobile_network_codes_combo)
+        self.local_area_codes_text_box.addWidget(self.local_area_codes_label)
+        self.local_area_codes_text_box.addWidget(self.local_area_codes_count)
+        self.local_area_codes_box.addLayout(self.local_area_codes_text_box)
+        self.local_area_codes_box.addWidget(self.local_area_codes_combo)
         self.cell_load_button = QtWidgets.QPushButton('Load Cell Data')
         self.cell_load_button.clicked.connect(self.loadCell)
         
-        self.cell_box.addLayout(self.mcc_box)
-        self.cell_box.addLayout(self.mnc_box)
-        self.cell_box.addLayout(self.lac_box)
+        self.cell_box.addLayout(self.mobile_country_codes_box)
+        self.cell_box.addLayout(self.mobile_network_codes_box)
+        self.cell_box.addLayout(self.local_area_codes_box)
         self.cell_box.addLayout(self.cellid_box)
         self.tower_box.addWidget(self.tower_combo_title)
         self.tower_box.addLayout(self.cell_box)
@@ -287,12 +297,12 @@ class WSWindow(QtWidgets.QMainWindow):
         self.cellstats_scroll_area.setWidget(self.cellstats_data_widget)
         self.cellstats_data_tab = self.cellstats_scroll_area
 
-    def createMapBox(self):
-        self.map_box = QtWidgets.QVBoxLayout()
-        self.map_box.addWidget(self.map_toolbar)
-        self.map_box.addWidget(self.map_canvas)
-        self.map_tab = QtWidgets.QWidget()
-        self.map_tab.setLayout(self.map_box)
+    def createSignalMapBox(self):
+        self.signal_map_box = QtWidgets.QVBoxLayout()
+        self.signal_map_box.addWidget(self.signal_map_toolbar)
+        self.signal_map_box.addWidget(self.signal_map_canvas)
+        self.signal_map_tab = QtWidgets.QWidget()
+        self.signal_map_tab.setLayout(self.signal_map_box)
 
     def createRawDataTab(self):
         self.raw_data_table = QtWidgets.QTableView()
@@ -308,6 +318,13 @@ class WSWindow(QtWidgets.QMainWindow):
         self.pl_plot_tab = QtWidgets.QWidget()
         self.pl_plot_tab.setLayout(self.pl_plot_box)
 
+    def createBitrateMapBox(self):
+        self.bitrate_map_box = QtWidgets.QVBoxLayout()
+        self.bitrate_map_box.addWidget(self.bitrate_map_toolbar)
+        self.bitrate_map_box.addWidget(self.bitrate_map_canvas)
+        self.bitrate_map_tab = QtWidgets.QWidget()
+        self.bitrate_map_tab.setLayout(self.bitrate_map_box)
+
     def createBitrateTab(self):
         self.br_plot_tab = self.br_widget
 
@@ -316,16 +333,18 @@ class WSWindow(QtWidgets.QMainWindow):
 
         self.createSummaryTab()
         self.createCellStatsTab()
-        self.createMapBox()
+        self.createSignalMapBox()
         self.createRawDataTab()
         self.createPathLossTab()
+        self.createBitrateMapBox()
         self.createBitrateTab()
 
         self.tabs.addTab(self.summary_data_tab, "Summary")
         self.tabs.addTab(self.cellstats_data_tab, "Cell Stats")
-        self.tabs.addTab(self.map_tab, "Cell Map")
+        self.tabs.addTab(self.signal_map_tab, "Signal Map")
         self.tabs.addTab(self.pl_plot_tab, "Path Loss")
         self.tabs.addTab(self.br_plot_tab, "Bitrate")
+        self.tabs.addTab(self.bitrate_map_tab, "Bitrate Map")
         self.tabs.addTab(self.raw_data_tab, "Raw Data")
 
     def setupDataSidebar(self):
@@ -525,11 +544,15 @@ class WSWindow(QtWidgets.QMainWindow):
         self.createPLTXPowerSlider()
         self.createPLTXGainSlider()
         self.createPLRXGainSlider()
+        self.createPLBSHeightSlider()
         self.createPLUEHeightSlider()
 
     def createPLFreqTextbox(self):
         self.pl_freq_textbox = QtWidgets.QLineEdit(self)
-        self.pl_freq_textbox.setText("50")
+        if self.config:
+            self.pl_freq_textbox.setText(str(self.config.pl_freq_value))
+        else:
+            self.pl_freq_textbox.setText("50")
         self.pl_freq_textbox_label = QtWidgets.QLabel('Frequency')
         self.pl_freq_unit_label = QtWidgets.QLabel('MHz')
         self.pl_freq_textbox.textEdited.connect(self.plTextboxUpdate)
@@ -607,26 +630,26 @@ class WSWindow(QtWidgets.QMainWindow):
         if fname[0]:
             self.config.signal_data_files = fname[0]
 
-        self.setDataset()
+        self.setSignalData()
 
-    def setDataset(self):
-        self.signal_dataset = ds.DataSet(self.config.signal_data_files)
+    def setSignalData(self):
+        self.signal_dataset = ds.MeasurementMultiSet(self.config.signal_data_files)
         self.cellid_combo.clear()
-        self.mcc_combo.clear()
-        self.mnc_combo.clear()
-        self.lac_combo.clear()
-        self.cellid_count.setText("(" + str(len(self.signal_dataset.cellid_u)) + ")")
-        self.mcc_count.setText("(" + str(len(self.signal_dataset.mcc_u)) + ")")
-        self.mnc_count.setText("(" + str(len(self.signal_dataset.mnc_u)) + ")")
-        self.lac_count.setText("(" + str(len(self.signal_dataset.lac_u)) + ")")
+        self.mobile_country_codes_combo.clear()
+        self.mobile_network_codes_combo.clear()
+        self.local_area_codes_combo.clear()
+        self.cellid_count.setText("(" + str(len(self.signal_dataset.unique_cellids)) + ")")
+        self.mobile_country_codes_count.setText("(" + str(len(self.signal_dataset.unique_mobile_country_codes)) + ")")
+        self.mobile_network_codes_count.setText("(" + str(len(self.signal_dataset.unique_mobile_network_codes)) + ")")
+        self.local_area_codes_count.setText("(" + str(len(self.signal_dataset.unique_local_area_codes)) + ")")
 
-        for mcc in self.signal_dataset.mcc_u:
-            self.mcc_combo.addItem(str(mcc))
-        for mnc in self.signal_dataset.mnc_u:
-            self.mnc_combo.addItem(str(mnc))
-        for lac in self.signal_dataset.lac_u:
-            self.lac_combo.addItem(str(lac))
-        for cellid in self.signal_dataset.cellid_u:
+        for mobile_country_code in self.signal_dataset.unique_mobile_country_codes:
+            self.mobile_country_codes_combo.addItem(str(mobile_country_code))
+        for mobile_network_code in self.signal_dataset.unique_mobile_network_codes:
+            self.mobile_network_codes_combo.addItem(str(mobile_network_code))
+        for local_area_code in self.signal_dataset.unique_local_area_codes:
+            self.local_area_codes_combo.addItem(str(local_area_code))
+        for cellid in self.signal_dataset.unique_cellids:
             self.cellid_combo.addItem(str(cellid))
 
     def showBitrateFileDialog(self):
@@ -634,18 +657,18 @@ class WSWindow(QtWidgets.QMainWindow):
         fname = QtWidgets.QFileDialog.getOpenFileNames(self, 'Open file', home_dir)
 
         if fname[0]:
-            print("Selected bitrate signal_data_files {0}".format(fname[0]))
             self.config.bitrate_data_files = fname[0]
 
-        if self.config.bitrate_data_files:
-            self.bitrate_dataset = br.BitrateMultiSet(self.config.bitrate_data_files)
-        else:
-            print("No bitrate file selected")
+        self.setBitrateData()
+
+    def setBitrateData(self):
+        self.bitrate_dataset = ds.BitrateMultiSet(self.config.bitrate_data_files)
 
     def loadCell(self):
         print("Loading cell data...")
         self.setCell()
-        self.updateCellMap()
+        self.updateSignalMap()
+        self.updateBitrateMap()
         self.updateRawTable()
         self.updateSummaryTable()
         self.updateCellStatsTable()
@@ -660,8 +683,8 @@ class WSWindow(QtWidgets.QMainWindow):
         if self.lat_edit.text() and self.lon_edit.text():
             self.config.tower_lat = float(self.lat_edit.text())
             self.config.tower_lon = float(self.lon_edit.text())
-            self.map_canvas.axes.scatter(float(self.config.tower_lon), float(self.config.tower_lat), zorder=1, alpha=1.0, s=20, color="blue")
-            self.map_canvas.draw()
+            self.signal_map_canvas.axes.scatter(float(self.config.tower_lon), float(self.config.tower_lat), zorder=1, alpha=1.0, s=20, color="blue")
+            self.signal_map_canvas.draw()
 
             self.cell_distances = self.cell.get_distances(self.config.tower_lat, self.config.tower_lon)
             self.cell_pl = self.cell.get_path_loss(self.config.pl_tx_power_value)
@@ -722,22 +745,22 @@ class WSWindow(QtWidgets.QMainWindow):
             self.plUpdatePlot()
 
     def updateRawTable(self):
-        self.raw_table_model = tm.TableModel(self.signal_dataset.measurements.data)
+        self.raw_table_model = tm.TableModel(self.signal_dataset.data)
         self.raw_data_table.setModel(self.raw_table_model)
 
     def updateSummaryTable(self):
         for i in reversed(range(self.summary_data_box.count())):
             self.summary_data_box.itemAt(i).widget().setParent(None)
 
-        self.summary_table_model = tm.TableModel(self.signal_dataset.measurements.summary)
+        self.summary_table_model = tm.TableModel(self.signal_dataset.summary)
         self.overall_summary_table.setModel(self.summary_table_model)
         self.summary_data_box.addWidget(self.overall_summary_title)
         self.summary_data_box.addWidget(self.overall_summary_table)
-        for index in range(len(self.signal_dataset.measurements.set_summaries)):
-            set_title = QtWidgets.QLabel(str(self.signal_dataset.measurements.file_list[index].rsplit("/", 1)[1]))
+        for index in range(len(self.signal_dataset.set_summaries)):
+            set_title = QtWidgets.QLabel(str(self.signal_dataset.file_list[index].rsplit("/", 1)[1]))
             set_title.setFont(QtGui.QFont("Arial", 12))
             view = QtWidgets.QTableView()
-            model = tm.TableModel(self.signal_dataset.measurements.set_summaries[index])
+            model = tm.TableModel(self.signal_dataset.set_summaries[index])
             view.setModel(model)
             view.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed))
             self.summary_data_box.addWidget(set_title)
@@ -747,38 +770,42 @@ class WSWindow(QtWidgets.QMainWindow):
         for i in reversed(range(self.cellstats_data_box.count())):
             self.cellstats_data_box.itemAt(i).widget().setParent(None)
 
-        for index in range(len(self.signal_dataset.measurements.cellid_subset_summaries)):
-            cellid_title = QtWidgets.QLabel(str(self.signal_dataset.measurements.cellids[index]))
+        for index in range(len(self.signal_dataset.cellid_subset_summaries)):
+            cellid_title = QtWidgets.QLabel(str(self.signal_dataset.unique_cellids[index]))
             cellid_title.setFont(QtGui.QFont("Arial", 12))
             view = QtWidgets.QTableView()
-            model = tm.TableModel(self.signal_dataset.measurements.cellid_subset_summaries[index])
+            model = tm.TableModel(self.signal_dataset.cellid_subset_summaries[index])
             view.setModel(model)
             view.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed))
             self.cellstats_data_box.addWidget(cellid_title)
             self.cellstats_data_box.addWidget(view)
 
-    def updateCellMap(self):
+    def updateSignalMap(self):
         points = self.cell.data_points
         lon_series = np.array([point.lon for point in points], dtype=float)
         lat_series = np.array([point.lat for point in points], dtype=float)
 
         if self.cbar:
             self.cbar.remove()
-        self.map_canvas.axes.cla()
-        divider = make_axes_locatable(self.map_canvas.axes)
+        self.signal_map_canvas.axes.cla()
+        divider = make_axes_locatable(self.signal_map_canvas.axes)
         cax = divider.append_axes("right", size="5%", pad=0.1)
-        self.map_canvas.axes.imshow(self.signal_dataset.plot_map, zorder=0, extent = self.signal_dataset.map_bbox[0], aspect="equal")
-        powerscatter = self.map_canvas.axes.scatter(lon_series, lat_series, zorder=1, alpha=1.0, s=20, c=self.cell.signal_power, cmap=self.signal_dataset.cm)
+        self.signal_map_canvas.axes.imshow(self.signal_dataset.plot_map, zorder=0, extent = self.signal_dataset.map_bbox[0], aspect="equal")
+        powerscatter = self.signal_map_canvas.axes.scatter(lon_series, lat_series, zorder=1, alpha=1.0, s=20, c=self.cell.signal_power, cmap=self.signal_cm)
 
-        self.map_canvas.axes.set_xlim(self.signal_dataset.map_bbox[0][0], self.signal_dataset.map_bbox[0][1])
-        self.map_canvas.axes.set_ylim(self.signal_dataset.map_bbox[0][2], self.signal_dataset.map_bbox[0][3])
-        self.map_canvas.axes.set_xlabel("Longitude")
-        self.map_canvas.axes.set_ylabel("Latitude")
-        self.map_canvas.axes.set_title("Signal Power vs Position")
-        self.cbar = self.map_canvas.fig.colorbar(powerscatter, cax=cax)
+        self.signal_map_canvas.axes.set_xlim(self.signal_dataset.map_bbox[0][0], self.signal_dataset.map_bbox[0][1])
+        self.signal_map_canvas.axes.set_ylim(self.signal_dataset.map_bbox[0][2], self.signal_dataset.map_bbox[0][3])
+        self.signal_map_canvas.axes.set_xlabel("Longitude")
+        self.signal_map_canvas.axes.set_ylabel("Latitude")
+        self.signal_map_canvas.axes.set_title("Signal Power vs Position")
+        self.signal_map_canvas.axes.ticklabel_format(useOffset=False)
+        self.cbar = self.signal_map_canvas.fig.colorbar(powerscatter, cax=cax)
         self.cbar.ax.set_ylabel("Signal Power (dBm)", rotation=270, labelpad=10)
 
-        self.map_canvas.draw()
+        self.signal_map_canvas.draw()
+
+    def updateBitrateMap(self):
+        pass
 
     def brUpdateMeasurements(self):
         points = self.bitrate_dataset.get_points()
@@ -794,6 +821,10 @@ class WSWindow(QtWidgets.QMainWindow):
     def plUpdatePlot(self):
         self.plUpdateMeasurements()
         self.plUpdateModels()
+        self.plUpdatePlotTitle()
+
+    def plUpdatePlotTitle(self):
+        self.pl_widget.setTitle("<b><p style=\"color:black;font-size:16px\">Path Loss for Cell {0} vs Distance from ({1},{2}), {3} MHz</p></b>".format(self.cell.cellid, self.config.tower_lat, self.config.tower_lon, self.config.pl_freq_value))
 
     def plUpdateXScale(self):
         self.pl_widget.setXRange(0, max(self.cell_distances) + 50)
