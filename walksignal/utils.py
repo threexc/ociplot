@@ -67,3 +67,5 @@ def get_distance(lat1, lon1, lat2, lon2):
 
     return distance.distance(coords_one, coords_two).km
 
+def get_great_circle_distance(p1, p2):
+    return distance.great_circle(p1, p2)

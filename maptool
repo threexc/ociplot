@@ -1,0 +1,212 @@
+#!/usr/bin/python3
+
+import sys  # We need sys so that we can pass argv to QApplication
+import os
+import time
+import yaml
+import numpy as np
+import pyqtgraph as pg
+from random import randint
+from PIL import Image
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+from matplotlib_scalebar.scalebar import ScaleBar
+from pathlib import Path
+from PyQt5 import QtWidgets, QtCore, QtGui
+import matplotlib.pyplot as plt
+import walksignal.dataset as ds
+import walksignal.models as md
+import walksignal.plottools as pt
+import walksignal.utils as utils
+import walksignal.config as cfg
+import walksignal.gui.tablemodel as tm
+import walksignal.gui.parameterwidget as pw
+
+class WSWindow(QtWidgets.QMainWindow):
+
+    def __init__(self, *args, **kwargs):
+        super(WSWindow, self).__init__(*args, **kwargs)
+
+        self.setWindowTitle("Walksignal Map Tool")
+        self.x = list(range(100))  # 100 time points
+        self.y = [randint(0,100) for _ in range(100)]  # 100 data points
+        self.cellmap = None
+        self.map_extent = None
+
+        self.setup()
+    
+    def setup(self):
+        self.setupPens()
+        self.setupCanvas()
+        self.setupFileControls()
+        self.setupColorBox()
+        self.setupLatLonBoxes()
+        self.setupSidebar()
+        self.setupMainWidget()
+
+    def setupPens(self):
+        self.pl_red_pen = pg.mkPen(color=(255, 0, 0), width=1)
+        self.pl_green_pen = pg.mkPen(color=(64, 192, 64), width=1)
+        self.pl_blue_pen = pg.mkPen(color=(0, 0, 255), width=1)
+        self.pl_solid_pen = pg.mkPen(color=(0, 0, 0), width=3, style=QtCore.Qt.SolidLine)
+        self.pl_dot_pen = pg.mkPen(color=(255, 144, 0), width=3, style=QtCore.Qt.DotLine)
+        self.pl_dash_pen = pg.mkPen(color=(128, 64, 64), width=3, style=QtCore.Qt.DashLine)
+        self.pl_dashdot_pen = pg.mkPen(color=(192,64,192), width=3, style=QtCore.Qt.DashDotLine)
+        self.pl_dashdotdot_pen = pg.mkPen(color=(64, 64, 144), width=3, style=QtCore.Qt.DashDotDotLine)
+
+        self.styles = {'color':'b', 'font-size':'18px'}
+
+    def setupCanvas(self):
+        print(f"Setting up canvases...")
+        self.map_layout = QtWidgets.QVBoxLayout()
+        self.map_canvas = pt.MplCanvas(self, width=5, height=4, dpi=100)
+        self.map_toolbar = NavigationToolbar(self.map_canvas, self)
+
+        self.map_layout.addWidget(self.map_toolbar)
+        self.map_layout.addWidget(self.map_canvas)
+
+    def setupMainWidget(self):
+        print(f"Setting up main layout...")
+        self.main_layout = QtWidgets.QHBoxLayout()
+        self.main_layout.addWidget(self.dataSidebarWidget, 1)
+        self.main_layout.addLayout(self.map_layout, 3)
+        self.main_widget = QtWidgets.QWidget()
+        self.main_widget.setLayout(self.main_layout)
+        self.setCentralWidget(self.main_widget)
+
+    def setupSidebar(self):
+        print(f"Setting up data sidebar...")
+        self.dataSidebar = QtWidgets.QVBoxLayout()
+        self.dataSidebar.addLayout(self.file_control_box)
+        self.dataSidebar.addLayout(self.set_position_box)
+        self.dataSidebar.setAlignment(QtCore.Qt.AlignTop)
+        self.dataSidebarWidget = QtWidgets.QWidget()
+        self.dataSidebarWidget.setLayout(self.dataSidebar)
+
+    def setupFileControls(self):
+        print(f"Setting up file controls...")
+        self.file_control_box = QtWidgets.QVBoxLayout()
+
+        self.file_controls_title = QtWidgets.QLabel('File Selection')
+        self.file_controls_title.setFont(QtGui.QFont('Arial', 16))
+
+        self.set_map_button = QtWidgets.QPushButton('Set Map')
+        self.set_map_button.clicked.connect(self.showFileDialog)
+        
+        self.title_box = QtWidgets.QHBoxLayout()
+        self.title_label = QtWidgets.QLabel("Title")
+        self.title_edit = QtWidgets.QLineEdit(self)
+        self.title_box.addWidget(self.title_label)
+        self.title_box.addWidget(self.title_edit)
+
+        self.set_title_button = QtWidgets.QPushButton('Set Title')
+        self.set_title_button.clicked.connect(self.setMapTitle)
+
+        self.file_control_box.addWidget(self.file_controls_title)
+        self.file_control_box.addWidget(self.set_map_button)
+        self.file_control_box.addLayout(self.title_box)
+        self.file_control_box.addWidget(self.set_title_button)
+
+    def setupLatLonBoxes(self):
+        self.set_position_box = QtWidgets.QVBoxLayout()
+        self.position_label_box = QtWidgets.QHBoxLayout()
+        self.latbox = QtWidgets.QHBoxLayout()
+        self.lonbox = QtWidgets.QHBoxLayout()
+        self.lat_edit = QtWidgets.QLineEdit(self)
+        self.latbox_label = QtWidgets.QLabel("Latitude")
+        self.latbox.addWidget(self.latbox_label)
+        self.latbox.addWidget(self.lat_edit)
+
+        self.lon_edit = QtWidgets.QLineEdit(self)
+        self.lonbox_label = QtWidgets.QLabel("Longitude")
+        self.lonbox.addWidget(self.lonbox_label)
+        self.lonbox.addWidget(self.lon_edit)
+
+        self.position_label_edit = QtWidgets.QLineEdit(self)
+        self.position_label = QtWidgets.QLabel("Label")
+        self.position_label_box.addWidget(self.position_label)
+        self.position_label_box.addWidget(self.position_label_edit)
+
+        self.set_position_button = QtWidgets.QPushButton('Draw Point')
+        self.set_position_button.clicked.connect(self.drawPoint)
+
+        self.set_position_box.addLayout(self.latbox)
+        self.set_position_box.addLayout(self.lonbox)
+        self.set_position_box.addLayout(self.position_label_box)
+        self.set_position_box.addLayout(self.color_combo_box)
+        self.set_position_box.addWidget(self.set_position_button)
+
+    def setupColorBox(self):
+        self.color_combo_box = QtWidgets.QHBoxLayout()
+        self.color_label = QtWidgets.QLabel('Point Color')
+        self.color_combo = QtWidgets.QComboBox(self)
+        self.color_combo.addItem("black")
+        self.color_combo.addItem("red")
+        self.color_combo.addItem("blue")
+        self.color_combo.addItem("green")
+        self.color_combo_box.addWidget(self.color_label)
+        self.color_combo_box.addWidget(self.color_combo)
+
+    def drawPoint(self):
+        if (self.lat_edit.text() and self.lon_edit.text()):
+            self.map_canvas.axes.scatter(float(self.lon_edit.text()),
+                    float(self.lat_edit.text()), zorder=1, alpha=1.0, s=32,
+                    color=self.color_combo.currentText())
+            if self.position_label_edit.text():
+                self.map_canvas.axes.annotate(self.position_label_edit.text(),
+                        (float(self.lon_edit.text()),
+                        float(self.lat_edit.text())),
+                        fontsize=18)
+            self.map_canvas.draw()
+
+        else:
+            print("latitude, longitude, and label must be set")
+
+    def setScaleBar(self):
+        print(f"Setting scale bar...")
+        x1, x2, y1, y2 = self.map_canvas.axes.axis()
+        _y = (y1 + y2)/2
+        p1, p2 = (int(x1), _y), (int(x1)+1, _y)
+        meter_per_deg = utils.get_great_circle_distance(p1, p2)
+        self.map_width, self.map_height = Image.open(self.cellmap.map_path).size
+        self.scalebar_dist = utils.get_distance(self.map_extent[2],
+                 self.map_extent[0],
+                 self.map_extent[2],
+                 self.map_extent[1])
+        self.pixel_width = self.scalebar_dist * 1000 / self.map_width
+        self.scalebar = ScaleBar(meter_per_deg.meters, "m",
+                length_fraction=0.2, location="lower right")
+        self.map_canvas.axes.add_artist(self.scalebar)
+
+    def showFileDialog(self):
+        home_dir = str(Path.home)
+        fname = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file', home_dir)
+        self.cellmap = ds.CellMap(fname[0])
+        self.map_extent = self.cellmap.get_bbox()[0]
+        self.setupMap()
+
+    def setupMap(self):
+        self.map_canvas.axes.cla()
+        self.map_canvas.axes.imshow(self.cellmap.get_map(), zorder=0, extent = self.map_extent, aspect="equal")
+        self.map_canvas.axes.set_xlim(self.map_extent[0], self.map_extent[1])
+        self.map_canvas.axes.set_ylim(self.map_extent[2], self.map_extent[3])
+        self.map_canvas.axes.set_xlabel("Longitude")
+        self.map_canvas.axes.set_ylabel("Latitude")
+        self.map_canvas.axes.ticklabel_format(useOffset=False)
+
+        self.setScaleBar()
+        self.map_canvas.draw()
+
+    def setMapTitle(self):
+        if self.title_edit.text():
+            self.map_canvas.axes.set_title(self.title_edit.text())
+            self.map_canvas.draw()
+
+def main():
+    app = QtWidgets.QApplication(sys.argv)
+    w = WSWindow()
+    w.show()
+    sys.exit(app.exec_())
+
+if __name__ == "__main__":
+    main()

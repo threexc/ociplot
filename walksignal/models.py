@@ -6,7 +6,7 @@ from dataclasses import dataclass
 @dataclass
 class FreeSpaceModel:
     """Class representing the free space path loss model for
-    line-of-sight communications."""
+    line-of-sight communications. Distance is in meters, frequency is in MHz."""
     freq: float
 
     def path_loss(self, dist):
@@ -19,7 +19,8 @@ class FreeSpaceModel:
 class TwoRayModel:
     """Class representing the two-ray path loss model for line-of-sight
     communications. This version of the model does not explicitly
-    require frequency, instead relying on the empirically-determined nu."""
+    require frequency, instead relying on the empirically-determined nu. ref_pl
+    is in dB, ref_dist is in meters."""
     ref_pl: float
     pl_exp: float
     ref_dist: float
@@ -34,7 +35,8 @@ class TwoRayModel:
 class MultiSlopeModel:
     """Class representing the Multi-Slope Propagation Model which consists
     of the Free Space Model below the critical distance, and the Two-Ray
-    Multipath propagation model above it"""
+    Multipath propagation model above it. freq is in Mhz, bs_height and
+    ue_height are in meters."""
     freq: float
     bs_height: float
     ue_height: float
@@ -73,7 +75,7 @@ class ABGModel(FreeSpaceModel):
 @dataclass
 class CIModel(FreeSpaceModel):
     """Class representing the Close-In path loss model for line-of-sight
-    communications."""
+    communications. Assumes distance in meters, frequency in MHz"""
     freq: float
     pl_exp: float
     sigma: float
@@ -87,7 +89,8 @@ class CIModel(FreeSpaceModel):
 
 @dataclass
 class OHUrbanModel:
-    """Class representing the Okumura-Hata urban propagation model."""
+    """Class representing the Okumura-Hata urban propagation model. Assumes
+    distance and heights in meters, frequency in MHz."""
     freq: float
     bs_height: float
     ue_height: float
@@ -116,7 +119,8 @@ class OHUrbanModel:
 
 @dataclass
 class OHSuburbanModel(OHUrbanModel):
-    """Class representing the Okumura-Hata suburban propagation model."""
+    """Class representing the Okumura-Hata suburban propagation model. Assumes
+    distance and heights in meters, frequency in MHz."""
 
     def path_loss(self, dist):
         return super().base_path_loss(dist) - super().small_city_correction_factor() - 2 * np.square(np.log10(self.freq / 28)) - 5.4
@@ -126,7 +130,8 @@ class OHSuburbanModel(OHUrbanModel):
 
 @dataclass
 class OHRuralModel(OHUrbanModel):
-    """Class representing the Okumura-Hata rural propagation model."""
+    """Class representing the Okumura-Hata rural propagation model. Assumes
+    distance and heights in meters, frequency in MHz."""
 
     def path_loss(self, dist):
         return super().base_path_loss(dist) - super().small_city_correction_factor() - 4.78 * np.square(np.log10(self.freq)) + 18.33 * np.log10(self.freq) - 40.94

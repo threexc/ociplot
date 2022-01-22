@@ -14,6 +14,7 @@ class Config:
                 self.bitrate_data_files = self.data.get("bitrate_data_files")
                 self.tower_lat = self.data.get("tower_lat", None)
                 self.tower_lon = self.data.get("tower_lon", None)
+                self.tower_label = self.data.get("tower_label", "Tower")
                 self.pl_freq_value = self.data.get("pl_freq_value", 50)
                 self.pl_alpha_value = self.data.get("pl_alpha_value", 1)
                 self.pl_beta_value = self.data.get("pl_beta_value", 1)
@@ -84,5 +85,7 @@ class Config:
             if self.tower_lat and self.tower_lon:
               self.lastcfg['tower_lat'] = self.tower_lat
               self.lastcfg['tower_lon'] = self.tower_lon
+              if self.tower_label:
+                  self.lastcfg['tower_label'] = self.tower_label
 
             yaml.dump(self.lastcfg, stream)

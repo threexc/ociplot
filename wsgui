@@ -7,8 +7,10 @@ import yaml
 import numpy as np
 import pyqtgraph as pg
 from random import randint
+from PIL import Image
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+from matplotlib_scalebar.scalebar import ScaleBar
 from pathlib import Path
 from PyQt5 import QtWidgets, QtCore, QtGui
 import matplotlib.pyplot as plt
@@ -29,7 +31,6 @@ class WSWindow(QtWidgets.QMainWindow):
         self.config = cfg.Config("lastcfg.yaml")
 
         self.signal_dataset = None
-        self.bitrate_dataset = None
         self.x_range = None
         self.y_range = None
 
@@ -37,9 +38,8 @@ class WSWindow(QtWidgets.QMainWindow):
         self.cell_pl = None
         self.cell_distances = None
         self.tower = None
+        self.tower_annotation = None
         self.cbar = None
-
-        self.br_distances = None
 
         self.pl_points = np.arange(0.5, 2500, 0.5)
         self.pl_fs_y = None
@@ -57,21 +57,12 @@ class WSWindow(QtWidgets.QMainWindow):
         self.x = list(range(100))  # 100 time points
         self.y = [randint(0,100) for _ in range(100)]  # 100 data points
 
-        self.setupUI()
+        self.setup()
     
     def closeEvent(self, event):
         self.config.save()
 
-    def setupCanvases(self):
-        self.signal_map_canvas = pt.MplCanvas(self, width=5, height=4, dpi=100)
-        self.signal_map_toolbar = NavigationToolbar(self.signal_map_canvas, self)
-
-        self.signal_cm = plt.cm.get_cmap('gist_heat')
-
-        self.bitrate_map_canvas = pt.MplCanvas(self, width=5, height=4, dpi=100)
-        self.bitrate_map_toolbar = NavigationToolbar(self.bitrate_map_canvas, self)
-
-    def setupUI(self):
+    def setup(self):
         self.setupCanvases()
         self.setupPlotWidgets()
         self.setupLines()
@@ -80,38 +71,43 @@ class WSWindow(QtWidgets.QMainWindow):
         self.setupPathLossControls()
         self.setupTabs()
         self.setupDataSidebar()
+        self.setupMainWidget()
 
-        self.main_layout = QtWidgets.QHBoxLayout()
-        self.main_layout.addWidget(self.dataSidebarWidget, 1)
-        self.main_layout.addWidget(self.tabs, 3)
-        self.br_widget = QtWidgets.QWidget()
-        self.br_widget.setLayout(self.main_layout)
-        self.setCentralWidget(self.br_widget)
         if self.config.signal_data_files:
+            print(f"Setting signal data...")
             self.setSignalData()
             self.loadCell()
 
-        if self.config.bitrate_data_files:
-            self.setBitrateData()
+    def setupCanvases(self):
+        print(f"Setting up canvases...")
+        self.signal_map_canvas = pt.MplCanvas(self, width=5, height=4, dpi=100)
+        self.signal_map_toolbar = NavigationToolbar(self.signal_map_canvas, self)
+        self.signal_cm = plt.cm.get_cmap('gist_heat')
+
+    def setupMainWidget(self):
+        print(f"Setting up main layout...")
+        self.main_layout = QtWidgets.QHBoxLayout()
+        self.main_layout.addWidget(self.dataSidebarWidget, 1)
+        self.main_layout.addWidget(self.tabs, 3)
+        self.main_widget = QtWidgets.QWidget()
+        self.main_widget.setLayout(self.main_layout)
+        self.setCentralWidget(self.main_widget)
 
     def setupPlotWidgets(self):
-        self.br_widget = pg.PlotWidget()
-        self.br_widget.addLegend(offset=(300, 210))
-        self.br_widget.setBackground('w')
-        self.br_widget.showGrid(x=True, y=True, alpha=0.5)
-        self.br_widget.setYRange(0, 250)
-        self.br_widget.setLabel('left', "Bitrate (Mb/s)", **self.styles)
-        self.br_widget.setLabel('bottom', "Distance (m)", **self.styles)
-
+        print(f"Setting up plot widgets...")
         self.pl_widget = pg.PlotWidget()
-        self.pl_widget.addLegend(offset=(300, 210))
         self.pl_widget.setBackground('w')
         self.pl_widget.showGrid(x=True, y=True, alpha=0.5)
         self.pl_widget.setYRange(-150, 150)
         self.pl_widget.setLabel('left', "Path Loss (dB)", **self.styles)
         self.pl_widget.setLabel('bottom', "Distance (m)", **self.styles)
+        self.pl_widget.getAxis('left').setTextPen('black')
+        self.pl_widget.getAxis('bottom').setTextPen('black')
+        self.pl_widget.getAxis('left').setStyle(tickFont=QtGui.QFont('Arial', 12))
+        self.pl_widget.getAxis('bottom').setStyle(tickFont=QtGui.QFont('Arial', 12))
 
     def setupLines(self):
+        print(f"Setting up lines...")
         self.pl_abg_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_blue_pen, name="ABG Model")
         self.pl_ci_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_green_pen, name="CI Model")
         self.pl_fs_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_solid_pen, name="Free Space Model")
@@ -121,10 +117,8 @@ class WSWindow(QtWidgets.QMainWindow):
         self.pl_oh_r_line = self.pl_widget.plot(self.x, self.y, pen=self.pl_dashdotdot_pen, name="Okumura-Hata Rural")
         self.pl_measured_line = self.pl_widget.plot(self.x, self.y, pen=None, symbol="o", symbolPen=self.pl_red_pen, symbolSize=3, symbolBrush=(255, 0, 0, 255), name="Measured")
 
-        self.br_up_line = self.br_widget.plot(self.x, self.y, pen=None, symbol="o", symbolPen=self.pl_blue_pen, symbolSize=5, symbolBrush=(0, 0, 255, 255), name="Upload")
-        self.br_down_line = self.br_widget.plot(self.x, self.y, pen=None, symbol="o", symbolPen=self.pl_red_pen, symbolSize=5, symbolBrush=(255, 0, 0, 255), name="Download")
-
     def setupFileControls(self):
+        print(f"Setting up file controls...")
         self.file_control_box = QtWidgets.QVBoxLayout()
         self.file_load_box = QtWidgets.QHBoxLayout()
 
@@ -134,34 +128,18 @@ class WSWindow(QtWidgets.QMainWindow):
         self.set_signal_data_button = QtWidgets.QPushButton('Set Signal')
         self.set_signal_data_button.clicked.connect(self.showSignalFileDialog)
 
-        self.set_bitrate_data_button = QtWidgets.QPushButton('Set Bitrate')
-        self.set_bitrate_data_button.clicked.connect(self.showBitrateFileDialog)
-
         self.file_load_box.addWidget(self.set_signal_data_button)
-        self.file_load_box.addWidget(self.set_bitrate_data_button)
         self.file_control_box.addWidget(self.file_controls_title)
         self.file_control_box.addLayout(self.file_load_box)
 
     def setupPathLossControls(self):
+        print(f"Setting up path loss controls...")
         self.control_tabs = QtWidgets.QTabWidget()
 
         self.pl_sidebar_box = QtWidgets.QVBoxLayout()
         self.pl_general_controls_box = QtWidgets.QVBoxLayout()
         self.pl_oh_title_box = QtWidgets.QHBoxLayout()
-        self.pl_freq_box = QtWidgets.QHBoxLayout()
-        self.pl_alpha_box = QtWidgets.QHBoxLayout()
-        self.pl_beta_box = QtWidgets.QHBoxLayout()
-        self.pl_gamma_box = QtWidgets.QHBoxLayout()
-        self.pl_sigma_box = QtWidgets.QHBoxLayout()
-        self.pl_exp_box = QtWidgets.QHBoxLayout()
         self.pl_exp_tworay_box = QtWidgets.QHBoxLayout()
-        self.pl_tx_power_box = QtWidgets.QHBoxLayout()
-        self.pl_tx_gain_box = QtWidgets.QHBoxLayout()
-        self.pl_rx_gain_box = QtWidgets.QHBoxLayout()
-        self.pl_ref_dist_box = QtWidgets.QHBoxLayout()
-        self.pl_ref_pl_box = QtWidgets.QHBoxLayout()
-        self.pl_bs_height_box = QtWidgets.QHBoxLayout()
-        self.pl_ue_height_box = QtWidgets.QHBoxLayout()
 
         self.setupGeneralPathLossControlsBox()
         self.setupLatLonBoxes()
@@ -222,88 +200,53 @@ class WSWindow(QtWidgets.QMainWindow):
         self.pl_large_city_checkbox.setChecked(True)
         self.pl_large_city_checkbox.stateChanged.connect(self.plCheckboxUpdate)
 
-        self.pl_freq_textbox = QtWidgets.QLineEdit(self)
         if self.config:
-            self.pl_freq_textbox.setText(str(self.config.pl_freq_value))
+            self.pl_freq_parameter = pw.TextWidget("f", "MHz", self.config.pl_freq_value, self.plTextboxUpdate)
         else:
-            self.pl_freq_textbox.setText("50")
-        self.pl_freq_textbox_label = QtWidgets.QLabel('f')
-        self.pl_freq_unit_label = QtWidgets.QLabel('MHz')
-        self.pl_freq_textbox.editingFinished.connect(self.plTextboxUpdate)
-        self.pl_freq_box.addWidget(self.pl_freq_textbox_label)
-        self.pl_freq_box.addWidget(self.pl_freq_textbox)
-        self.pl_freq_box.addWidget(self.pl_freq_unit_label)
+            self.pl_freq_parameter = pw.TextWidget("f", "MHz", 50, self.plTextboxUpdate)
 
-        self.pl_ref_pl_textbox = QtWidgets.QLineEdit(self)
-        self.pl_ref_pl_textbox.setText("1")
-        self.pl_ref_pl_textbox_label = QtWidgets.QLabel('PL<sub>ref</sub> (2R)')
-        self.pl_ref_pl_unit_label = QtWidgets.QLabel('dB')
-        self.pl_ref_pl_textbox.editingFinished.connect(self.plTextboxUpdate)
-        self.pl_ref_pl_box.addWidget(self.pl_ref_pl_textbox_label)
-        self.pl_ref_pl_box.addWidget(self.pl_ref_pl_textbox)
-        self.pl_ref_pl_box.addWidget(self.pl_ref_pl_unit_label)
-
-        self.pl_exp_tworay_parameter = pw.ParameterWidget("\u03BD (2R)", "", self.config.pl_exp_tworay_value, 0, 100, 10, self.plSliderUpdate, self.plTextboxUpdate)
-        self.pl_exp_tworay_box.addWidget(self.pl_exp_tworay_parameter)
-        self.pl_tx_power_parameter = pw.ParameterWidget("P<sub>TX</sub>", "dBm", self.config.pl_tx_power_value, 0, 1000, 10, self.plSliderUpdate, self.plTextboxUpdate)
-        self.pl_tx_power_box.addWidget(self.pl_tx_power_parameter)
-        self.pl_tx_gain_parameter = pw.ParameterWidget("G<sub>TX</sub>", "dB", self.config.pl_tx_gain_value, 0, 1000, 10, self.plSliderUpdate, self.plTextboxUpdate)
-        self.pl_tx_gain_box.addWidget(self.pl_tx_gain_parameter)
-        self.pl_rx_gain_parameter = pw.ParameterWidget("G<sub>RX</sub>", "dB", self.config.pl_rx_gain_value, 0, 1000, 10, self.plSliderUpdate, self.plTextboxUpdate) 
-        self.pl_rx_gain_box.addWidget(self.pl_rx_gain_parameter)
-        self.pl_alpha_parameter = pw.ParameterWidget("\u03B1", "", self.config.pl_alpha_value, 0, 100, 10, self.plSliderUpdate, self.plTextboxUpdate)
-        self.pl_alpha_box.addWidget(self.pl_alpha_parameter)
-        self.pl_beta_parameter = pw.ParameterWidget("\u03B2", "dB", self.config.pl_beta_value, -1000, 1000, 10, self.plSliderUpdate, self.plTextboxUpdate)
-        self.pl_beta_box.addWidget(self.pl_beta_parameter)
-        self.pl_gamma_parameter = pw.ParameterWidget("\u03B3", "", self.config.pl_gamma_value, 0, 100, 10, self.plSliderUpdate, self.plTextboxUpdate)
-        self.pl_gamma_box.addWidget(self.pl_gamma_parameter)
-        self.pl_sigma_parameter = pw.ParameterWidget("\u03C3", "dB", self.config.pl_sigma_value, 0, 100, 10, self.plSliderUpdate, self.plTextboxUpdate)
-        self.pl_sigma_box.addWidget(self.pl_sigma_parameter)
-        self.pl_exp_parameter = pw.ParameterWidget("\u03BD (CI)", "", self.config.pl_exp_value, 0, 100, 10, self.plSliderUpdate, self.plTextboxUpdate)
-        self.pl_exp_box.addWidget(self.pl_exp_parameter)
+        self.pl_ref_pl_parameter = pw.TextWidget("PL<sub>ref</sub> (2R)", "dB", 1, self.plTextboxUpdate)
+        self.pl_ref_dist_parameter = pw.TextWidget("d<sub>0</sub>", "m", 1, self.plTextboxUpdate)
+        self.pl_exp_tworay_parameter = pw.SliderTextWidget("\u03BD (2R)", "", self.config.pl_exp_tworay_value, 0, 100, 10, self.plSliderUpdate, self.plTextboxUpdate)
+        self.pl_tx_power_parameter = pw.SliderTextWidget("P<sub>TX</sub>", "dBm", self.config.pl_tx_power_value, 0, 1000, 10, self.plSliderUpdate, self.plTextboxUpdate)
+        self.pl_tx_gain_parameter = pw.SliderTextWidget("G<sub>TX</sub>", "dB", self.config.pl_tx_gain_value, 0, 1000, 10, self.plSliderUpdate, self.plTextboxUpdate)
+        self.pl_rx_gain_parameter = pw.SliderTextWidget("G<sub>RX</sub>", "dB", self.config.pl_rx_gain_value, 0, 1000, 10, self.plSliderUpdate, self.plTextboxUpdate) 
+        self.pl_alpha_parameter = pw.SliderTextWidget("\u03B1", "", self.config.pl_alpha_value, 0, 100, 10, self.plSliderUpdate, self.plTextboxUpdate)
+        self.pl_beta_parameter = pw.SliderTextWidget("\u03B2", "dB", self.config.pl_beta_value, -1000, 1000, 10, self.plSliderUpdate, self.plTextboxUpdate)
+        self.pl_gamma_parameter = pw.SliderTextWidget("\u03B3", "", self.config.pl_gamma_value, 0, 100, 10, self.plSliderUpdate, self.plTextboxUpdate)
+        self.pl_sigma_parameter = pw.SliderTextWidget("\u03C3", "dB", self.config.pl_sigma_value, 0, 100, 10, self.plSliderUpdate, self.plTextboxUpdate)
+        self.pl_exp_parameter = pw.SliderTextWidget("\u03BD (CI)", "", self.config.pl_exp_value, 0, 100, 10, self.plSliderUpdate, self.plTextboxUpdate)
 
         self.pl_gain_layout = QtWidgets.QHBoxLayout()
         self.pl_gain_layout.addWidget(self.pl_tx_gain_parameter)
         self.pl_gain_layout.addWidget(self.pl_rx_gain_parameter)
 
-        self.pl_ref_dist_textbox = QtWidgets.QLineEdit(self)
-        self.pl_ref_dist_textbox.setText("1")
-        self.pl_ref_dist_textbox_label = QtWidgets.QLabel("d<sub>0</sub>")
-        self.pl_ref_dist_unit_label = QtWidgets.QLabel('m')
-        self.pl_ref_dist_textbox.editingFinished.connect(self.plTextboxUpdate)
-        self.pl_ref_dist_box.addWidget(self.pl_ref_dist_textbox_label)
-        self.pl_ref_dist_box.addWidget(self.pl_ref_dist_textbox)
-        self.pl_ref_dist_box.addWidget(self.pl_ref_dist_unit_label)
-
-        self.pl_bs_height_parameter = pw.ParameterWidget("h<sub>TX</sub>", "m", self.config.pl_bs_height_value, 0, 2500, 10, self.plSliderUpdate, self.plTextboxUpdate)
-        self.pl_bs_height_box.addWidget(self.pl_bs_height_parameter)
-
-        self.pl_ue_height_parameter = pw.ParameterWidget("h<sub>RX</sub>", "m", self.config.pl_ue_height_value, 0, 100, 10, self.plSliderUpdate, self.plTextboxUpdate)
-        self.pl_ue_height_box.addWidget(self.pl_ue_height_parameter)
+        self.pl_bs_height_parameter = pw.SliderTextWidget("h<sub>TX</sub>", "m", self.config.pl_bs_height_value, 0, 2500, 10, self.plSliderUpdate, self.plTextboxUpdate)
+        self.pl_ue_height_parameter = pw.SliderTextWidget("h<sub>RX</sub>", "m", self.config.pl_ue_height_value, 0, 100, 10, self.plSliderUpdate, self.plTextboxUpdate)
 
         self.pl_height_layout = QtWidgets.QHBoxLayout()
         self.pl_height_layout.addWidget(self.pl_bs_height_parameter)
         self.pl_height_layout.addWidget(self.pl_ue_height_parameter)
 
         self.pl_freq_tx_power_layout = QtWidgets.QHBoxLayout()
-        self.pl_freq_tx_power_layout.addLayout(self.pl_freq_box)
-        self.pl_freq_tx_power_layout.addLayout(self.pl_tx_power_box)
+        self.pl_freq_tx_power_layout.addWidget(self.pl_freq_parameter)
+        self.pl_freq_tx_power_layout.addWidget(self.pl_tx_power_parameter)
 
         self.pl_exp_layout = QtWidgets.QHBoxLayout()
-        self.pl_exp_layout.addLayout(self.pl_exp_box)
-        self.pl_exp_layout.addLayout(self.pl_exp_tworay_box)
+        self.pl_exp_layout.addWidget(self.pl_exp_parameter)
+        self.pl_exp_layout.addWidget(self.pl_exp_tworay_parameter)
 
         self.pl_ref_layout = QtWidgets.QHBoxLayout()
-        self.pl_ref_layout.addLayout(self.pl_ref_pl_box)
-        self.pl_ref_layout.addLayout(self.pl_ref_dist_box)
+        self.pl_ref_layout.addWidget(self.pl_ref_pl_parameter)
+        self.pl_ref_layout.addWidget(self.pl_ref_dist_parameter)
 
         self.pl_alpha_beta_layout = QtWidgets.QHBoxLayout()
-        self.pl_alpha_beta_layout.addLayout(self.pl_alpha_box)
-        self.pl_alpha_beta_layout.addLayout(self.pl_beta_box)
+        self.pl_alpha_beta_layout.addWidget(self.pl_alpha_parameter)
+        self.pl_alpha_beta_layout.addWidget(self.pl_beta_parameter)
 
         self.pl_gamma_sigma_layout = QtWidgets.QHBoxLayout()
-        self.pl_gamma_sigma_layout.addLayout(self.pl_gamma_box)
-        self.pl_gamma_sigma_layout.addLayout(self.pl_sigma_box)
+        self.pl_gamma_sigma_layout.addWidget(self.pl_gamma_parameter)
+        self.pl_gamma_sigma_layout.addWidget(self.pl_sigma_parameter)
 
         self.pl_general_controls_box.addWidget(self.pl_controls_title)
         self.pl_general_controls_box.addLayout(self.pl_model_layout)
@@ -318,14 +261,11 @@ class WSWindow(QtWidgets.QMainWindow):
         self.pl_general_controls_box.addLayout(self.pl_alpha_beta_layout)
         self.pl_general_controls_box.addLayout(self.pl_gamma_sigma_layout)
 
-    def setupBitrateControls(self):
-        self.bitrate_box = QtWidgets.QVBoxLayout()
-        self.bitrate_title = QtWidgets.QLabel("Bitrate Controls")
-        self.bitrate_title.setFont(QtGui.QFont("Arial", 14))
-
     def setupCellControls(self):
+        print(f"Setting up cell controls...")
+        self.cell_control_box = QtWidgets.QVBoxLayout()
         self.tower_box = QtWidgets.QVBoxLayout()
-        self.cell_box = QtWidgets.QVBoxLayout()
+        self.cell_selection_box = QtWidgets.QVBoxLayout()
         self.cellid_box = QtWidgets.QHBoxLayout()
         self.cellid_text_box = QtWidgets.QHBoxLayout()
         self.mobile_country_codes_box = QtWidgets.QHBoxLayout()
@@ -336,10 +276,14 @@ class WSWindow(QtWidgets.QMainWindow):
         self.local_area_codes_text_box = QtWidgets.QHBoxLayout()
         self.latbox = QtWidgets.QHBoxLayout()
         self.lonbox = QtWidgets.QHBoxLayout()
-        self.set_tower_box = QtWidgets.QHBoxLayout()
+        self.tower_label_box = QtWidgets.QHBoxLayout()
+        self.set_tower_box = QtWidgets.QVBoxLayout()
 
-        self.tower_combo_title = QtWidgets.QLabel('Cell Selection')
-        self.tower_combo_title.setFont(QtGui.QFont('Arial', 14))
+        self.set_tower_title = QtWidgets.QLabel('Tower Location')
+        self.set_tower_title.setFont(QtGui.QFont('Arial', 14))
+
+        self.cell_selection_combo_title = QtWidgets.QLabel('Cell Selection')
+        self.cell_selection_combo_title.setFont(QtGui.QFont('Arial', 14))
 
         self.cellid_label = QtWidgets.QLabel('Cell IDs')
         self.cellid_count = QtWidgets.QLabel('')
@@ -378,19 +322,21 @@ class WSWindow(QtWidgets.QMainWindow):
         self.cell_load_button = QtWidgets.QPushButton('Load Cell Data')
         self.cell_load_button.clicked.connect(self.loadCell)
         
-        self.cell_box.addLayout(self.mobile_country_codes_box)
-        self.cell_box.addLayout(self.mobile_network_codes_box)
-        self.cell_box.addLayout(self.local_area_codes_box)
-        self.cell_box.addLayout(self.cellid_box)
-        self.tower_box.addWidget(self.tower_combo_title)
-        self.tower_box.addLayout(self.cell_box)
-        self.tower_box.addWidget(self.cell_load_button)
-        self.tower_box.addLayout(self.latbox)
-        self.tower_box.addLayout(self.lonbox)
-        self.tower_box.addLayout(self.set_tower_box)
-        self.tower_box.setAlignment(QtCore.Qt.AlignTop)
+        self.cell_selection_box.addWidget(self.cell_selection_combo_title)
+        self.cell_selection_box.addLayout(self.mobile_country_codes_box)
+        self.cell_selection_box.addLayout(self.mobile_network_codes_box)
+        self.cell_selection_box.addLayout(self.local_area_codes_box)
+        self.cell_selection_box.addLayout(self.cellid_box)
+        self.set_tower_box.addWidget(self.cell_load_button)
+        self.set_tower_box.addWidget(self.set_tower_title)
+        self.set_tower_box.addLayout(self.latbox)
+        self.set_tower_box.addLayout(self.lonbox)
+        self.set_tower_box.addLayout(self.tower_label_box)
+        self.set_tower_box.setAlignment(QtCore.Qt.AlignTop)
+        self.cell_control_box.addLayout(self.cell_selection_box)
+        self.cell_control_box.addLayout(self.set_tower_box)
 
-    def createSummaryTab(self):
+    def buildSummaryTab(self):
         self.summary_scroll_area = QtWidgets.QScrollArea()
         self.summary_scroll_area.setWidgetResizable(True)
         self.overall_summary_table = QtWidgets.QTableView()
@@ -405,7 +351,7 @@ class WSWindow(QtWidgets.QMainWindow):
         self.summary_scroll_area.setWidget(self.summary_data_widget)
         self.summary_data_tab = self.summary_scroll_area
 
-    def createCellStatsTab(self):
+    def buildCellStatsTab(self):
         self.cellstats_scroll_area = QtWidgets.QScrollArea()
         self.cellstats_scroll_area.setWidgetResizable(True)
         self.overall_cellstats_title = QtWidgets.QLabel("Statistics by Cell")
@@ -417,60 +363,48 @@ class WSWindow(QtWidgets.QMainWindow):
         self.cellstats_scroll_area.setWidget(self.cellstats_data_widget)
         self.cellstats_data_tab = self.cellstats_scroll_area
 
-    def createSignalMapBox(self):
+    def buildMapTab(self):
         self.signal_map_box = QtWidgets.QVBoxLayout()
         self.signal_map_box.addWidget(self.signal_map_toolbar)
         self.signal_map_box.addWidget(self.signal_map_canvas)
         self.signal_map_tab = QtWidgets.QWidget()
         self.signal_map_tab.setLayout(self.signal_map_box)
 
-    def createRawDataTab(self):
+    def buildRawDataTab(self):
         self.raw_data_table = QtWidgets.QTableView()
         self.raw_data_box = QtWidgets.QHBoxLayout()
         self.raw_data_box.addWidget(self.raw_data_table)
         self.raw_data_tab = QtWidgets.QWidget()
         self.raw_data_tab.setLayout(self.raw_data_box)
 
-    def createPathLossTab(self):
+    def buildPathLossTab(self):
         self.pl_plot_box = QtWidgets.QHBoxLayout()
         self.pl_plot_box.addWidget(self.pl_widget, 2)
         self.pl_plot_box.addLayout(self.pl_sidebar_box, 1)
         self.pl_plot_tab = QtWidgets.QWidget()
         self.pl_plot_tab.setLayout(self.pl_plot_box)
 
-    def createBitrateMapBox(self):
-        self.bitrate_map_box = QtWidgets.QVBoxLayout()
-        self.bitrate_map_box.addWidget(self.bitrate_map_toolbar)
-        self.bitrate_map_box.addWidget(self.bitrate_map_canvas)
-        self.bitrate_map_tab = QtWidgets.QWidget()
-        self.bitrate_map_tab.setLayout(self.bitrate_map_box)
-
-    def createBitrateTab(self):
-        self.br_plot_tab = self.br_widget
-
     def setupTabs(self):
+        print(f"Setting up tabs...")
         self.tabs = QtWidgets.QTabWidget()
 
-        self.createSummaryTab()
-        self.createCellStatsTab()
-        self.createSignalMapBox()
-        self.createRawDataTab()
-        self.createPathLossTab()
-        self.createBitrateMapBox()
-        self.createBitrateTab()
+        self.buildSummaryTab()
+        self.buildCellStatsTab()
+        self.buildMapTab()
+        self.buildRawDataTab()
+        self.buildPathLossTab()
 
         self.tabs.addTab(self.summary_data_tab, "Summary")
         self.tabs.addTab(self.cellstats_data_tab, "Cell Stats")
         self.tabs.addTab(self.signal_map_tab, "Signal Map")
         self.tabs.addTab(self.pl_plot_tab, "Path Loss")
-        self.tabs.addTab(self.br_plot_tab, "Bitrate")
-        self.tabs.addTab(self.bitrate_map_tab, "Bitrate Map")
         self.tabs.addTab(self.raw_data_tab, "Raw Data")
 
     def setupDataSidebar(self):
+        print(f"Setting up data sidebar...")
         self.dataSidebar = QtWidgets.QVBoxLayout()
         self.dataSidebar.addLayout(self.file_control_box)
-        self.dataSidebar.addLayout(self.tower_box)
+        self.dataSidebar.addLayout(self.cell_control_box)
         self.dataSidebar.addWidget(self.cell_load_button)
         self.dataSidebar.setAlignment(QtCore.Qt.AlignTop)
         self.dataSidebarWidget = QtWidgets.QWidget()
@@ -480,15 +414,21 @@ class WSWindow(QtWidgets.QMainWindow):
         self.lat_edit = QtWidgets.QLineEdit(self)
         if self.config.tower_lat:
             self.lat_edit.setText(str(self.config.tower_lat))
-        self.latbox_label = QtWidgets.QLabel("Tower Lat")
+        self.latbox_label = QtWidgets.QLabel("Latitude")
         self.latbox.addWidget(self.latbox_label)
         self.latbox.addWidget(self.lat_edit)
         self.lon_edit = QtWidgets.QLineEdit(self)
         if self.config.tower_lon:
             self.lon_edit.setText(str(self.config.tower_lon))
-        self.lonbox_label = QtWidgets.QLabel("Tower Lon")
+        self.lonbox_label = QtWidgets.QLabel("Longitude")
         self.lonbox.addWidget(self.lonbox_label)
         self.lonbox.addWidget(self.lon_edit)
+        self.tower_label_edit = QtWidgets.QLineEdit(self)
+        if self.config.tower_label:
+            self.tower_label_edit.setText(str(self.config.tower_label))
+        self.tower_label = QtWidgets.QLabel("Label")
+        self.tower_label_box.addWidget(self.tower_label)
+        self.tower_label_box.addWidget(self.tower_label_edit)
 
         self.set_tower_button = QtWidgets.QPushButton('Set Tower')
         self.set_tower_button.clicked.connect(self.setTowerLocation)
@@ -523,38 +463,52 @@ class WSWindow(QtWidgets.QMainWindow):
         for cellid in self.signal_dataset.unique_cellids:
             self.cellid_combo.addItem(str(cellid))
 
-    def showBitrateFileDialog(self):
-        home_dir = str(Path.home)
-        fname = QtWidgets.QFileDialog.getOpenFileNames(self, 'Open file', home_dir)
-
-        if fname[0]:
-            self.config.bitrate_data_files = fname[0]
-
-        self.setBitrateData()
-
-    def setBitrateData(self):
-        self.bitrate_dataset = ds.BitrateMultiSet(self.config.bitrate_data_files)
+    def setScaleBar(self):
+        print(f"Setting scale bar...")
+        x1, x2, y1, y2 = self.signal_map_canvas.axes.axis()
+        _y = (y1 + y2)/2
+        p1, p2 = (int(x1), _y), (int(x1)+1, _y)
+        meter_per_deg = utils.get_great_circle_distance(p1, p2)
+        self.map_width, self.map_height = Image.open(self.signal_dataset.cellmap.map_path).size
+        self.scalebar_dist = utils.get_distance(self.signal_dataset.map_bbox[0][2],
+                 self.signal_dataset.map_bbox[0][0],
+                 self.signal_dataset.map_bbox[0][2],
+                 self.signal_dataset.map_bbox[0][1])
+        self.pixel_width = self.scalebar_dist * 1000 / self.map_width
+        self.scalebar = ScaleBar(meter_per_deg.meters, "m",
+                length_fraction=0.2, location="lower right")
+        self.signal_map_canvas.axes.add_artist(self.scalebar)
 
     def loadCell(self):
         print("Loading cell data...")
         self.setCell()
-        self.updateSignalMap()
-        self.updateBitrateMap()
+        self.updateMap()
         self.updateRawTable()
         self.updateSummaryTable()
         self.updateCellStatsTable()
+        self.setScaleBar()
         self.setTowerLocation()
 
     def setCell(self):
+        print(f"Setting cell...")
         self.cell = self.signal_dataset.get_cell(self.cellid_combo.currentText())
         point_count = len(self.cell.signal_power)
         self.cell_load_button.setText("Load Cell Data ({0} points)".format(point_count))
 
     def setTowerLocation(self):
         if self.lat_edit.text() and self.lon_edit.text():
+            print(f"Setting tower location...")
             self.config.tower_lat = float(self.lat_edit.text())
             self.config.tower_lon = float(self.lon_edit.text())
-            self.signal_map_canvas.axes.scatter(float(self.config.tower_lon), float(self.config.tower_lat), zorder=1, alpha=1.0, s=20, color="blue")
+            self.signal_map_canvas.axes.scatter(float(self.config.tower_lon),
+                    float(self.config.tower_lat), zorder=1, alpha=1.0, s=32, color="blue")
+            if self.tower_annotation:
+                self.tower_annotation.remove()
+            if self.tower_label_edit.text():
+                self.config.tower_label = str(self.tower_label_edit.text())
+                self.tower_annotation = self.signal_map_canvas.axes.annotate(self.tower_label_edit.text(),
+                        (float(self.config.tower_lon),
+                        float(self.config.tower_lat)), fontsize=14)
             self.signal_map_canvas.draw()
 
             self.cell_distances = self.cell.get_distances(self.config.tower_lat, self.config.tower_lon)
@@ -562,15 +516,13 @@ class WSWindow(QtWidgets.QMainWindow):
             
             if self.signal_dataset:
                 self.plUpdatePlot()
-            if self.bitrate_dataset:
-                self.brUpdatePlot()
         else:
             print("Can't draw tower, bad lat/lon")
 
     def plTextboxUpdate(self):
-        self.config.pl_freq_value = float(self.pl_freq_textbox.text())
-        self.config.pl_ref_dist_value = float(self.pl_ref_dist_textbox.text())
-        self.config.pl_ref_pl_value = float(self.pl_ref_pl_textbox.text())
+        self.config.pl_freq_value = float(self.pl_freq_parameter.text())
+        self.config.pl_ref_dist_value = float(self.pl_ref_dist_parameter.text())
+        self.config.pl_ref_pl_value = float(self.pl_ref_pl_parameter.text())
         self.config.pl_alpha_value = self.pl_alpha_parameter.value
         self.config.pl_beta_value = self.pl_beta_parameter.value
         self.config.pl_gamma_value = self.pl_gamma_parameter.value
@@ -650,7 +602,7 @@ class WSWindow(QtWidgets.QMainWindow):
             self.cellstats_data_box.addWidget(cellid_title)
             self.cellstats_data_box.addWidget(view)
 
-    def updateSignalMap(self):
+    def updateMap(self):
         points = self.cell.data_points
         lon_series = np.array([point.lon for point in points], dtype=float)
         lat_series = np.array([point.lat for point in points], dtype=float)
@@ -674,20 +626,6 @@ class WSWindow(QtWidgets.QMainWindow):
 
         self.signal_map_canvas.draw()
 
-    def updateBitrateMap(self):
-        pass
-
-    def brUpdateMeasurements(self):
-        points = self.bitrate_dataset.get_points()
-        self.br_distances = [utils.get_distance(bitrate.lat, bitrate.lon, self.config.tower_lat, self.config.tower_lon) * 1000 for bitrate in points]
-        self.br_up = [bitrate.up for bitrate in points]
-        self.br_down = [bitrate.down for bitrate in points]
-        self.br_up_line.setData(self.br_distances, self.br_up)
-        self.br_down_line.setData(self.br_distances, self.br_down)
-
-    def brUpdatePlot(self):
-        self.brUpdateMeasurements()
-
     def plUpdatePlot(self):
         self.plUpdateMeasurements()
         self.plUpdateModels()
@@ -696,7 +634,7 @@ class WSWindow(QtWidgets.QMainWindow):
 
     def plUpdatePlotTitle(self):
         self.pl_widget.setTitle(f"<p \
-                style=\"color:black;font-size:14px\">Path Loss for Cell \
+                style=\"color:black;font-size:18px\">Path Loss for Cell \
                 {self.cell.cellid} vs Distance \
                 ({self.config.tower_lat},{self.config.tower_lon}), \
                 {self.config.pl_freq_value} MHz, G<sub>TX</sub> \
@@ -725,45 +663,50 @@ class WSWindow(QtWidgets.QMainWindow):
             self.pl_measured_line.setData(self.cell_distances, self.cell_pl)
 
     def plUpdateLegend(self):
-        self.pl_widget.plotItem.legend.removeItem(self.pl_measured_line)
-        self.pl_widget.plotItem.legend.removeItem(self.pl_abg_line)
-        self.pl_widget.plotItem.legend.removeItem(self.pl_ci_line)
-        self.pl_widget.plotItem.legend.removeItem(self.pl_tworay_line)
-        self.pl_widget.plotItem.legend.removeItem(self.pl_oh_u_line)
-        self.pl_widget.plotItem.legend.removeItem(self.pl_oh_s_line)
-        self.pl_widget.plotItem.legend.removeItem(self.pl_oh_r_line)
+        for item in self.pl_widget.plotItem.childItems():
+            if isinstance(item, pg.LegendItem):
+                self.pl_widget.plotItem.scene().removeItem(item)
 
-        self.pl_widget.plotItem.legend.addItem(self.pl_measured_line, name=f"Measured (tx_power = {self.config.pl_tx_power_value} dBm)")
-        self.pl_widget.plotItem.legend.addItem(self.pl_abg_line,
-                name=f"ABG (\u03B1 = {self.config.pl_alpha_value}, \
-                \u03B2 = {self.config.pl_beta_value}, \u03B3 = \
-                {self.config.pl_gamma_value}, d_ref = \
-                {self.config.pl_ref_dist_value} m, \u03C3 = \
-                {self.config.pl_sigma_value} dB)")
-        self.pl_widget.plotItem.legend.addItem(self.pl_ci_line,
-                name=f"CI (\u03BD = {self.config.pl_exp_value}, d_ref = \
-                {self.config.pl_ref_dist_value} m, \u03C3 = \
-                {self.config.pl_sigma_value} dB)")
-        self.pl_widget.plotItem.legend.addItem(self.pl_tworay_line,
-                name=f"TwoRay (\u03BD = \
-                {self.config.pl_exp_tworay_value}, d_ref = \
-                {self.config.pl_ref_dist_value} m, pl_ref = \
-                {self.config.pl_ref_pl_value} dB)")
-        self.pl_widget.plotItem.legend.addItem(self.pl_oh_u_line,
-                name=f"OH Urban (bs_height = \
-                {self.config.pl_bs_height_value} m, ue_height = \
-                {self.config.pl_ue_height_value} m, large_city = \
-                {self.config.pl_large_city_state})")
-        self.pl_widget.plotItem.legend.addItem(self.pl_oh_s_line,
-                name=f"OH Suburban (bs_height = \
-                {self.config.pl_bs_height_value} m, ue_height = \
-                {self.config.pl_ue_height_value} m, large_city = \
-                {self.config.pl_large_city_state})")
-        self.pl_widget.plotItem.legend.addItem(self.pl_oh_r_line,
-                name=f"OH Rural (bs_height = \
-                {self.config.pl_bs_height_value} m, ue_height = \
-                {self.config.pl_ue_height_value} m, large_city = \
-                {self.config.pl_large_city_state})")
+        
+        legend = pg.LegendItem(offset=(300,210))
+        legend.setBrush("#E3E3E3FF")
+        legend.setLabelTextColor("#00000000")
+
+        legend.addItem(self.pl_measured_line, name=f"Measured (tx_power_est = {self.config.pl_tx_power_value} dBm)")
+        if self.pl_fs_checkbox.isChecked():
+            legend.addItem(self.pl_fs_line, "Free Space")
+        if self.pl_abg_checkbox.isChecked():
+            legend.addItem(self.pl_abg_line, name=f"ABG (\u03B1 = {self.config.pl_alpha_value}, \
+                    \u03B2 = {self.config.pl_beta_value}, \u03B3 = \
+                    {self.config.pl_gamma_value}, d_ref = \
+                    {self.config.pl_ref_dist_value} m, \u03C3 = \
+                    {self.config.pl_sigma_value} dB)")
+        if self.pl_ci_checkbox.isChecked():
+            legend.addItem(self.pl_ci_line, name=f"CI (\u03BD = {self.config.pl_exp_value}, d_ref = \
+                    {self.config.pl_ref_dist_value} m, \u03C3 = \
+                    {self.config.pl_sigma_value} dB)")
+        if self.pl_tworay_checkbox.isChecked():
+            legend.addItem(self.pl_tworay_line, name=f"TwoRay (\u03BD = \
+                    {self.config.pl_exp_tworay_value}, d_ref = \
+                    {self.config.pl_ref_dist_value} m, pl_ref = \
+                    {self.config.pl_ref_pl_value} dB)")
+        if self.pl_oh_u_checkbox.isChecked():
+            legend.addItem(self.pl_oh_u_line, name=f"OH Urban (bs_height = \
+                    {self.config.pl_bs_height_value} m, ue_height = \
+                    {self.config.pl_ue_height_value} m, large_city = \
+                    {self.config.pl_large_city_state})")
+        if self.pl_oh_s_checkbox.isChecked():
+            legend.addItem(self.pl_oh_s_line, name=f"OH Suburban (bs_height = \
+                    {self.config.pl_bs_height_value} m, ue_height = \
+                    {self.config.pl_ue_height_value} m, large_city = \
+                    {self.config.pl_large_city_state})")
+        if self.pl_oh_r_checkbox.isChecked():
+            legend.addItem(self.pl_oh_r_line, name=f"OH Rural (bs_height = \
+                    {self.config.pl_bs_height_value} m, ue_height = \
+                    {self.config.pl_ue_height_value} m, large_city = \
+                    {self.config.pl_large_city_state})")
+
+        legend.setParentItem(self.pl_widget.plotItem)
 
     def plUpdateModels(self):
         if self.pl_fs_checkbox.isChecked():

@@ -2,6 +2,7 @@
 import time
 import numpy as np
 import pandas as pd
+import os.path
 import matplotlib.pyplot as pyplot
 import walksignal.utils as utils
 from dataclasses import dataclass
@@ -53,17 +54,20 @@ class CellDataPoint:
       self.direction = datapoint['direction']
       self.measured_at = datapoint['measured_at']
 
-@dataclass
 class CellMap:
     """Class containing OpenStreetMap imagery info."""
-    map_path: str
-    bbox_path: str
+    def __init__(self, map_path):
+        self.map_path = map_path
+        self.bbox_path = os.path.dirname(self.map_path) + "/bbox.txt"
 
     def get_map(self):
         return pyplot.imread(self.map_path)
 
     def get_bbox(self):
-        return [entry for entry in utils.get_bbox(self.bbox_path)]
+        bbox = None
+        with open(self.bbox_path) as f:
+            bbox = [tuple(map(float, i.split(','))) for i in f]
+        return bbox
 
 @dataclass
 class BaseStation:
@@ -107,7 +111,7 @@ class MeasurementMultiSet:
         self.measured_cells = self.get_measured_cell_list()
         self.map_path = self.data_path() + "/map.png"
         self.bbox_path = self.data_path() + "/bbox.txt"
-        self.cellmap = CellMap(self.map_path, self.bbox_path)
+        self.cellmap = CellMap(self.map_path)
         self.plot_map = self.cellmap.get_map()
         self.map_bbox = self.cellmap.get_bbox()
         self.cm = pyplot.cm.get_cmap('gist_heat')
@@ -124,71 +128,3 @@ class MeasurementMultiSet:
         for cell in self.measured_cells:
             if str(cell.cellid) == cellid:
                 return cell
-
-@dataclass
-class Bitrate:
-    """A class that stores a single datapoint of speed test data 
-    extracted from a given row of a Pandas dataframe."""
-    def __init__(self, point):
-        self.type = point['type']
-        self.ping = point['ping']
-        self.jitter = point['jitter']
-        self.down = point['down']
-        self.up = point['up']
-        self.time = point['time']
-        self.lat = point['lat']
-        self.lon = point['lon']
-        self.accuracy = point['accuracy']
-
-class BitrateSet:
-    """A set of speed test data extracted from a Pandas dataframe."""
-
-    def __init__(self, datafile):
-        self.datafile = datafile
-        self.data = pd.read_csv(self.datafile)
-        self.summary = self.data.describe()
-
-    def data_path(self):
-        return self.datafile[0].rsplit('/', 1)[0]
-
-    def get_points(self):
-        return [Bitrate(row) for index, row in self.data.iterrows()]
-
-    def get_mean(self, field):
-        return self.data[field].mean()
-
-    def get_max(self, field):
-        return self.data[field].max()
-
-    def get_min(self, field):
-        return self.data[field].min()
-
-class BitrateMultiSet:
-    """Collection of BitrateSets."""
-
-    def __init__(self, file_list):
-        self.file_list = file_list
-        self.sets = [BitrateSet(f) for f in self.file_list]
-        self.set_summaries = [brset.summary for brset in self.sets]
-        self.data = pd.concat([brset.data for brset in self.sets], ignore_index=True)
-        self.summary = self.data.describe()
-        self.map_path = self.data_path() + "/map.png"
-        self.bbox_path = self.data_path() + "/bbox.txt"
-        self.cellmap = CellMap(self.map_path, self.bbox_path)
-        self.plot_map = self.cellmap.get_map()
-        self.map_bbox = self.cellmap.get_bbox()
-
-    def data_path(self):
-        return self.file_list[0].rsplit('/', 1)[0]
-
-    def get_points(self):
-        return [Bitrate(row) for index, row in self.data.iterrows()]
-
-    def get_mean(self, field):
-        return self.data[field].mean()
-
-    def get_max(self, field):
-        return self.data[field].max()
-
-    def get_min(self, field):
-        return self.data[field].min()
