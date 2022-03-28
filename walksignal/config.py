@@ -11,76 +11,74 @@ class Config:
             with open(self.filename) as stream:
                 self.data = yaml.safe_load(stream)
                 self.signal_data_files = self.data.get("signal_data_files")
-                self.bitrate_data_files = self.data.get("bitrate_data_files")
                 self.tower_lat = self.data.get("tower_lat", None)
                 self.tower_lon = self.data.get("tower_lon", None)
                 self.tower_label = self.data.get("tower_label", "Tower")
-                self.pl_freq_value = self.data.get("pl_freq_value", 50)
-                self.pl_alpha_value = self.data.get("pl_alpha_value", 1)
-                self.pl_beta_value = self.data.get("pl_beta_value", 1)
-                self.pl_gamma_value = self.data.get("pl_gamma_value", 1)
-                self.pl_sigma_value = self.data.get("pl_sigma_value", 1)
-                self.pl_exp_value = self.data.get("pl_exp_value", 1)
-                self.pl_exp_tworay_value = self.data.get("pl_exp_tworay_value", 1)
-                self.pl_ref_dist_value = self.data.get("pl_ref_dist_value", 1)
-                self.pl_ref_pl_value = self.data.get("pl_ref_pl_value", 80)
-                self.pl_ref_freq_value = self.data.get("pl_ref_freq_value", 1000000000)
-                self.pl_tx_power_value = self.data.get("pl_tx_power_value", 43)
-                self.pl_tx_gain_value = self.data.get("pl_tx_gain_value", 3)
-                self.pl_rx_gain_value = self.data.get("pl_rx_gain_value", 3)
-                self.pl_bs_height_value = self.data.get("pl_bs_height_value", 1)
-                self.pl_ue_height_value = self.data.get("pl_ue_height_value", 1)
-                self.pl_correction_factor = self.data.get("pl_correction_factor", 1)
-                self.pl_large_city_state = self.data.get("pl_large_city_state", True)
-                self.pl_path_gain_state = self.data.get("pl_path_gain_state", False)
+                self.freq = self.data.get("freq", 50)
+                self.alpha = self.data.get("alpha", 1)
+                self.beta = self.data.get("beta", 1)
+                self.gamma = self.data.get("gamma", 1)
+                self.sigma = self.data.get("sigma", 1)
+                self.pl_exp = self.data.get("pl_exp", 1)
+                self.pl_exp_tworay = self.data.get("pl_exp_tworay", 1)
+                self.ref_dist = self.data.get("ref_dist", 1)
+                self.ref_pl = self.data.get("ref_pl", 80)
+                self.ref_freq = self.data.get("ref_freq", 1000000000)
+                self.tx_power = self.data.get("tx_power", 43)
+                self.tx_gain = self.data.get("tx_gain", 3)
+                self.rx_gain = self.data.get("rx_gain", 3)
+                self.bs_height = self.data.get("bs_height", 1)
+                self.ue_height = self.data.get("ue_height", 1)
+                self.oh_correction_factor = self.data.get("oh_correction_factor", 1)
+                self.large_city = self.data.get("large_city", True)
+                self.path_gain = self.data.get("path_gain", False)
         except:
             print("Could not load {0}. Setting defaults...".format(self.filename))
             self.signal_data_files = None
-            self.bitrate_data_files = None
             self.tower_lat = None
             self.tower_lon = None
-            self.pl_freq_value = 50
-            self.pl_alpha_value = 1
-            self.pl_beta_value = 1
-            self.pl_gamma_value = 1
-            self.pl_sigma_value = 1
-            self.pl_exp_value = 1
-            self.pl_exp_tworay_value = 1
-            self.pl_ref_dist_value = 1
-            self.pl_ref_pl_value = 80
-            self.pl_ref_freq_value = 1000000000
-            self.pl_tx_power_value = 43
-            self.pl_tx_gain_value = 3
-            self.pl_rx_gain_value = 3
-            self.pl_bs_height_value = 1
-            self.pl_ue_height_value = 1
-            self.pl_correction_factor = 1
-            self.pl_large_city_state = True
-            self.pl_path_gain_state = False
+            self.tower_label = "Tower"
+            self.freq = 50
+            self.alpha = 1
+            self.beta = 1
+            self.gamma = 1
+            self.sigma = 1
+            self.pl_exp = 1
+            self.pl_exp_tworay = 1
+            self.ref_dist = 1
+            self.ref_pl = 80
+            self.ref_freq = 1000000000
+            self.tx_power = 43
+            self.tx_gain = 3
+            self.rx_gain = 3
+            self.bs_height = 1
+            self.ue_height = 1
+            self.oh_correction_factor = 1
+            self.large_city = True
+            self.path_gain = False
 
     def save(self):
         with open(self.filename, "w") as stream:
             self.lastcfg = {
                 'signal_data_files': self.signal_data_files,
-                'bitrate_data_files': self.bitrate_data_files,
-                'pl_freq_value': self.pl_freq_value,
-                'pl_alpha_value': self.pl_alpha_value,
-                'pl_beta_value': self.pl_beta_value,
-                'pl_gamma_value': self.pl_gamma_value,
-                'pl_sigma_value': self.pl_sigma_value,
-                'pl_exp_value': self.pl_exp_value,
-                'pl_exp_tworay_value': self.pl_exp_tworay_value,
-                'pl_ref_dist_value': self.pl_ref_dist_value,
-                'pl_ref_pl_value': self.pl_ref_pl_value,
-                'pl_ref_freq_value': self.pl_ref_freq_value,
-                'pl_tx_power_value': self.pl_tx_power_value,
-                'pl_tx_gain_value': self.pl_tx_gain_value,
-                'pl_rx_gain_value': self.pl_rx_gain_value,
-                'pl_bs_height_value': self.pl_bs_height_value,
-                'pl_ue_height_value': self.pl_ue_height_value,
-                'pl_correction_factor': self.pl_correction_factor,
-                'pl_large_city_state': self.pl_large_city_state,
-                'pl_path_gain_state': self.pl_path_gain_state
+                'freq': self.freq,
+                'alpha': self.alpha,
+                'beta': self.beta,
+                'gamma': self.gamma,
+                'sigma': self.sigma,
+                'pl_exp': self.pl_exp,
+                'pl_exp_tworay': self.pl_exp_tworay,
+                'ref_dist': self.ref_dist,
+                'ref_pl': self.ref_pl,
+                'ref_freq': self.ref_freq,
+                'tx_power': self.tx_power,
+                'tx_gain': self.tx_gain,
+                'rx_gain': self.rx_gain,
+                'bs_height': self.bs_height,
+                'ue_height': self.ue_height,
+                'oh_correction_factor': self.oh_correction_factor,
+                'large_city': self.large_city,
+                'path_gain': self.path_gain
             }
             if self.tower_lat and self.tower_lon:
               self.lastcfg['tower_lat'] = self.tower_lat

@@ -16,11 +16,11 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 import matplotlib.pyplot as plt
 import walksignal.dataset as ds
 import walksignal.models as md
-import walksignal.plottools as pt
+import walksignal.canvases as canvases
 import walksignal.utils as utils
 import walksignal.config as cfg
 import walksignal.gui.tablemodel as tm
-import walksignal.gui.parameterwidget as pw
+import walksignal.gui.customwidgets as pw
 
 class WSWindow(QtWidgets.QMainWindow):
 
@@ -59,7 +59,7 @@ class WSWindow(QtWidgets.QMainWindow):
     def setupCanvas(self):
         print(f"Setting up canvases...")
         self.map_layout = QtWidgets.QVBoxLayout()
-        self.map_canvas = pt.MplCanvas(self, width=5, height=4, dpi=100)
+        self.map_canvas = canvases.MplCanvas(self, width=5, height=4, dpi=100)
         self.map_toolbar = NavigationToolbar(self.map_canvas, self)
 
         self.map_layout.addWidget(self.map_toolbar)

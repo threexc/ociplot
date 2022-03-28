@@ -7,7 +7,7 @@ import matplotlib.pyplot as pyplot
 import walksignal.utils as utils
 from dataclasses import dataclass
 
-class MeasuredCell:
+class Cell:
     """Class containing the complete set of data for a single cell."""
     def __init__(self, data, cellid):
         self.cellid = cellid
@@ -30,8 +30,10 @@ class MeasuredCell:
         self.path_loss = []
         self.data_points = [CellDataPoint(row) for index, row in data.iterrows()]
 
-    def get_distances(self, tower_lat, tower_lon):
-        return [utils.get_distance(tower_lat, tower_lon, data_point.lat, data_point.lon) * 1000 for data_point in self.data_points]
+    def get_distances(self, tower_lat, tower_lon, bs_height):
+        return [np.sqrt(np.square(bs_height) +
+            np.square(utils.get_distance(tower_lat, tower_lon, data_point.lat,
+                data_point.lon) * 1000)) for data_point in self.data_points]
 
     def get_path_loss(self, tx_power):
         return [tx_power - xi for xi in self.signal_power]
@@ -69,31 +71,33 @@ class CellMap:
             bbox = [tuple(map(float, i.split(','))) for i in f]
         return bbox
 
-@dataclass
-class BaseStation:
-    """Class containing basic information about a base station."""
+class Tower:
+    """Class containing basic information about a tower."""
+    def __init__(self, lat, lon, label, height=None):
+        self.lat = lat
+        self.lon = lon
+        self.label = label
+        self.height = height
 
-    lat: float
-    lon: float
+    def get_distance(self, point):
+        return utils.get_distance(self.lat, self.lon, point.lat, point.lon) 
 
     def get_distances(self, points):
-        return [utils.get_distance(self.lat, self.lon, point.lat, point.lon) for point in points]
+        return [self.get_distance(point) for point in points]
 
-class MeasurementSet:
+class Dataset:
     """Class containing the measured data info."""
-
     def __init__(self, datafile):
         self.datafile = datafile
         self.data = pd.read_csv(datafile).drop('bid', axis=1).drop('sid', axis=1).drop('nid', axis=1).drop('psc', axis=1)
         self.summary = self.data.drop(['measured_at', 'pci', 'mcc', 'mnc', 'lac', 'cellid', 'tac', 'direction', 'ta'], axis=1).describe().apply(lambda s: s.apply('{0:.6f}'.format))
         self.rx_power = self.data['signal'].describe()
 
-class MeasurementMultiSet:
-    """Class containing an aggregate of MeasurementSet data"""
-    
+class DataSuperset:
+    """Class containing an aggregate of Dataset data"""
     def __init__(self, file_list):
         self.file_list = file_list
-        self.sets = [MeasurementSet(f) for f in self.file_list]
+        self.sets = [Dataset(f) for f in self.file_list]
         self.set_summaries = [mset.summary for mset in self.sets]
         self.data = pd.concat([mset.data for mset in self.sets], ignore_index=True)
 
@@ -108,7 +112,11 @@ class MeasurementMultiSet:
         self.cellid_subsets = [self.data.loc[self.data['cellid'] == cellid] for cellid in self.unique_cellids]
         self.cellid_subset_summaries = [subset.drop(['measured_at', 'pci', 'mcc', 'mnc', 'lac', 'cellid', 'tac', 'direction', 'ta'], axis=1).describe() for subset in self.cellid_subsets]
         self.summary = self.data.drop(['measured_at', 'pci', 'mcc', 'mnc', 'lac', 'cellid', 'tac', 'direction', 'ta'], axis=1).describe().apply(lambda s: s.apply('{0:.6f}'.format))
-        self.measured_cells = self.get_measured_cell_list()
+        self.cells = {}
+
+        for cellid in self.data['cellid'].unique():
+            self.cells[cellid] = Cell(self.data.loc[self.data['cellid'] ==
+                cellid], cellid)
         self.map_path = self.data_path() + "/map.png"
         self.bbox_path = self.data_path() + "/bbox.txt"
         self.cellmap = CellMap(self.map_path)
@@ -119,12 +127,6 @@ class MeasurementMultiSet:
     def data_path(self):
         return self.file_list[0].rsplit('/', 1)[0]
 
-    """Return a list of all cells in the data matrix and their measured characteristics."""
-    def get_measured_cell_list(self):
-        return [MeasuredCell(self.data.loc[self.data['cellid'] == cellid], cellid) for cellid in self.data['cellid'].unique()]
-
-    """Get the MeasuredCell matching a particular cellid."""
+    """Get the Cell matching a particular cellid."""
     def get_cell(self, cellid):
-        for cell in self.measured_cells:
-            if str(cell.cellid) == cellid:
-                return cell
+        return self.cells[cellid]
