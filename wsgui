@@ -114,6 +114,7 @@ class WSWindow(QtWidgets.QMainWindow):
         self.pl_exp_parameter = pw.SliderTextWidget("\u03BD (CI)", "", self.config.pl_exp, 0, 100, 10, self.updateSliders, self.updateTextboxes)
         self.pl_bs_height_parameter = pw.SliderTextWidget("h<sub>TX</sub>", "m", self.config.bs_height, 0, 2500, 10, self.updateSliders, self.updateTextboxes)
         self.pl_ue_height_parameter = pw.SliderTextWidget("h<sub>RX</sub>", "m", self.config.ue_height, 0, 100, 10, self.updateSliders, self.updateTextboxes)
+        self.pl_coherence_length_parameter = pw.SliderTextWidget("L<sub>coh</sub>", "m", self.config.coherence_length, 1, 20, 1, self.updateSliders, self.updateTextboxes)
 
         self.lat_edit = QtWidgets.QLineEdit(self)
         if self.config.tower_lat:
@@ -250,6 +251,7 @@ class WSWindow(QtWidgets.QMainWindow):
         self.pl_general_controls_box.addWidget(self.pl_ref_dist_parameter)
         self.pl_general_controls_box.addWidget(self.pl_freq_parameter)
         self.pl_general_controls_box.addWidget(self.pl_tx_power_parameter)
+        self.pl_general_controls_box.addWidget(self.pl_coherence_length_parameter)
 
         self.cellid_box.addWidget(self.cellid_label)
         self.cellid_box.addWidget(self.cellid_count)
@@ -427,6 +429,7 @@ class WSWindow(QtWidgets.QMainWindow):
         self.config.pl_exp = self.pl_exp_parameter.value
         self.config.pl_exp_tworay = self.pl_exp_tworay_parameter.value
         self.config.tx_power = self.pl_tx_power_parameter.value
+        self.config.coherence_length = self.pl_coherence_length_parameter.value
         self.config.tx_gain = self.pl_tx_gain_parameter.value
         self.config.rx_gain = self.pl_rx_gain_parameter.value
         self.config.bs_height = self.pl_bs_height_parameter.value
@@ -456,6 +459,7 @@ class WSWindow(QtWidgets.QMainWindow):
         self.config.pl_exp = self.pl_exp_parameter.value
         self.config.pl_exp_tworay = self.pl_exp_tworay_parameter.value
         self.config.tx_power = self.pl_tx_power_parameter.value
+        self.config.coherence_length = self.pl_coherence_length_parameter.value
         self.config.tx_gain = self.pl_tx_gain_parameter.value
         self.config.rx_gain = self.pl_rx_gain_parameter.value
         self.config.bs_height = self.pl_bs_height_parameter.value
