@@ -573,21 +573,21 @@ class WSWindow(QtWidgets.QMainWindow):
         legend = pg.LegendItem(offset=(300,210))
         legend.setBrush("#E3E3E3FF")
         legend.setLabelTextColor("#00000000")
-        legend.setLabelTextSize("12pt")
+        legend.setLabelTextSize("14pt")
 
         legend.addItem(self.pl_measured_line, name=f"Measured (tx_power_est = {self.config.tx_power} dBm)")
         legend.addItem(self.pl_fs_line, "Free Space")
         legend.addItem(self.pl_abg_line, name=f"ABG (\u03B1 = {self.config.alpha}, \
-                \u03B2 = {self.config.beta}, \u03B3 = \
+                \u03B2 = {self.config.beta} dB, \u03B3 = \
                 {self.config.gamma}, d_ref = \
                 {self.config.ref_dist} m, \u03C3 = \
-                {self.config.sigma} dB)")
+                {self.config.sigma} dB, L_coh = {self.config.coherence_length} m)")
         legend.addItem(self.pl_ci_line, name=f"CI (\u03BD = {self.config.pl_exp}, d_ref = \
                 {self.config.ref_dist} m, \u03C3 = \
-                {self.config.sigma} dB)")
+                {self.config.sigma} dB, L_coh = {self.config.coherence_length} m)")
         legend.addItem(self.pl_tworay_line, name=f"TwoRay (\u03BD = \
                 {self.config.pl_exp_tworay}, d_ref = \
-                {self.config.ref_dist})")
+                {self.config.ref_dist} m)")
         legend.addItem(self.pl_oh_u_line, name=f"OH Urban (bs_height = \
                 {self.config.bs_height} m, ue_height = \
                 {self.config.ue_height} m, large_city = \

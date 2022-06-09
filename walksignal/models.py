@@ -108,10 +108,26 @@ class ModelEngine:
         return np.array([self.tworay_pl(xi) * -1 for xi in x_range])
 
     def abg_pg_array(self, x_range):
-        return np.array([self.abg_pl(xi) * -1 for xi in x_range])
+        random_val = np.random.normal(0, self.config.sigma)
+        random_array = []
+
+        for i in range(0, len(x_range)):
+            if (i+1) % int(self.config.coherence_length) == 0:
+                random_val = np.random.normal(0, self.config.sigma)
+            random_array.append(random_val)
+
+        return np.array([(self.abg_pl(xi) + random_array[index]) * -1 for index, xi in enumerate(x_range)])
 
     def ci_pg_array(self, x_range):
-        return np.array([self.ci_pl(xi) * -1 for xi in x_range])
+        random_val = np.random.normal(0, self.config.sigma)
+        random_array = []
+
+        for i in range(0, len(x_range)):
+            if (i+1) % int(self.config.coherence_length) == 0:
+                random_val = np.random.normal(0, self.config.sigma)
+            random_array.append(random_val)
+
+        return np.array([(self.ci_pl(xi) + random_array[index]) * -1 for index, xi in enumerate(x_range)])
 
     def ohu_pg_array(self, x_range):
         return np.array([self.ohu_pl(xi) * -1 for xi in x_range])
