@@ -18,11 +18,9 @@ class ModelEngine:
         return 20 * np.log10(dist) + 20 * np.log10(self.config.freq) - 27.55 - self.config.tx_gain - self.config.rx_gain
 
     def tworay_pl(self, dist):
-        """Calculate the Two-Ray model path loss at a given distance, where
-        ref_dist is a reference distance (typically 1m) for free space path
-        loss, and pl_exp is the path loss exponent ranging from 2 (free space)
-        to 8."""
-        return self.fs_pl(self.config.ref_dist) + 10 * self.config.pl_exp_tworay * np.log10(dist/self.config.ref_dist) - self.config.tx_gain - self.config.rx_gain
+        """Calculate the Two-Ray model path loss at a given distance, using the
+        height of the base station and the user equipment."""
+        return 40 * np.log10(dist) - 10 * np.log10(np.power(self.config.bs_height, 2) * np.power(self.config.ue_height,2)) - self.config.tx_gain - self.config.rx_gain
     
     def abg_pl(self, dist):
         """Calculate the Alpha-Beta-Gamma model path loss at a given

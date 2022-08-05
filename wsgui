@@ -103,7 +103,6 @@ class WSWindow(QtWidgets.QMainWindow):
 
         self.pl_ref_dist_parameter = pw.TextWidget("d<sub>0</sub>", "m", 1, self.updateTextboxes)
 
-        self.pl_exp_tworay_parameter = pw.SliderTextWidget("\u03BD (2R)", "", self.config.pl_exp_tworay, 0, 100, 10, self.updateSliders, self.updateTextboxes)
         self.pl_tx_power_parameter = pw.SliderTextWidget("P<sub>TX</sub>", "dBm", self.config.tx_power, 0, 1000, 10, self.updateSliders, self.updateTextboxes)
         self.pl_tx_gain_parameter = pw.SliderTextWidget("G<sub>TX</sub>", "dB", self.config.tx_gain, 0, 1000, 10, self.updateSliders, self.updateTextboxes)
         self.pl_rx_gain_parameter = pw.SliderTextWidget("G<sub>RX</sub>", "dB", self.config.rx_gain, 0, 1000, 10, self.updateSliders, self.updateTextboxes) 
@@ -200,14 +199,14 @@ class WSWindow(QtWidgets.QMainWindow):
         self.styles = {'color':'b', 'font-size':'18px'}
         self.pl_widget = pg.PlotWidget()
         self.pl_widget.setBackground('w')
-        self.pl_widget.showGrid(x=True, y=True, alpha=0.5)
+        self.pl_widget.showGrid(x=True, y=True, alpha=0.8)
         self.pl_widget.setYRange(-150, 150)
         self.pl_widget.setLabel('left', "Path Loss (dB)", **self.styles)
         self.pl_widget.setLabel('bottom', "Distance (m)", **self.styles)
         self.pl_widget.getAxis('left').setTextPen('black')
         self.pl_widget.getAxis('bottom').setTextPen('black')
-        self.pl_widget.getAxis('left').setStyle(tickFont=QtGui.QFont('Arial', 12))
-        self.pl_widget.getAxis('bottom').setStyle(tickFont=QtGui.QFont('Arial', 12))
+        self.pl_widget.getAxis('left').setStyle(tickFont=QtGui.QFont('Arial', 16))
+        self.pl_widget.getAxis('bottom').setStyle(tickFont=QtGui.QFont('Arial', 16))
 
     def createLayouts(self):
         self.main_layout = QtWidgets.QHBoxLayout()
@@ -241,7 +240,6 @@ class WSWindow(QtWidgets.QMainWindow):
         self.pl_general_controls_box.addWidget(self.pl_bs_height_parameter)
         self.pl_general_controls_box.addWidget(self.pl_ue_height_parameter)
         self.pl_general_controls_box.addWidget(self.pl_exp_parameter)
-        self.pl_general_controls_box.addWidget(self.pl_exp_tworay_parameter)
         self.pl_general_controls_box.addWidget(self.pl_alpha_parameter)
         self.pl_general_controls_box.addWidget(self.pl_beta_parameter)
         self.pl_general_controls_box.addWidget(self.pl_gamma_parameter)
@@ -412,7 +410,8 @@ class WSWindow(QtWidgets.QMainWindow):
 
             self.cell_distances = self.cell.get_distances(self.config.tower_lat,
                     self.config.tower_lon, self.config.bs_height)
-            self.cell_pl = self.cell.get_path_loss(self.config.tx_power)
+            self.cell_pl = self.cell.get_path_loss(self.config.tx_power,
+                    self.config.tx_gain, self.config.rx_gain)
             
             if self.signal_dataset:
                 self.updatePlot()
@@ -427,7 +426,6 @@ class WSWindow(QtWidgets.QMainWindow):
         self.config.gamma = self.pl_gamma_parameter.value
         self.config.sigma = self.pl_sigma_parameter.value
         self.config.pl_exp = self.pl_exp_parameter.value
-        self.config.pl_exp_tworay = self.pl_exp_tworay_parameter.value
         self.config.tx_power = self.pl_tx_power_parameter.value
         self.config.coherence_length = self.pl_coherence_length_parameter.value
         self.config.tx_gain = self.pl_tx_gain_parameter.value
@@ -457,7 +455,6 @@ class WSWindow(QtWidgets.QMainWindow):
         self.config.gamma = self.pl_gamma_parameter.value
         self.config.sigma = self.pl_sigma_parameter.value
         self.config.pl_exp = self.pl_exp_parameter.value
-        self.config.pl_exp_tworay = self.pl_exp_tworay_parameter.value
         self.config.tx_power = self.pl_tx_power_parameter.value
         self.config.coherence_length = self.pl_coherence_length_parameter.value
         self.config.tx_gain = self.pl_tx_gain_parameter.value
@@ -557,12 +554,14 @@ class WSWindow(QtWidgets.QMainWindow):
     def updateMeasurements(self):
         self.cell_distances = self.cell.get_distances(self.config.tower_lat,
                 self.config.tower_lon, self.config.bs_height)
-        self.cell_pl = self.cell.get_path_loss(self.config.tx_power)
+        self.cell_pl = self.cell.get_path_loss(self.config.tx_power, self.config.tx_gain, self.config.rx_gain)
         if self.config.path_gain:
             measured_inverted = [element * -1 for element in self.cell_pl]
             self.pl_measured_line.setData(self.cell_distances, measured_inverted)
+            print(min(self.cell_distances), max(self.cell_distances))
         else:
             self.pl_measured_line.setData(self.cell_distances, self.cell_pl)
+            print(min(self.cell_distances), max(self.cell_distances))
 
     def updateLegend(self):
         for item in self.pl_widget.plotItem.childItems():
@@ -585,9 +584,9 @@ class WSWindow(QtWidgets.QMainWindow):
         legend.addItem(self.pl_ci_line, name=f"CI (\u03BD = {self.config.pl_exp}, d_ref = \
                 {self.config.ref_dist} m, \u03C3 = \
                 {self.config.sigma} dB, L_coh = {self.config.coherence_length} m)")
-        legend.addItem(self.pl_tworay_line, name=f"TwoRay (\u03BD = \
-                {self.config.pl_exp_tworay}, d_ref = \
-                {self.config.ref_dist} m)")
+        legend.addItem(self.pl_tworay_line, name=f"TwoRay (bs_height = \
+                {self.config.bs_height} m, ue_height = \
+                {self.config.ue_height} m)")
         legend.addItem(self.pl_oh_u_line, name=f"OH Urban (bs_height = \
                 {self.config.bs_height} m, ue_height = \
                 {self.config.ue_height} m, large_city = \
