@@ -398,14 +398,14 @@ class WSWindow(QtWidgets.QMainWindow):
             self.config.tower_lat = float(self.lat_edit.text())
             self.config.tower_lon = float(self.lon_edit.text())
             self.signal_map_canvas.axes.scatter(float(self.config.tower_lon),
-                    float(self.config.tower_lat), zorder=1, alpha=1.0, s=32, color="blue")
+                    float(self.config.tower_lat), zorder=1, alpha=1.0, s=48, color="blue")
             if self.tower_annotation:
                 self.tower_annotation.remove()
             if self.tower_label_edit.text():
                 self.config.tower_label = str(self.tower_label_edit.text())
                 self.tower_annotation = self.signal_map_canvas.axes.annotate(self.tower_label_edit.text(),
                         (float(self.config.tower_lon),
-                        float(self.config.tower_lat)), fontsize=14)
+                        float(self.config.tower_lat)), fontsize=20)
             self.signal_map_canvas.draw()
 
             self.cell_distances = self.cell.get_distances(self.config.tower_lat,
@@ -515,12 +515,18 @@ class WSWindow(QtWidgets.QMainWindow):
 
         self.signal_map_canvas.axes.set_xlim(self.signal_dataset.map_bbox[0][0], self.signal_dataset.map_bbox[0][1])
         self.signal_map_canvas.axes.set_ylim(self.signal_dataset.map_bbox[0][2], self.signal_dataset.map_bbox[0][3])
-        self.signal_map_canvas.axes.set_xlabel("Longitude")
-        self.signal_map_canvas.axes.set_ylabel("Latitude")
-        self.signal_map_canvas.axes.set_title("Signal Power vs Position")
-        self.signal_map_canvas.axes.ticklabel_format(useOffset=False)
+        self.signal_map_canvas.axes.set_xlabel("Longitude", labelpad=10)
+        self.signal_map_canvas.axes.set_ylabel("Latitude", labelpad=10)
+        self.signal_map_canvas.axes.set_title("Signal Power vs Position", pad=10)
+        self.signal_map_canvas.axes.title.set_fontsize(24)
+        self.signal_map_canvas.axes.xaxis.label.set_fontsize(16)
+        self.signal_map_canvas.axes.yaxis.label.set_fontsize(16)
+        self.signal_map_canvas.axes.tick_params(axis='x', labelsize=14)
+        self.signal_map_canvas.axes.tick_params(axis='y', labelsize=14)
         self.cbar = self.signal_map_canvas.fig.colorbar(powerscatter, cax=cax)
-        self.cbar.ax.set_ylabel("Signal Power (dBm)", rotation=270, labelpad=10)
+        self.cbar.ax.set_ylabel("Signal Power (dBm)", rotation=270, labelpad=15)
+        self.cbar.ax.yaxis.label.set_fontsize(16)
+        self.cbar.ax.tick_params(axis='y', labelsize=14)
 
         self.signal_map_canvas.draw()
 
@@ -532,7 +538,7 @@ class WSWindow(QtWidgets.QMainWindow):
 
     def updatePlotTitle(self):
         self.pl_widget.setTitle(f"<p \
-                style=\"color:black;font-size:18px\">Path Loss for Cell \
+                style=\"color:black;font-size:24px\">Path Loss for Cell \
                 {self.cell.cellid} vs Distance \
                 ({self.config.tower_lat},{self.config.tower_lon}), \
                 {self.config.freq} MHz, G<sub>TX</sub> \
