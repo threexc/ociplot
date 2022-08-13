@@ -537,13 +537,22 @@ class WSWindow(QtWidgets.QMainWindow):
         self.updateLegend()
 
     def updatePlotTitle(self):
-        self.pl_widget.setTitle(f"<p \
-                style=\"color:black;font-size:24px\">Path Loss for Cell \
-                {self.cell.cellid} vs Distance \
-                ({self.config.tower_lat},{self.config.tower_lon}), \
-                {self.config.freq} MHz, G<sub>TX</sub> \
-                = {self.config.tx_gain} dB, G<sub>RX</sub> = \
-                {self.config.rx_gain} dB</p>")
+        if self.config.path_gain:
+            self.pl_widget.setTitle(f"<p \
+                    style=\"color:black;font-size:24px\">Path Gain for Cell \
+                    {self.cell.cellid} vs Distance \
+                    ({self.config.tower_lat},{self.config.tower_lon}), \
+                    {self.config.freq} MHz, G<sub>TX</sub> \
+                    = {self.config.tx_gain} dB, G<sub>RX</sub> = \
+                    {self.config.rx_gain} dB</p>")
+        else:
+            self.pl_widget.setTitle(f"<p \
+                    style=\"color:black;font-size:24px\">Path Loss for Cell \
+                    {self.cell.cellid} vs Distance \
+                    ({self.config.tower_lat},{self.config.tower_lon}), \
+                    {self.config.freq} MHz, G<sub>TX</sub> \
+                    = {self.config.tx_gain} dB, G<sub>RX</sub> = \
+                    {self.config.rx_gain} dB</p>")
 
     def updateXScale(self):
         self.pl_widget.setXRange(0, max(self.cell_distances) + 50)
