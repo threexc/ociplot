@@ -87,8 +87,8 @@ class WSWindow(QtWidgets.QMainWindow):
 
     def createPens(self):
         self.pl_red_pen = pg.mkPen(color=(255, 0, 0), width=1)
-        self.pl_green_pen = pg.mkPen(color=(64, 192, 64), width=1)
-        self.pl_blue_pen = pg.mkPen(color=(0, 0, 255), width=1)
+        self.pl_green_pen = pg.mkPen(color=(64, 192, 64), width=3)
+        self.pl_blue_pen = pg.mkPen(color=(0, 0, 255), width=3)
         self.pl_solid_pen = pg.mkPen(color=(0, 0, 0), width=3, style=QtCore.Qt.SolidLine)
         self.pl_dot_pen = pg.mkPen(color=(255, 144, 0), width=3, style=QtCore.Qt.DotLine)
         self.pl_dash_pen = pg.mkPen(color=(128, 64, 64), width=3, style=QtCore.Qt.DashLine)
