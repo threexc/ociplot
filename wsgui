@@ -110,7 +110,7 @@ class WSWindow(QtWidgets.QMainWindow):
         self.pl_beta_parameter = pw.SliderTextWidget("\u03B2", "dB", self.config.beta, -1000, 1000, 10, self.updateSliders, self.updateTextboxes)
         self.pl_gamma_parameter = pw.SliderTextWidget("\u03B3", "", self.config.gamma, 0, 100, 10, self.updateSliders, self.updateTextboxes)
         self.pl_sigma_parameter = pw.SliderTextWidget("\u03C3", "dB", self.config.sigma, 0, 100, 10, self.updateSliders, self.updateTextboxes)
-        self.pl_exp_parameter = pw.SliderTextWidget("\u03BD (CI)", "", self.config.pl_exp, 0, 100, 10, self.updateSliders, self.updateTextboxes)
+        self.pl_exp_parameter = pw.SliderTextWidget("n (CI)", "", self.config.pl_exp, 0, 100, 10, self.updateSliders, self.updateTextboxes)
         self.pl_bs_height_parameter = pw.SliderTextWidget("h<sub>TX</sub>", "m", self.config.bs_height, 0, 2500, 10, self.updateSliders, self.updateTextboxes)
         self.pl_ue_height_parameter = pw.SliderTextWidget("h<sub>RX</sub>", "m", self.config.ue_height, 0, 100, 10, self.updateSliders, self.updateTextboxes)
         self.pl_coherence_length_parameter = pw.SliderTextWidget("L<sub>coh</sub>", "m", self.config.coherence_length, 1, 20, 1, self.updateSliders, self.updateTextboxes)
@@ -596,7 +596,7 @@ class WSWindow(QtWidgets.QMainWindow):
                 {self.config.gamma}, d_ref = \
                 {self.config.ref_dist} m, \u03C3 = \
                 {self.config.sigma} dB, L_coh = {self.config.coherence_length} m)")
-        legend.addItem(self.pl_ci_line, name=f"CI (\u03BD = {self.config.pl_exp}, d_ref = \
+        legend.addItem(self.pl_ci_line, name=f"CI (n = {self.config.pl_exp}, d_ref = \
                 {self.config.ref_dist} m, \u03C3 = \
                 {self.config.sigma} dB, L_coh = {self.config.coherence_length} m)")
         legend.addItem(self.pl_tworay_line, name=f"TwoRay (bs_height = \
