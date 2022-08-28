@@ -32,6 +32,7 @@ class Config:
                 self.oh_correction_factor = self.data.get("oh_correction_factor", 1)
                 self.large_city = self.data.get("large_city", True)
                 self.path_gain = self.data.get("path_gain", False)
+                self.coherence_length = self.data.get("coherence_length", 1)
         except:
             print("Could not load {0}. Setting defaults...".format(self.filename))
             self.signal_data_files = None
@@ -56,6 +57,7 @@ class Config:
             self.oh_correction_factor = 1
             self.large_city = True
             self.path_gain = False
+            self.coherence_length = 1
 
     def save(self):
         with open(self.filename, "w") as stream:
@@ -78,7 +80,8 @@ class Config:
                 'ue_height': self.ue_height,
                 'oh_correction_factor': self.oh_correction_factor,
                 'large_city': self.large_city,
-                'path_gain': self.path_gain
+                'path_gain': self.path_gain,
+                'coherence_length': self.coherence_length
             }
             if self.tower_lat and self.tower_lon:
               self.lastcfg['tower_lat'] = self.tower_lat

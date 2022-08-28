@@ -14,13 +14,13 @@ from matplotlib_scalebar.scalebar import ScaleBar
 from pathlib import Path
 from PyQt5 import QtWidgets, QtCore, QtGui
 import matplotlib.pyplot as plt
-import walksignal.dataset as ds
-import walksignal.models as md
-import walksignal.canvases as canvases
-import walksignal.utils as utils
-import walksignal.config as cfg
-import walksignal.gui.tablemodel as tm
-import walksignal.gui.customwidgets as pw
+import routesignal.dataset as ds
+import routesignal.models as md
+import routesignal.canvases as canvases
+import routesignal.utils as utils
+import routesignal.config as cfg
+import routesignal.gui.tablemodel as tm
+import routesignal.gui.customwidgets as pw
 
 class WSWindow(QtWidgets.QMainWindow):
 
@@ -191,7 +191,11 @@ class WSWindow(QtWidgets.QMainWindow):
         self.map_canvas.axes.set_xlim(self.map_extent[0], self.map_extent[1])
         self.map_canvas.axes.set_ylim(self.map_extent[2], self.map_extent[3])
         self.map_canvas.axes.set_xlabel("Longitude")
+        self.map_canvas.axes.xaxis.label.set_fontsize(16)
         self.map_canvas.axes.set_ylabel("Latitude")
+        self.map_canvas.axes.yaxis.label.set_fontsize(16)
+        self.map_canvas.axes.tick_params(axis='x', labelsize=14)
+        self.map_canvas.axes.tick_params(axis='y', labelsize=14)
         self.map_canvas.axes.ticklabel_format(useOffset=False)
 
         self.setScaleBar()

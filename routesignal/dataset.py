@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import os.path
 import matplotlib.pyplot as pyplot
-import walksignal.utils as utils
+import routesignal.utils as utils
 from dataclasses import dataclass
 
 class Cell:
@@ -35,8 +35,8 @@ class Cell:
             np.square(utils.get_distance(tower_lat, tower_lon, data_point.lat,
                 data_point.lon) * 1000)) for data_point in self.data_points]
 
-    def get_path_loss(self, tx_power):
-        return [tx_power - xi for xi in self.signal_power]
+    def get_path_loss(self, tx_power, tx_gain, rx_gain):
+        return [tx_power - xi - tx_gain - rx_gain for xi in self.signal_power]
 
 class CellDataPoint:
     """Class containing the contents of a signal data point."""

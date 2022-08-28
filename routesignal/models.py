@@ -18,20 +18,18 @@ class ModelEngine:
         return 20 * np.log10(dist) + 20 * np.log10(self.config.freq) - 27.55 - self.config.tx_gain - self.config.rx_gain
 
     def tworay_pl(self, dist):
-        """Calculate the Two-Ray model path loss at a given distance, where
-        ref_dist is a reference distance (typically 1m) for free space path
-        loss, and pl_exp is the path loss exponent ranging from 2 (free space)
-        to 8."""
-        return self.fs_pl(self.config.ref_dist) + 10 * self.config.pl_exp_tworay * np.log10(dist/self.config.ref_dist) - self.config.tx_gain - self.config.rx_gain
+        """Calculate the Two-Ray model path loss at a given distance, using the
+        height of the base station and the user equipment."""
+        return 40 * np.log10(dist) - 10 * np.log10(np.power(self.config.bs_height, 2) * np.power(self.config.ue_height,2)) - self.config.tx_gain - self.config.rx_gain
     
     def abg_pl(self, dist):
         """Calculate the Alpha-Beta-Gamma model path loss at a given
         distance."""
-        return 10 * self.config.alpha * np.log10(dist/self.config.ref_dist) + self.config.beta + 10 * self.config.gamma * np.log10(self.config.freq/1000) + np.random.normal(0, self.config.sigma) - self.config.tx_gain - self.config.rx_gain
+        return 10 * self.config.alpha * np.log10(dist/self.config.ref_dist) + self.config.beta + 10 * self.config.gamma * np.log10(self.config.freq/1000) - self.config.tx_gain - self.config.rx_gain
 
     def ci_pl(self, dist):
         """Calculate the Close-In model path loss at a given distance."""
-        return self.fs_pl(self.config.ref_dist) + 10 * self.config.pl_exp * np.log10(dist/self.config.ref_dist) + np.random.normal(0, self.config.sigma) - self.config.tx_gain - self.config.rx_gain
+        return self.fs_pl(self.config.ref_dist) + 10 * self.config.pl_exp * np.log10(dist/self.config.ref_dist) - self.config.tx_gain - self.config.rx_gain
 
     def ohu_pl(self, dist):
         """Calculate the Okumura-Hata Urban model path loss at a given
@@ -70,10 +68,27 @@ class ModelEngine:
         return np.array([self.tworay_pl(xi) for xi in x_range])
 
     def abg_pl_array(self, x_range):
-        return np.array([self.abg_pl(xi) for xi in x_range])
+        random_val = np.random.normal(0, self.config.sigma)
+        random_array = []
+
+        for i in range(0, len(x_range)):
+            if (i+1) % int(self.config.coherence_length) == 0:
+                f"{i+1} == {self.config.coherence_length}"
+                random_val = np.random.normal(0, self.config.sigma)
+            random_array.append(random_val)
+
+        return np.array([self.abg_pl(xi) + random_array[index] for index, xi in enumerate(x_range)])
 
     def ci_pl_array(self, x_range):
-        return np.array([self.ci_pl(xi) for xi in x_range])
+        random_val = np.random.normal(0, self.config.sigma)
+        random_array = []
+
+        for i in range(0, len(x_range)):
+            if (i+1) % int(self.config.coherence_length) == 0:
+                random_val = np.random.normal(0, self.config.sigma)
+            random_array.append(random_val)
+
+        return np.array([self.ci_pl(xi) + random_array[index] for index, xi in enumerate(x_range)])
 
     def ohu_pl_array(self, x_range):
         return np.array([self.ohu_pl(xi) for xi in x_range])
@@ -91,10 +106,26 @@ class ModelEngine:
         return np.array([self.tworay_pl(xi) * -1 for xi in x_range])
 
     def abg_pg_array(self, x_range):
-        return np.array([self.abg_pl(xi) * -1 for xi in x_range])
+        random_val = np.random.normal(0, self.config.sigma)
+        random_array = []
+
+        for i in range(0, len(x_range)):
+            if (i+1) % int(self.config.coherence_length) == 0:
+                random_val = np.random.normal(0, self.config.sigma)
+            random_array.append(random_val)
+
+        return np.array([(self.abg_pl(xi) + random_array[index]) * -1 for index, xi in enumerate(x_range)])
 
     def ci_pg_array(self, x_range):
-        return np.array([self.ci_pl(xi) * -1 for xi in x_range])
+        random_val = np.random.normal(0, self.config.sigma)
+        random_array = []
+
+        for i in range(0, len(x_range)):
+            if (i+1) % int(self.config.coherence_length) == 0:
+                random_val = np.random.normal(0, self.config.sigma)
+            random_array.append(random_val)
+
+        return np.array([(self.ci_pl(xi) + random_array[index]) * -1 for index, xi in enumerate(x_range)])
 
     def ohu_pg_array(self, x_range):
         return np.array([self.ohu_pl(xi) * -1 for xi in x_range])
