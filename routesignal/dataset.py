@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import os.path
 import matplotlib.pyplot as pyplot
-import walksignal.utils as utils
+import routesignal.utils as utils
 from dataclasses import dataclass
 
 class Cell:

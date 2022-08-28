@@ -1,9 +1,6 @@
 #!/usr/bin/python3
 
 import sys  # We need sys so that we can pass argv to QApplication
-import os
-import time
-import yaml
 import numpy as np
 import pyqtgraph as pg
 from random import randint
@@ -14,20 +11,20 @@ from matplotlib_scalebar.scalebar import ScaleBar
 from pathlib import Path
 from PyQt5 import QtWidgets, QtCore, QtGui
 import matplotlib.pyplot as plt
-import walksignal.dataset as ds
-import walksignal.models as md
-import walksignal.canvases as canvases
-import walksignal.utils as utils
-import walksignal.config as cfg
-import walksignal.gui.tablemodel as tm
-import walksignal.gui.customwidgets as pw
+import routesignal.dataset as ds
+import routesignal.models as md
+import routesignal.canvases as canvases
+import routesignal.utils as utils
+import routesignal.config as cfg
+import routesignal.gui.tablemodel as tm
+import routesignal.gui.customwidgets as pw
 
 class WSWindow(QtWidgets.QMainWindow):
 
     def __init__(self, *args, **kwargs):
         super(WSWindow, self).__init__(*args, **kwargs)
 
-        self.setWindowTitle("walksignal 0.11.0")
+        self.setWindowTitle("routesignal 0.11.0")
         self.config = cfg.Config("lastcfg.yaml")
         self.engine = md.ModelEngine(self.config)
 
@@ -41,7 +38,7 @@ class WSWindow(QtWidgets.QMainWindow):
         self.cbar = None
 
         self.x_range = np.arange(0.5, 2500, 2)
-        self.y = [randint(0,100) for _ in self.x_range]  # 100 data points
+        self.y_range = [randint(0,100) for _ in self.x_range]  # 100 data points
 
         self.setup()
     
@@ -76,14 +73,14 @@ class WSWindow(QtWidgets.QMainWindow):
 
     def createLines(self):
         print(f"Setting up lines...")
-        self.pl_abg_line = self.pl_widget.plot(self.x_range, self.y, pen=self.pl_blue_pen, name="ABG Model")
-        self.pl_ci_line = self.pl_widget.plot(self.x_range, self.y, pen=self.pl_green_pen, name="CI Model")
-        self.pl_fs_line = self.pl_widget.plot(self.x_range, self.y, pen=self.pl_solid_pen, name="Free Space Model")
-        self.pl_tworay_line = self.pl_widget.plot(self.x_range, self.y, pen=self.pl_dot_pen, name="TwoRay Model")
-        self.pl_oh_u_line = self.pl_widget.plot(self.x_range, self.y, pen=self.pl_dash_pen, name="Okumura-Hata Urban")
-        self.pl_oh_s_line = self.pl_widget.plot(self.x_range, self.y, pen=self.pl_dashdot_pen, name="Okumura-Hata Suburban")
-        self.pl_oh_r_line = self.pl_widget.plot(self.x_range, self.y, pen=self.pl_dashdotdot_pen, name="Okumura-Hata Rural")
-        self.pl_measured_line = self.pl_widget.plot(self.x_range, self.y, pen=None, symbol="o", symbolPen=self.pl_red_pen, symbolSize=4, symbolBrush=(255, 0, 0, 255), name="Measured")
+        self.pl_abg_line = self.pl_widget.plot(self.x_range, self.y_range, pen=self.pl_blue_pen, name="ABG Model")
+        self.pl_ci_line = self.pl_widget.plot(self.x_range, self.y_range, pen=self.pl_green_pen, name="CI Model")
+        self.pl_fs_line = self.pl_widget.plot(self.x_range, self.y_range, pen=self.pl_solid_pen, name="Free Space Model")
+        self.pl_tworay_line = self.pl_widget.plot(self.x_range, self.y_range, pen=self.pl_dot_pen, name="TwoRay Model")
+        self.pl_oh_u_line = self.pl_widget.plot(self.x_range, self.y_range, pen=self.pl_dash_pen, name="Okumura-Hata Urban")
+        self.pl_oh_s_line = self.pl_widget.plot(self.x_range, self.y_range, pen=self.pl_dashdot_pen, name="Okumura-Hata Suburban")
+        self.pl_oh_r_line = self.pl_widget.plot(self.x_range, self.y_range, pen=self.pl_dashdotdot_pen, name="Okumura-Hata Rural")
+        self.pl_measured_line = self.pl_widget.plot(self.x_range, self.y_range, pen=None, symbol="o", symbolPen=self.pl_red_pen, symbolSize=4, symbolBrush=(255, 0, 0, 255), name="Measured")
 
     def createPens(self):
         self.pl_red_pen = pg.mkPen(color=(255, 0, 0), width=1)

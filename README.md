@@ -1,5 +1,5 @@
-# walksignal
-walksignal is a set of tools to plot OpenCellID data on street maps and other
+# routesignal
+routesignal is a set of tools to plot OpenCellID data on street maps and other
 images. The project was originally motivated by interest in comparing
 real-world data to random walk models in the context of signal reception and
 quality. It relies heavily on the use of freely-available mobile apps and
