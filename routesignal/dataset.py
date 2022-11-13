@@ -1,5 +1,6 @@
 #!/usr/bin/python3 
 import time
+import statistics as stat
 import numpy as np
 import pandas as pd
 import os.path
@@ -29,6 +30,11 @@ class Cell:
         self.peak_value = None
         self.path_loss = []
         self.data_points = [CellDataPoint(row) for index, row in data.iterrows()]
+        self.power_mw = [np.power(10, (-1 * dBm) / 10) for dBm in self.signal_power]
+        self.average_power = stat.fmean(self.power_mw)
+        self.power_stdev = stat.stdev(self.power_mw)
+        self.average_power_dbm = -10 * (np.log10(self.average_power))
+        self.power_stdev_db = (np.log10(self.power_stdev))
 
     def get_distances(self, tower_lat, tower_lon, bs_height):
         return [np.sqrt(np.square(bs_height) +
@@ -37,6 +43,9 @@ class Cell:
 
     def get_path_loss(self, tx_power, tx_gain, rx_gain):
         return [tx_power - xi - tx_gain - rx_gain for xi in self.signal_power]
+
+    def get_signal_power(self):
+        return [xi for xi in self.signal_power]
 
 class CellDataPoint:
     """Class containing the contents of a signal data point."""
@@ -87,19 +96,9 @@ class Tower:
 
 class Dataset:
     """Class containing the measured data info."""
-    def __init__(self, datafile):
-        self.datafile = datafile
-        self.data = pd.read_csv(datafile).drop('bid', axis=1).drop('sid', axis=1).drop('nid', axis=1).drop('psc', axis=1)
-        self.summary = self.data.drop(['measured_at', 'pci', 'mcc', 'mnc', 'lac', 'cellid', 'tac', 'direction', 'ta'], axis=1).describe().apply(lambda s: s.apply('{0:.6f}'.format))
-        self.rx_power = self.data['signal'].describe()
-
-class DataSuperset:
-    """Class containing an aggregate of Dataset data"""
-    def __init__(self, file_list):
-        self.file_list = file_list
-        self.sets = [Dataset(f) for f in self.file_list]
-        self.set_summaries = [mset.summary for mset in self.sets]
-        self.data = pd.concat([mset.data for mset in self.sets], ignore_index=True)
+    def __init__(self, datafiles):
+        self.datafiles = datafiles
+        self.data = pd.concat([pd.read_csv(datafile).drop('bid', axis=1).drop('sid', axis=1).drop('nid', axis=1).drop('psc', axis=1) for datafile in datafiles])
 
         self.mobile_country_codes = self.data['mcc']
         self.mobile_network_codes = self.data['mnc']
@@ -109,14 +108,12 @@ class DataSuperset:
         self.unique_mobile_network_codes = self.mobile_network_codes.unique()
         self.unique_local_area_codes = self.local_area_codes.unique()
         self.unique_cellids = self.cellids.unique()
-        self.cellid_subsets = [self.data.loc[self.data['cellid'] == cellid] for cellid in self.unique_cellids]
-        self.cellid_subset_summaries = [subset.drop(['measured_at', 'pci', 'mcc', 'mnc', 'lac', 'cellid', 'tac', 'direction', 'ta'], axis=1).describe() for subset in self.cellid_subsets]
-        self.summary = self.data.drop(['measured_at', 'pci', 'mcc', 'mnc', 'lac', 'cellid', 'tac', 'direction', 'ta'], axis=1).describe().apply(lambda s: s.apply('{0:.6f}'.format))
         self.cells = {}
 
         for cellid in self.data['cellid'].unique():
             self.cells[cellid] = Cell(self.data.loc[self.data['cellid'] ==
                 cellid], cellid)
+        print(f"26317827 is: {self.cells[26317827]}")
         self.map_path = self.data_path() + "/map.png"
         self.bbox_path = self.data_path() + "/bbox.txt"
         self.cellmap = CellMap(self.map_path)
@@ -125,7 +122,7 @@ class DataSuperset:
         self.cm = pyplot.cm.get_cmap('gist_heat')
 
     def data_path(self):
-        return self.file_list[0].rsplit('/', 1)[0]
+        return self.datafiles[0].rsplit('/', 1)[0]
 
     """Get the Cell matching a particular cellid."""
     def get_cell(self, cellid):
