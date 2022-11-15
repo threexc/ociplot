@@ -24,7 +24,7 @@ class WSWindow(QtWidgets.QMainWindow):
     def __init__(self, *args, **kwargs):
         super(WSWindow, self).__init__(*args, **kwargs)
 
-        self.setWindowTitle("routesignal 0.12.0")
+        self.setWindowTitle("routesignal 0.13.0")
         self.config = cfg.Config("lastcfg.yaml")
         self.engine = md.ModelEngine(self.config)
 
@@ -38,7 +38,7 @@ class WSWindow(QtWidgets.QMainWindow):
         self.cbar = None
 
         self.x_range = np.arange(0.5, 2500, 2)
-        self.y_range = [randint(0,100) for _ in self.x_range]  # 100 data points
+        self.y_range = np.random.randint(0, 100, self.x_range.size)  # 100 data points
 
         self.setup()
     
@@ -194,6 +194,8 @@ class WSWindow(QtWidgets.QMainWindow):
         self.pl_widget.setLabel('bottom', "Distance (m)", **self.styles)
         self.pl_widget.getAxis('left').setStyle(tickFont=QtGui.QFont('Arial', 16))
         self.pl_widget.getAxis('bottom').setStyle(tickFont=QtGui.QFont('Arial', 16))
+        self.pl_widget.getAxis('left').setTextPen((0, 0, 0))
+        self.pl_widget.getAxis('bottom').setTextPen((0, 0, 0))
 
         self.power_dist_widget = pg.PlotWidget()
         self.power_dist_widget.setBackground('w')
@@ -380,8 +382,6 @@ class WSWindow(QtWidgets.QMainWindow):
     def setCell(self):
         print(f"Setting cell...")
         self.cell = self.signal_dataset.get_cell(int(self.cellid_combo.currentText()))
-        point_count = len(self.cell.signal_power)
-        self.cell_load_button.setText("Load Cell Data ({0} points)".format(point_count))
 
     def setTowerLocation(self):
         if self.lat_edit.text() and self.lon_edit.text():
@@ -399,9 +399,9 @@ class WSWindow(QtWidgets.QMainWindow):
                         float(self.config.tower_lat)), fontsize=20)
             self.signal_map_canvas.draw()
 
-            self.cell_distances = self.cell.get_distances(self.config.tower_lat,
+            self.cell_distances = self.signal_dataset.get_distances(self.cellid_combo.currentText(), self.config.tower_lat,
                     self.config.tower_lon, self.config.bs_height)
-            self.cell_pl = self.cell.get_path_loss(self.config.tx_power,
+            self.cell_pl = self.signal_dataset.get_path_loss(self.cellid_combo.currentText(), self.config.tx_power,
                     self.config.tx_gain, self.config.rx_gain)
             
             if self.signal_dataset:
@@ -460,9 +460,8 @@ class WSWindow(QtWidgets.QMainWindow):
         self.raw_data_table.setModel(self.raw_table_model)
 
     def updateMap(self):
-        points = self.cell.data_points
-        lon_series = np.array([point.lon for point in points], dtype=float)
-        lat_series = np.array([point.lat for point in points], dtype=float)
+        lon_series = self.cell.data['lon'].to_numpy(dtype=float)
+        lat_series = self.cell.data['lat'].to_numpy(dtype=float)
 
         if self.cbar:
             self.cbar.remove()
@@ -470,7 +469,7 @@ class WSWindow(QtWidgets.QMainWindow):
         divider = make_axes_locatable(self.signal_map_canvas.axes)
         cax = divider.append_axes("right", size="5%", pad=0.1)
         self.signal_map_canvas.axes.imshow(self.signal_dataset.plot_map, zorder=0, extent = self.signal_dataset.map_bbox[0], aspect="equal")
-        powerscatter = self.signal_map_canvas.axes.scatter(lon_series, lat_series, zorder=1, alpha=1.0, s=20, c=self.cell.signal_power, cmap=self.signal_cm)
+        powerscatter = self.signal_map_canvas.axes.scatter(lon_series, lat_series, zorder=1, alpha=1.0, s=20, c=self.cell.data['signal'], cmap=self.signal_cm)
 
         self.signal_map_canvas.axes.set_xlim(self.signal_dataset.map_bbox[0][0], self.signal_dataset.map_bbox[0][1])
         self.signal_map_canvas.axes.set_ylim(self.signal_dataset.map_bbox[0][2], self.signal_dataset.map_bbox[0][3])
@@ -498,10 +497,10 @@ class WSWindow(QtWidgets.QMainWindow):
     def updatePlotTitles(self):
         self.pl_widget.setTitle(f"<p \
                 style=\"color:black;font-size:20px\">{self.cell.cellid} vs \
-                {self.tower_label_edit.text()} ({self.config.tower_lat}, {self.config.tower_lon})</p>")
+                {self.tower_label_edit.text()} ({self.config.tower_lat}, {self.config.tower_lon}), n = {len(self.cell.data['signal'])} </p>")
         self.power_dist_widget.setTitle(f"<p \
                 style=\"color:black;font-size:20px\">RSRP for {self.cell.cellid} vs \
-                {self.tower_label_edit.text()} ({self.config.tower_lat}, {self.config.tower_lon})</p>")
+                {self.tower_label_edit.text()} ({self.config.tower_lat}, {self.config.tower_lon}), n = {len(self.cell.data['signal'])} </p>")
 
     def updateXScale(self):
         self.pl_widget.setXRange(0, max(self.cell_distances) + 50)
@@ -516,9 +515,9 @@ class WSWindow(QtWidgets.QMainWindow):
         self.pl_widget.setYRange(y_min, y_max)
 
     def updateMeasurements(self):
-        self.cell_distances = self.cell.get_distances(self.config.tower_lat,
+        self.cell_distances = self.signal_dataset.get_distances(self.cellid_combo.currentText(), self.config.tower_lat,
                 self.config.tower_lon, self.config.bs_height)
-        self.cell_pl = self.cell.get_path_loss(self.config.tx_power, self.config.tx_gain, self.config.rx_gain)
+        self.cell_pl = self.signal_dataset.get_path_loss(self.cellid_combo.currentText(), self.config.tx_power, self.config.tx_gain, self.config.rx_gain)
         if self.config.path_gain:
             measured_inverted = [element * -1 for element in self.cell_pl]
             self.pl_measured_line.setData(self.cell_distances, measured_inverted)
@@ -537,7 +536,6 @@ class WSWindow(QtWidgets.QMainWindow):
         legend.setLabelTextColor("#00000000")
         legend.setLabelTextSize("14pt")
 
-#        legend.addItem(None, name=f"Parameters:")
         legend.addItem(self.pl_measured_line, name=f"Measured")
         legend.addItem(self.pl_fs_line, "Free Space")
         legend.addItem(self.pl_abg_line, name=f"ABG")
@@ -576,8 +574,7 @@ class WSWindow(QtWidgets.QMainWindow):
             self.pl_oh_s_line.setData(self.x_range, self.engine.ohs_pl_array(self.x_range))
             self.pl_oh_r_line.setData(self.x_range, self.engine.ohr_pl_array(self.x_range))
         
-        print(self.cell.signal_power)
-        self.power_dist_line.setData(self.cell_distances, self.cell.get_signal_power())
+        self.power_dist_line.setData(self.cell_distances, self.signal_dataset.get_signal_power(self.cellid_combo.currentText()))
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
