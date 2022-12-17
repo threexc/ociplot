@@ -28,10 +28,9 @@ class Cell:
         ]
         self.data = data[columns]
         self.power_mw = [np.power(10, (-1 * dBm) / 10) for dBm in self.data['signal']]
-        self.average_power = stat.fmean(self.power_mw)
-        self.power_stdev = stat.stdev(self.power_mw)
-        self.average_power_dbm = -10 * (np.log10(self.average_power))
-        self.power_stdev_db = (np.log10(self.power_stdev))
+
+        self.geometric_average = stat.fmean(self.data['signal'])
+        self.geometric_stdev_db = stat.stdev(self.data['signal'])
 
 class Tower:
     """Class containing basic information about a tower."""
@@ -70,15 +69,12 @@ class Dataset:
         self.signal_power = pd.concat([cell.data['signal'] for key, cell in self.cells.items()])
 
         self.power_mw = [np.power(10, (-1 * dBm) / 10) for dBm in self.signal_power]
-        self.average_power = stat.fmean(self.power_mw)
-        self.power_stdev = stat.stdev(self.power_mw)
-        self.average_power_dbm = -10 * (np.log10(self.average_power))
-        self.power_stdev_db = (np.log10(self.power_stdev))
 
-        print(self.average_power)
-        print(self.power_stdev)
-        print(self.average_power_dbm)
-        print(self.power_stdev_db)
+        self.geometric_average = stat.fmean(self.signal_power)
+        self.geometric_stdev_db = stat.stdev(self.signal_power)
+
+        print(f"geo average: {self.geometric_average} dBm")
+        print(f"geo stdev: {self.geometric_stdev_db} dB")
 
         self.map_path = self.data_path() + "/map.png"
         self.bbox_path = self.data_path() + "/bbox.txt"

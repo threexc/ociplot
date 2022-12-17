@@ -550,10 +550,11 @@ class WSWindow(QtWidgets.QMainWindow):
         parambox = pg.TextItem(color=(0, 0, 0), anchor=(0, -1.5), fill="#E3E3E3FF")
         parambox.setHtml(f"<p style=\"color:black;font-size:20px\"> \u03B1 = {self.config.alpha}, \u03B2 = {self.config.beta} dB, \u03B3 = {self.config.gamma},<br> \
         n<sub>CI</sub> = {self.config.pl_exp}, h<sub>bs</sub> = {self.config.bs_height} m, h<sub>ue</sub> = {self.config.ue_height} m,<br> \
-        \u03C3 = {self.config.sigma} dB, L<sub>coh</sub> = {self.config.coherence_length} m,<br> \
+        \u03C3 = {self.config.sigma} dB, d<sub>coh</sub> = {self.config.coherence_length} m,<br> \
         P<sub>TX</sub> = {self.config.tx_power} dBm, G<sub>TX</sub> = {self.config.tx_gain} dB, G<sub>RX</sub> = {self.config.rx_gain} dB,<br> \
-        f = {self.config.freq} MHz<br> P<sub>mean</sub> = {self.signal_dataset.cells[self.cell.cellid].average_power_dbm:.1f} dBm, \
-        P<sub>stdev</sub> = {self.signal_dataset.cells[self.cell.cellid].power_stdev_db:.1f} dB</p>")
+        f = {self.config.freq} MHz<br> P<sub>mean</sub> = \
+        {self.signal_dataset.cells[self.cell.cellid].geometric_average:.1f} dBm, \
+        P<sub>stdev</sub> = {self.signal_dataset.cells[self.cell.cellid].geometric_stdev_db:.1f} dB</p>")
         parambox.setParentItem(legend)
 
     def updateLines(self):
